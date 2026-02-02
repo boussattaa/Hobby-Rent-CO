@@ -1,0 +1,248 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
+
+import { createListing } from './actions';
+
+export default function ListYourGear() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login?message=Please log in to list your gear');
+      } else {
+        setLoading(false);
+      }
+    };
+    checkUser();
+  }, [router, supabase]);
+
+  const [imageUrl, setImageUrl] = useState('/images/dirt-hero.png'); // Default fallback
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (e) => {
+    try {
+      setUploading(true);
+      if (!e.target.files || e.target.files.length === 0) {
+        throw new Error('You must select an image to upload.');
+      }
+
+      const file = e.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from('items').upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from('items').getPublicUrl(filePath);
+      setImageUrl(data.publicUrl);
+    } catch (error) {
+      alert('Error uploading image: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container" style={{ paddingTop: '150px', textAlign: 'center' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="list-page">
+      <div className="container">
+        <div className="form-wrapper glass">
+          <div className="form-header">
+            <h1>List Your Gear</h1>
+            <p>Start earning money from your idle equipment today.</p>
+          </div>
+
+          <form action={createListing}>
+            {/* Hidden field to pass the uploaded image URL to the server action */}
+            <input type="hidden" name="image_url" value={imageUrl} />
+
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Category</label>
+                <select name="category">
+                  <option value="dirt">Dirt (Off-road)</option>
+                  <option value="water">Water Sports</option>
+                  <option value="housing">Housing & Tools</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Item Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="e.g. 2023 KTM 300 XC"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Daily Price ($)</label>
+                <input
+                  type="number"
+                  name="price"
+                  placeholder="150"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Location</label>
+                <input
+                  type="text"
+                  name="location"
+                  placeholder="e.g. Moab, UT"
+                  required
+                />
+              </div>
+
+              <div className="form-group full">
+                <label>Description</label>
+                <textarea
+                  name="description"
+                  rows="4"
+                  placeholder="Describe your item..."
+                ></textarea>
+              </div>
+
+              <div className="form-group full">
+                <label>Photos</label>
+                <div className="upload-box">
+                  {imageUrl && imageUrl !== '/images/dirt-hero.png' ? (
+                    <img src={imageUrl} alt="Uploaded" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', borderRadius: '8px' }} />
+                  ) : (
+                    <span>{uploading ? 'Uploading...' : 'Click to select an image'}</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary btn-lg">Create Listing</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .list-page {
+          min-height: 100vh;
+          padding: 4rem 0;
+          background-image: 
+            radial-gradient(at 10% 10%, rgba(255,255,255,0.8) 0%, transparent 40%),
+            radial-gradient(at 90% 90%, rgba(226, 232, 240, 0.8) 0%, transparent 40%);
+        }
+
+        .form-wrapper {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 3rem;
+          border-radius: 24px;
+          background: white;
+          border: 1px solid var(--border-color);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        .form-header {
+          text-align: center;
+          margin-bottom: 3rem;
+        }
+
+        .form-header h1 {
+          font-size: 2.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .form-header p {
+          color: var(--text-secondary);
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .form-group label {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+          width: 100%;
+          padding: 0.75rem;
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          font-size: 1rem;
+          font-family: inherit;
+        }
+        
+        .form-group.full {
+          grid-column: 1 / -1;
+        }
+
+        .upload-box {
+          border: 2px dashed var(--border-color);
+          border-radius: 12px;
+          padding: 3rem;
+          text-align: center;
+          color: var(--text-secondary);
+          cursor: pointer;
+          transition: border-color 0.2s;
+          position: relative;
+          overflow: hidden;
+        }
+        .upload-box:hover {
+          border-color: var(--accent-color);
+          color: var(--accent-color);
+        }
+
+        .form-actions {
+          text-align: center;
+        }
+
+        .btn-lg {
+          padding: 1rem 3rem;
+          font-size: 1.1rem;
+        }
+
+        @media (max-width: 600px) {
+          .form-grid {
+             grid-template-columns: 1fr;
+          }
+          .form-wrapper {
+            padding: 1.5rem;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}

@@ -1,0 +1,40 @@
+
+'use server'
+
+import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
+
+export async function createListing(formData) {
+    const supabase = await createClient()
+
+    // Get current user to attach as owner
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        redirect('/login')
+    }
+
+    const itemData = {
+        owner_id: user.id,
+        name: formData.get('name'),
+        category: formData.get('category'),
+        price: parseFloat(formData.get('price')),
+        location: formData.get('location'),
+        description: formData.get('description'),
+        // Use the image URL from the hidden form field, or fall back to default
+        image_url: formData.get('image_url') || '/images/dirt-hero.png'
+    }
+
+    const { error } = await supabase.from('items').insert(itemData)
+
+    if (error) {
+        console.error('Error creating listing:', error)
+        // In a real app we'd return an error state to the form
+        return { error: error.message }
+    }
+
+    revalidatePath('/')
+    revalidatePath(`/${itemData.category}`)
+    redirect(`/${itemData.category}`)
+}
