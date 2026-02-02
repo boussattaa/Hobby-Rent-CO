@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/utils/supabase/client';
 
 const DIRT_ITEMS = [
   { id: 'd1', name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT' },
@@ -11,6 +13,30 @@ const DIRT_ITEMS = [
 ];
 
 export default function OffroadPage() {
+  const [items, setItems] = useState(DIRT_ITEMS);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('category', 'offroad');
+
+      if (data) {
+        // Merge with mock items
+        // Map DB fields to UI fields if necessary (DB has image_url, UI uses image)
+        const formattedItems = data.map(item => ({
+          ...item,
+          image: item.image_url || '/images/dirt-hero.png',
+          price: Number(item.price)
+        }));
+        setItems(prev => [...DIRT_ITEMS, ...formattedItems]);
+      }
+    };
+    fetchItems();
+  }, [supabase]);
+
   return (
     <div className="category-page">
       <header className="page-header">
@@ -56,7 +82,7 @@ export default function OffroadPage() {
         </div>
 
         <div className="item-grid">
-          {DIRT_ITEMS.map((item) => (
+          {items.map((item) => (
             <Link key={item.id} href={`/item/${item.id}`} className="item-card">
               <div className="card-image">
                 <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />

@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/utils/supabase/client';
 
 // Mock database (consolidated from categories)
 const ITEMS_DB = {
@@ -26,14 +27,45 @@ const ITEMS_DB = {
 
 export default function ItemPage() {
   const params = useParams();
-  const item = ITEMS_DB[params.id];
+  const supabase = createClient();
+  const initialItem = ITEMS_DB[params.id] || null;
+  const [item, setItem] = useState(initialItem);
+  const [loading, setLoading] = useState(!initialItem);
 
   // Date state management
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  useEffect(() => {
+    if (ITEMS_DB[params.id]) return;
+
+    const fetchItem = async () => {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('id', params.id)
+        .single();
+
+      if (data) {
+        setItem({ ...data, price: Number(data.price) });
+      }
+      if (error) console.error('Error fetching item:', error);
+      setLoading(false);
+    };
+
+    fetchItem();
+  }, [params.id, supabase]);
+
   // Get today's date string for min attribute
   const today = new Date().toISOString().split('T')[0];
+
+  if (loading) {
+    return (
+      <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center' }}>
+        <h2>Loading gear...</h2>
+      </div>
+    );
+  }
 
   if (!item) {
     return (
@@ -47,7 +79,7 @@ export default function ItemPage() {
   return (
     <div className="item-page">
       <div className="item-hero">
-        <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} priority />
+        <Image src={item.image || item.image_url || '/images/dirt-hero.png'} alt={item.name} fill style={{ objectFit: 'cover' }} priority />
         <div className="gradient-overlay" />
       </div>
 

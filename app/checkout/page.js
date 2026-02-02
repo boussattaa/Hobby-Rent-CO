@@ -2,20 +2,64 @@
 
 import { useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/utils/supabase/client';
 
 // Initialize Stripe with the Publishable Key
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+// Mock database (for legacy support)
+const ITEMS_DB = {
+    'd1': { name: 'KTM 450 SX-F', price: 150 },
+    'd2': { name: 'Polaris RZR XP', price: 350 },
+    'd3': { name: 'Honda CRF250R', price: 120 },
+    'd4': { name: 'Can-Am Maverick', price: 400 },
+    'w1': { name: 'Sea-Doo GTX', price: 250 },
+    'w2': { name: 'MasterCraft NXT', price: 800 },
+    'w3': { name: 'Inflatable Paddleboard', price: 40 },
+    'w4': { name: 'Yamaha Waverunner', price: 220 },
+    'h1': { name: 'DeWalt 20V Drill Set', price: 25 },
+    'h2': { name: 'Industrial Carpet Cleaner', price: 60 },
+    'h3': { name: 'Pressure Washer 3000PSI', price: 45 },
+    'h4': { name: 'Tile Saw', price: 35 },
+};
 
 export default function CheckoutPage() {
     const searchParams = useSearchParams();
     const itemId = searchParams.get('itemId');
     const startParam = searchParams.get('start');
     const endParam = searchParams.get('end');
+    const supabase = createClient();
 
-    // Mock looking up item details based on ID (in real app would fetch from DB)
-    const itemPrice = 150; // Daily price
-    const itemName = "KTM 450 SX-F";
+    const [item, setItem] = useState(ITEMS_DB[itemId] || null);
+    const [loading, setLoading] = useState(!ITEMS_DB[itemId] && !!itemId);
+
+    useEffect(() => {
+        if (!itemId || ITEMS_DB[itemId]) return;
+
+        const fetchItem = async () => {
+            const { data } = await supabase
+                .from('items')
+                .select('name, price')
+                .eq('id', itemId)
+                .single();
+
+            if (data) setItem(data);
+            setLoading(false);
+        };
+        fetchItem();
+    }, [itemId, supabase]);
+
+    if (loading) {
+        return <div className="checkout-page"><div className="container"><h1>Loading...</h1></div></div>;
+    }
+
+    if (!item && itemId) {
+        return <div className="checkout-page"><div className="container"><h1>Item not found</h1></div></div>;
+    }
+
+    const itemPrice = item ? Number(item.price) : 0;
+    const itemName = item ? item.name : "Unknown Item";
     const serviceFee = 15;
 
     // Calculate duration
