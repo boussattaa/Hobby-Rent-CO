@@ -78,9 +78,10 @@ export default function ListYourGear() {
               <div className="form-group">
                 <label>Category</label>
                 <select name="category">
-                  <option value="dirt">Dirt (Off-road)</option>
-                  <option value="water">Water Sports</option>
-                  <option value="housing">Housing & Tools</option>
+                  <option value="dirt">Dirt</option>
+                  <option value="water">Watersports</option>
+                  <option value="trailers">Trailers</option>
+                  <option value="housing">Tools</option>
                 </select>
               </div>
 
