@@ -15,7 +15,7 @@ export default function HousingPage() {
         <div className="category-page">
             <header className="page-header">
                 <div className="container">
-                    <h1>Housing & Tools</h1>
+                    <h1>Tools Collection</h1>
                     <p>Get the job done with professional grade tools.</p>
                 </div>
             </header>

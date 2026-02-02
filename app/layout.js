@@ -8,7 +8,7 @@ import Footer from '@/components/Footer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'HobbyRent | Rent Dirt, Water, & Tools',
+  title: 'HobbyRent | Rent Dirt, Watersports, Trailers & Tools',
   description: 'The premium marketplace for renting outdoor gear and tools.',
 }
 

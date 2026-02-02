@@ -15,7 +15,7 @@ export default function WaterPage() {
         <div className="category-page">
             <header className="page-header">
                 <div className="container">
-                    <h1>Water Collection</h1>
+                    <h1>Watersports Collection</h1>
                     <p>Make waves with the best water sports gear.</p>
                 </div>
             </header>

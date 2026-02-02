@@ -14,12 +14,20 @@ export default function Home() {
       accent: 'var(--dirt-primary)'
     },
     {
-      id: 'water',
-      name: 'Water',
+      id: 'watersports', // Updated ID for consistency, though 'water' would work if href matches. Keeping existing logic.
+      name: 'Watersports',
       description: 'Make a splash. Jet skis, boats, and boards.',
       image: '/images/water-hero.png',
       href: '/water',
       accent: 'var(--water-primary)'
+    },
+    {
+      id: 'trailers',
+      name: 'Trailers',
+      description: 'Haul it all. Car trailers, dumpers, and more.',
+      image: '/images/trailer-hero.png',
+      href: '/trailers',
+      accent: 'var(--trailers-primary)'
     },
     {
       id: 'housing',

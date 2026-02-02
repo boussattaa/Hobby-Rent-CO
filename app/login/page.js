@@ -23,8 +23,26 @@ export default function LoginPage({ searchParams }) {
             </div>
 
             <div className="actions">
-              <button formAction={login} className="btn btn-primary full-width">Log in</button>
-              <button formAction={signup} className="btn btn-secondary full-width">Sign up</button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget.closest('form'));
+                  login(formData);
+                }}
+                className="btn btn-primary full-width"
+              >
+                Log in
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget.closest('form'));
+                  signup(formData);
+                }}
+                className="btn btn-secondary full-width"
+              >
+                Sign up
+              </button>
             </div>
 
             {searchParams?.message && (
