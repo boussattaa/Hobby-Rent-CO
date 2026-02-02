@@ -104,102 +104,103 @@ export default function ListYourGear() {
             <input type="hidden" name="image_url" value={imageUrl} />
 
             <div className="form-grid">
-              <label>Category</label>
-              <select
-                name="category"
-                value={selectedCategory}
-                onChange={(e) => {
-                  setSelectedCategory(e.target.value);
-                  // Reset subcategory when category changes
-                }}
-              >
-                <option value="offroad">Offroad</option>
-                <option value="water">Watersports</option>
-                <option value="trailers">Trailers</option>
-                <option value="housing">Tools</option>
-              </select>
-            </div>
+              <div className="form-group">
+                <label>Category</label>
+                <select
+                  name="category"
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    // Reset subcategory when category changes
+                  }}
+                >
+                  <option value="offroad">Offroad</option>
+                  <option value="water">Watersports</option>
+                  <option value="trailers">Trailers</option>
+                  <option value="housing">Tools</option>
+                </select>
+              </div>
 
-            <div className="form-group">
-              <label>Subcategory</label>
-              <select name="subcategory" required>
-                <option value="">Select a type...</option>
-                {CATEGORY_DATA[selectedCategory]?.map((group) => (
-                  <optgroup key={group.group} label={group.group}>
-                    {group.items.map((item) => (
-                      <option key={item} value={item}>{item}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </div>
+              <div className="form-group">
+                <label>Subcategory</label>
+                <select name="subcategory" required>
+                  <option value="">Select a type...</option>
+                  {CATEGORY_DATA[selectedCategory]?.map((group) => (
+                    <optgroup key={group.group} label={group.group}>
+                      {group.items.map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
 
-            <div className="form-group">
-              <label>Item Name</label>
-              <input
-                type="text"
-                name="name"
-                placeholder="e.g. 2023 KTM 300 XC"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Daily Price ($)</label>
-              <input
-                type="number"
-                name="price"
-                placeholder="150"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Location</label>
-              <input
-                type="text"
-                name="location"
-                placeholder="e.g. Moab, UT"
-                required
-              />
-            </div>
-
-            <div className="form-group full">
-              <label>Description</label>
-              <textarea
-                name="description"
-                rows="4"
-                placeholder="Describe your item..."
-              ></textarea>
-            </div>
-
-            <div className="form-group full">
-              <label>Photos</label>
-              <div className="upload-box">
-                {imageUrl && imageUrl !== '/images/dirt-hero.png' ? (
-                  <img src={imageUrl} alt="Uploaded" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', borderRadius: '8px' }} />
-                ) : (
-                  <span>{uploading ? 'Uploading...' : 'Click to select an image'}</span>
-                )}
+              <div className="form-group">
+                <label>Item Name</label>
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploading}
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                  type="text"
+                  name="name"
+                  placeholder="e.g. 2023 KTM 300 XC"
+                  required
                 />
               </div>
-            </div>
-        </div>
 
-        <div className="form-actions">
-          <button type="submit" className="btn btn-primary btn-lg">Create Listing</button>
+              <div className="form-group">
+                <label>Daily Price ($)</label>
+                <input
+                  type="number"
+                  name="price"
+                  placeholder="150"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Location</label>
+                <input
+                  type="text"
+                  name="location"
+                  placeholder="e.g. Moab, UT"
+                  required
+                />
+              </div>
+
+              <div className="form-group full">
+                <label>Description</label>
+                <textarea
+                  name="description"
+                  rows="4"
+                  placeholder="Describe your item..."
+                ></textarea>
+              </div>
+
+              <div className="form-group full">
+                <label>Photos</label>
+                <div className="upload-box">
+                  {imageUrl && imageUrl !== '/images/dirt-hero.png' ? (
+                    <img src={imageUrl} alt="Uploaded" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', borderRadius: '8px' }} />
+                  ) : (
+                    <span>{uploading ? 'Uploading...' : 'Click to select an image'}</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary btn-lg">Create Listing</button>
+            </div>
+          </form>
         </div>
-      </form>
-    </div>
       </div >
 
-    <style jsx>{`
+      <style jsx>{`
         .list-page {
           min-height: 100vh;
           padding: 4rem 0;
