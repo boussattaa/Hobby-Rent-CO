@@ -29,11 +29,11 @@ export default function Navbar({ user }) {
       <div className="container navbar-content">
         <Link href="/" className="logo">
           <Image
-            src="/images/logo.png"
+            src="/images/logo-new.jpg"
             alt="HobbyRent Logo"
             width={180}
             height={60}
-            style={{ objectFit: 'contain', mixBlendMode: 'multiply' }}
+            style={{ objectFit: 'contain' }}
             priority
           />
         </Link>
