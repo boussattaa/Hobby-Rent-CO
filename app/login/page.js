@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { login, signup } from './actions'
+import { SubmitButton } from '@/components/submit-button'
 
 export default function LoginPage({ searchParams }) {
   return (
@@ -23,26 +24,20 @@ export default function LoginPage({ searchParams }) {
             </div>
 
             <div className="actions">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget.closest('form'));
-                  login(formData);
-                }}
+              <SubmitButton
+                formAction={login}
                 className="btn btn-primary full-width"
+                pendingText="Logging in..."
               >
                 Log in
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget.closest('form'));
-                  signup(formData);
-                }}
+              </SubmitButton>
+              <SubmitButton
+                formAction={signup}
                 className="btn btn-secondary full-width"
+                pendingText="Signing up..."
               >
                 Sign up
-              </button>
+              </SubmitButton>
             </div>
 
             {searchParams?.message && (
