@@ -192,73 +192,7 @@ export default function Home() {
           margin-top: 0.5rem;
         }
 
-        .category-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 2rem;
-        }
-
-        .category-card {
-          position: relative;
-          height: 400px;
-          border-radius: 20px;
-          overflow: hidden;
-          text-decoration: none;
-          color: white;
-          transition: transform var(--transition-smooth);
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .category-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        .image-wrapper {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-        }
-
-        .overlay {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 60%);
-        }
-
-        .card-content {
-          position: relative;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          padding: 2rem;
-          z-index: 10;
-        }
-
-        .card-content h3 {
-          font-size: 2rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .card-content p {
-          color: rgba(255, 255, 255, 0.9);
-          margin-bottom: 1rem;
-        }
-
-        .arrow {
-          font-size: 1.5rem;
-          opacity: 0;
-          transform: translateX(-10px);
-          transition: all 0.3s;
-        }
-
-        .category-card:hover .arrow {
-          opacity: 1;
-          transform: translateX(0);
-        }
+        /* Category styles moved to globals.css to fix Link component styling issues */
       `}</style>
     </div>
   );
