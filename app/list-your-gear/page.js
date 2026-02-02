@@ -7,6 +7,8 @@ import { createClient } from '@/utils/supabase/client';
 import { createListing } from './actions';
 
 export default function ListYourGear() {
+  const router = useRouter();
+  const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
 
