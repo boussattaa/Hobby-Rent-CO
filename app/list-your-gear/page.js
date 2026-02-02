@@ -1,17 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useFormState } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
 import { createListing } from './actions';
 
 export default function ListYourGear() {
-  const router = useRouter();
-  const supabase = createClient();
   const [loading, setLoading] = useState(true);
-  const [state, formAction] = useFormState(createListing, null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -24,6 +21,21 @@ export default function ListYourGear() {
     };
     checkUser();
   }, [router, supabase]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setUploading(true);
+    setErrorMsg(null);
+
+    const formData = new FormData(e.currentTarget);
+    const result = await createListing(formData);
+
+    if (result?.message) {
+      setErrorMsg(result.message);
+      setUploading(false);
+    }
+    // If successful, the action redirects, so we don't need to do anything else.
+  };
 
   // Categories Config
   const CATEGORY_DATA = {
@@ -101,7 +113,7 @@ export default function ListYourGear() {
             <p>Start earning money from your idle equipment today.</p>
           </div>
 
-          <form action={formAction}>
+          <form onSubmit={handleSubmit}>
             {/* Hidden field to pass the uploaded image URL to the server action */}
             <input type="hidden" name="image_url" value={imageUrl} />
 
@@ -197,7 +209,7 @@ export default function ListYourGear() {
 
             <div className="form-actions">
               <button type="submit" className="btn btn-primary btn-lg" disabled={uploading}>Create Listing</button>
-              {state?.message && <p className="error-message" style={{ color: 'red', marginTop: '1rem' }}>{state.message}</p>}
+              {errorMsg && <p className="error-message" style={{ color: 'red', marginTop: '1rem' }}>{errorMsg}</p>}
             </div>
           </form>
         </div>
