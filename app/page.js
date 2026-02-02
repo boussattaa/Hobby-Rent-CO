@@ -51,7 +51,7 @@ export default function Home() {
             Earn from the <span className="highlight">Gear</span>.
           </h1>
           <p className="hero-subtitle">
-            The premium marketplace for outdoor enthusiasts and DYI masters.
+            The premium marketplace for outdoor enthusiasts and DIY masters.
             Rent what you need, list what you have.
           </p>
           <div className="hero-actions">

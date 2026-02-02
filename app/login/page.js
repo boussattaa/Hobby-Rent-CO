@@ -1,10 +1,9 @@
-"use client";
-
 import Link from 'next/link'
 import { login, signup } from './actions'
 import { SubmitButton } from '@/components/submit-button'
 
-export default function LoginPage({ searchParams }) {
+export default async function LoginPage(props) {
+  const searchParams = await props.searchParams;
   return (
     <div className="login-page">
       <div className="container">
