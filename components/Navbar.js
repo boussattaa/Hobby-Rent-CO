@@ -31,9 +31,9 @@ export default function Navbar({ user }) {
           <Image
             src="/images/logo-new.jpg"
             alt="HobbyRent Logo"
-            width={180}
+            width={60}
             height={60}
-            style={{ objectFit: 'contain' }}
+            style={{ objectFit: 'cover', borderRadius: '50%' }}
             priority
           />
         </Link>
