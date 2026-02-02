@@ -23,7 +23,7 @@ export default function Home() {
     },
     {
       id: 'housing',
-      name: 'Housing',
+      name: 'Tools',
       description: 'Build your dream. Quality tools for every job.',
       image: '/images/housing-hero.png',
       href: '/housing',
@@ -57,7 +57,7 @@ export default function Home() {
         </div>
         <div className="hero-background-wrapper">
           <Image
-            src="/images/hero-bg-v2.jpg"
+            src="/images/hero-bg-final.png"
             alt="Hero Background"
             fill
             style={{ objectFit: 'cover' }}
