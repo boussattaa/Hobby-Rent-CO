@@ -56,6 +56,9 @@ export default function Navbar({ user }) {
               <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                 {user.email}
               </span>
+              <Link href="/my-listings" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                My Listings
+              </Link>
               <Link href="/list-your-gear" className="btn btn-primary">
                 List Gear
               </Link>
