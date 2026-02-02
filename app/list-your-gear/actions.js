@@ -19,19 +19,20 @@ export async function createListing(formData) {
         owner_id: user.id,
         name: formData.get('name'),
         category: formData.get('category'),
+        subcategory: formData.get('subcategory'), // Add subcategory
         price: parseFloat(formData.get('price')),
         location: formData.get('location'),
         description: formData.get('description'),
-        // Use the image URL from the hidden form field, or fall back to default
         image_url: formData.get('image_url') || '/images/dirt-hero.png'
     }
+
+    console.log('Attempting to create listing:', itemData)
 
     const { error } = await supabase.from('items').insert(itemData)
 
     if (error) {
         console.error('Error creating listing:', error)
-        // In a real app we'd return an error state to the form
-        return { error: error.message }
+        return { message: error.message } // Standardize error return
     }
 
     revalidatePath('/')

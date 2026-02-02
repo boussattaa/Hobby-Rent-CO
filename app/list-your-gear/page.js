@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useFormState } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
@@ -10,6 +11,7 @@ export default function ListYourGear() {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
+  const [state, formAction] = useFormState(createListing, null);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -99,7 +101,7 @@ export default function ListYourGear() {
             <p>Start earning money from your idle equipment today.</p>
           </div>
 
-          <form action={createListing}>
+          <form action={formAction}>
             {/* Hidden field to pass the uploaded image URL to the server action */}
             <input type="hidden" name="image_url" value={imageUrl} />
 
@@ -194,7 +196,8 @@ export default function ListYourGear() {
             </div>
 
             <div className="form-actions">
-              <button type="submit" className="btn btn-primary btn-lg">Create Listing</button>
+              <button type="submit" className="btn btn-primary btn-lg" disabled={uploading}>Create Listing</button>
+              {state?.message && <p className="error-message" style={{ color: 'red', marginTop: '1rem' }}>{state.message}</p>}
             </div>
           </form>
         </div>
