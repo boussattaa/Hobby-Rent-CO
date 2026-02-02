@@ -3,103 +3,133 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 
 // Mock database (consolidated from categories)
 const ITEMS_DB = {
-    // Dirt
-    'd1': { name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT', description: 'Championship winning motocross bike. Perfect for the dunes or the track. Well maintained and ready to rip.' },
-    'd2': { name: 'Polaris RZR XP', price: 350, image: '/images/dirt-hero.png', location: 'Sand Hollow, UT', description: 'The ultimate side-by-side experience. 4 seats, turbo charged, plenty of suspension travel.' },
-    'd3': { name: 'Honda CRF250R', price: 120, image: '/images/dirt-hero.png', location: 'St. George, UT', description: 'Reliable and fun. Great for intermediate riders looking to explore the trails.' },
-    'd4': { name: 'Can-Am Maverick', price: 400, image: '/images/dirt-hero.png', location: 'Dumont Dunes, CA', description: 'High performance beast. Conquer any dune with this machine.' },
-    // Water
-    'w1': { name: 'Sea-Doo GTX', price: 250, image: '/images/water-hero.png', location: 'Miami, FL', description: 'Luxury personal watercraft. Stable, fast, and comfortable for 3 riders.' },
-    'w2': { name: 'MasterCraft NXT', price: 800, image: '/images/water-hero.png', location: 'Lake Powell, AZ', description: 'Premium wakeboard boat. Create the perfect wave for surfing or boarding.' },
-    'w3': { name: 'Inflatable Paddleboard', price: 40, image: '/images/water-hero.png', location: 'Austin, TX', description: 'Portable fun. easy to carry and inflate. Includes paddle and pump.' },
-    'w4': { name: 'Yamaha Waverunner', price: 220, image: '/images/water-hero.png', location: 'San Diego, CA', description: 'Reliable jet ski for cruising the bay or jumping waves.' },
-    // Housing
-    'h1': { name: 'DeWalt 20V Drill Set', price: 25, image: '/images/housing-hero.png', location: 'Seattle, WA', description: 'Complete drill and impact driver set. Batteries included.' },
-    'h2': { name: 'Industrial Carpet Cleaner', price: 60, image: '/images/housing-hero.png', location: 'Portland, OR', description: 'Deep clean your carpets like a pro. Removes tough stains and odors.' },
-    'h3': { name: 'Pressure Washer 3000PSI', price: 45, image: '/images/housing-hero.png', location: 'Vancouver, BC', description: 'Blast away dirt and grime from driveways, decks, and siding.' },
-    'h4': { name: 'Tile Saw', price: 35, image: '/images/housing-hero.png', location: 'Surrey, BC', description: 'Precision cutting for ceramic and stone tiles. Water cooled blade.' },
+  // Dirt
+  'd1': { name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT', description: 'Championship winning motocross bike. Perfect for the dunes or the track. Well maintained and ready to rip.' },
+  'd2': { name: 'Polaris RZR XP', price: 350, image: '/images/dirt-hero.png', location: 'Sand Hollow, UT', description: 'The ultimate side-by-side experience. 4 seats, turbo charged, plenty of suspension travel.' },
+  'd3': { name: 'Honda CRF250R', price: 120, image: '/images/dirt-hero.png', location: 'St. George, UT', description: 'Reliable and fun. Great for intermediate riders looking to explore the trails.' },
+  'd4': { name: 'Can-Am Maverick', price: 400, image: '/images/dirt-hero.png', location: 'Dumont Dunes, CA', description: 'High performance beast. Conquer any dune with this machine.' },
+  // Water
+  'w1': { name: 'Sea-Doo GTX', price: 250, image: '/images/water-hero.png', location: 'Miami, FL', description: 'Luxury personal watercraft. Stable, fast, and comfortable for 3 riders.' },
+  'w2': { name: 'MasterCraft NXT', price: 800, image: '/images/water-hero.png', location: 'Lake Powell, AZ', description: 'Premium wakeboard boat. Create the perfect wave for surfing or boarding.' },
+  'w3': { name: 'Inflatable Paddleboard', price: 40, image: '/images/water-hero.png', location: 'Austin, TX', description: 'Portable fun. easy to carry and inflate. Includes paddle and pump.' },
+  'w4': { name: 'Yamaha Waverunner', price: 220, image: '/images/water-hero.png', location: 'San Diego, CA', description: 'Reliable jet ski for cruising the bay or jumping waves.' },
+  // Housing
+  'h1': { name: 'DeWalt 20V Drill Set', price: 25, image: '/images/housing-hero.png', location: 'Seattle, WA', description: 'Complete drill and impact driver set. Batteries included.' },
+  'h2': { name: 'Industrial Carpet Cleaner', price: 60, image: '/images/housing-hero.png', location: 'Portland, OR', description: 'Deep clean your carpets like a pro. Removes tough stains and odors.' },
+  'h3': { name: 'Pressure Washer 3000PSI', price: 45, image: '/images/housing-hero.png', location: 'Vancouver, BC', description: 'Blast away dirt and grime from driveways, decks, and siding.' },
+  'h4': { name: 'Tile Saw', price: 35, image: '/images/housing-hero.png', location: 'Surrey, BC', description: 'Precision cutting for ceramic and stone tiles. Water cooled blade.' },
 };
 
 export default function ItemPage() {
-    const params = useParams();
-    const item = ITEMS_DB[params.id];
+  const params = useParams();
+  const item = ITEMS_DB[params.id];
 
-    if (!item) {
-        return (
-            <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center' }}>
-                <h1>Item not found</h1>
-                <Link href="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>Return Home</Link>
-            </div>
-        );
-    }
+  // Date state management
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
+  // Get today's date string for min attribute
+  const today = new Date().toISOString().split('T')[0];
+
+  if (!item) {
     return (
-        <div className="item-page">
-            <div className="item-hero">
-                <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} priority />
-                <div className="gradient-overlay" />
+      <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center' }}>
+        <h1>Item not found</h1>
+        <Link href="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>Return Home</Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="item-page">
+      <div className="item-hero">
+        <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} priority />
+        <div className="gradient-overlay" />
+      </div>
+
+      <div className="container item-content">
+        <div className="content-wrapper glass">
+          <div className="item-header">
+            <div>
+              <h1>{item.name}</h1>
+              <p className="location">📍 {item.location}</p>
+            </div>
+            <div className="price-tag">
+              <span className="currency">$</span>
+              <span className="amount">{item.price}</span>
+              <span className="per">/day</span>
+            </div>
+          </div>
+
+          <div className="grid-layout">
+            <div className="details-column">
+              <h3>Description</h3>
+              <p className="description">{item.description}</p>
+
+              <div className="features">
+                <div className="feature-item">🛡️ Insurance Included</div>
+                <div className="feature-item">⭐ 4.9 Star Equipment</div>
+                <div className="feature-item">✅ Verified Owner</div>
+              </div>
             </div>
 
-            <div className="container item-content">
-                <div className="content-wrapper glass">
-                    <div className="item-header">
-                        <div>
-                            <h1>{item.name}</h1>
-                            <p className="location">📍 {item.location}</p>
-                        </div>
-                        <div className="price-tag">
-                            <span className="currency">$</span>
-                            <span className="amount">{item.price}</span>
-                            <span className="per">/day</span>
-                        </div>
-                    </div>
-
-                    <div className="grid-layout">
-                        <div className="details-column">
-                            <h3>Description</h3>
-                            <p className="description">{item.description}</p>
-
-                            <div className="features">
-                                <div className="feature-item">🛡️ Insurance Included</div>
-                                <div className="feature-item">⭐ 4.9 Star Equipment</div>
-                                <div className="feature-item">✅ Verified Owner</div>
-                            </div>
-                        </div>
-
-                        <div className="booking-column">
-                            <div className="booking-card">
-                                <h3>Book this Item</h3>
-                                <div className="date-picker-mock">
-                                    <div className="date-field">
-                                        <label>Start Date</label>
-                                        <input type="date" />
-                                    </div>
-                                    <div className="date-field">
-                                        <label>End Date</label>
-                                        <input type="date" />
-                                    </div>
-                                </div>
-
-                                <div className="summary-row">
-                                    <span>Service Fee</span>
-                                    <span>$15</span>
-                                </div>
-                                <div className="summary-row total">
-                                    <span>Total (est)</span>
-                                    <span>${item.price + 15}</span>
-                                </div>
-
-                                <Link href={`/checkout?itemId=${params.id}`} className="btn btn-primary full-width" style={{ textAlign: 'center', textDecoration: 'none' }}>Request to Rent</Link>
-                            </div>
-                        </div>
-                    </div>
+            <div className="booking-column">
+              <div className="booking-card">
+                <h3>Book this Item</h3>
+                <div className="date-picker-mock">
+                  <div className="date-field">
+                    <label>Start Date</label>
+                    <input
+                      type="date"
+                      min={today}
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="date-field">
+                    <label>End Date</label>
+                    <input
+                      type="date"
+                      min={startDate || today}
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      disabled={!startDate}
+                    />
+                  </div>
                 </div>
-            </div>
 
-            <style jsx>{`
+                <div className="summary-row">
+                  <span>Service Fee</span>
+                  <span>$15</span>
+                </div>
+                <div className="summary-row total">
+                  <span>Total (est)</span>
+                  <span>${item.price + 15}</span>
+                </div>
+
+                <Link
+                  href={startDate && endDate ? `/checkout?itemId=${params.id}&start=${startDate}&end=${endDate}` : '#'}
+                  className={`btn btn-primary full-width ${(!startDate || !endDate) ? 'disabled' : ''}`}
+                  style={{
+                    textAlign: 'center',
+                    textDecoration: 'none',
+                    opacity: (!startDate || !endDate) ? 0.5 : 1,
+                    pointerEvents: (!startDate || !endDate) ? 'none' : 'auto'
+                  }}
+                >
+                  Request to Rent
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
         .item-page {
           min-height: 100vh;
         }
@@ -232,6 +262,6 @@ export default function ItemPage() {
           .item-hero { height: 40vh; }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

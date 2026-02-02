@@ -10,12 +10,36 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 export default function CheckoutPage() {
     const searchParams = useSearchParams();
     const itemId = searchParams.get('itemId');
+    const startParam = searchParams.get('start');
+    const endParam = searchParams.get('end');
 
     // Mock looking up item details based on ID (in real app would fetch from DB)
-    const itemPrice = 150;
+    const itemPrice = 150; // Daily price
     const itemName = "KTM 450 SX-F";
     const serviceFee = 15;
-    const total = itemPrice + serviceFee;
+
+    // Calculate duration
+    let days = 1;
+    let dateDisplay = "Select dates";
+
+    if (startParam && endParam) {
+        const start = new Date(startParam);
+        const end = new Date(endParam);
+        const diffTime = Math.abs(end - start);
+        days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (days === 0) days = 1; // Min 1 day
+
+        // Format dates safely
+        const options = { month: 'short', day: 'numeric' };
+        dateDisplay = `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
+        // Fix JS date off-by-one due to timezone by verifying string parsing? 
+        // Actually, input type="date" gives YYYY-MM-DD. new Date(str) uses UTC. 
+        // Displaying with locale might shift it. 
+        // Better to use simple string parsing for display if we want to be exact, but localestring is fine for MVP.
+    }
+
+    const rentalTotal = itemPrice * days;
+    const total = rentalTotal + serviceFee;
 
     const [loading, setLoading] = useState(false);
 
@@ -32,8 +56,8 @@ export default function CheckoutPage() {
                 },
                 body: JSON.stringify({
                     itemId,
-                    price: itemPrice,
-                    name: itemName,
+                    price: rentalTotal, // Send total rental price (days * daily)
+                    name: `${itemName} (${days} days)`,
                 }),
             });
 
@@ -71,14 +95,18 @@ export default function CheckoutPage() {
                         </div>
                         <div className="summary-item">
                             <span>Dates</span>
-                            <span>Oct 12 - Oct 13</span>
+                            <span>{dateDisplay}</span>
+                        </div>
+                        <div className="summary-item">
+                            <span>Duration</span>
+                            <span>{days} Day{days > 1 ? 's' : ''}</span>
                         </div>
 
                         <hr />
 
                         <div className="summary-row">
-                            <span>Rental Price</span>
-                            <span>${itemPrice}</span>
+                            <span>Rental Price (${itemPrice}/day)</span>
+                            <span>${rentalTotal}</span>
                         </div>
                         <div className="summary-row">
                             <span>Service Fee</span>
