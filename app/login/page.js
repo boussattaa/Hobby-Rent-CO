@@ -1,39 +1,40 @@
+"use client";
 
 import Link from 'next/link'
 import { login, signup } from './actions'
 
 export default function LoginPage({ searchParams }) {
-    return (
-        <div className="login-page">
-            <div className="container">
-                <div className="login-card glass">
-                    <h1>Welcome Back</h1>
-                    <p className="subtitle">Sign in to your HobbyRent account</p>
+  return (
+    <div className="login-page">
+      <div className="container">
+        <div className="login-card glass">
+          <h1>Welcome Back</h1>
+          <p className="subtitle">Sign in to your HobbyRent account</p>
 
-                    <form className="auth-form">
-                        <div className="form-group">
-                            <label htmlFor="email">Email</label>
-                            <input id="email" name="email" type="email" required placeholder="you@example.com" />
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <input id="password" name="password" type="password" required placeholder="••••••••" />
-                        </div>
-
-                        <div className="actions">
-                            <button formAction={login} className="btn btn-primary full-width">Log in</button>
-                            <button formAction={signup} className="btn btn-secondary full-width">Sign up</button>
-                        </div>
-
-                        {searchParams?.message && (
-                            <p className="message">{searchParams.message}</p>
-                        )}
-                    </form>
-                </div>
+          <form className="auth-form">
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input id="email" name="email" type="email" required placeholder="you@example.com" />
             </div>
 
-            <style jsx>{`
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input id="password" name="password" type="password" required placeholder="••••••••" />
+            </div>
+
+            <div className="actions">
+              <button formAction={login} className="btn btn-primary full-width">Log in</button>
+              <button formAction={signup} className="btn btn-secondary full-width">Sign up</button>
+            </div>
+
+            {searchParams?.message && (
+              <p className="message">{searchParams.message}</p>
+            )}
+          </form>
+        </div>
+      </div>
+
+      <style jsx>{`
         .login-page {
           min-height: 100vh;
           display: flex;
@@ -86,6 +87,6 @@ export default function LoginPage({ searchParams }) {
           text-align: center;
         }
       `}</style>
-        </div>
-    )
+    </div>
+  )
 }
