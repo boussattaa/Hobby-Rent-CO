@@ -32,7 +32,7 @@ export default function CheckoutPage() {
     const supabase = createClient();
 
     const [item, setItem] = useState(ITEMS_DB[itemId] || null);
-    const [loading, setLoading] = useState(!ITEMS_DB[itemId] && !!itemId);
+    const [fetching, setFetching] = useState(!ITEMS_DB[itemId] && !!itemId);
 
     useEffect(() => {
         if (!itemId || ITEMS_DB[itemId]) return;
@@ -45,12 +45,12 @@ export default function CheckoutPage() {
                 .single();
 
             if (data) setItem(data);
-            setLoading(false);
+            setFetching(false);
         };
         fetchItem();
     }, [itemId, supabase]);
 
-    if (loading) {
+    if (fetching) {
         return <div className="checkout-page"><div className="container"><h1>Loading...</h1></div></div>;
     }
 
