@@ -4,64 +4,75 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const TRAILER_ITEMS = [
-    { id: 't1', name: '20\' Car Hauler', price: 85, image: '/images/trailer-hero.png', location: 'Salt Lake City, UT', type: 'Car Trailer' },
-    { id: 't2', name: '14\' Dump Trailer', price: 120, image: '/images/trailer-hero.png', location: 'Orem, UT', type: 'Dump Trailer' },
-    { id: 't3', name: '15 Yard Dumpster', price: 250, image: '/images/trailer-hero.png', location: 'Provo, UT', type: 'Dumpster Bin' },
-    { id: 't4', name: 'Enclosed Cargo 6x12', price: 60, image: '/images/trailer-hero.png', location: 'Lehi, UT', type: 'Utility Trailer' },
-    { id: 't5', name: 'Heavy Duty Flatbed', price: 100, image: '/images/trailer-hero.png', location: 'Draper, UT', type: 'Flatbed' },
+  { id: 't1', name: '20\' Car Hauler', price: 85, image: '/images/trailer-hero.png', location: 'Salt Lake City, UT', type: 'Car Trailer' },
+  { id: 't2', name: '14\' Dump Trailer', price: 120, image: '/images/trailer-hero.png', location: 'Orem, UT', type: 'Dump Trailer' },
+  { id: 't3', name: '15 Yard Dumpster', price: 250, image: '/images/trailer-hero.png', location: 'Provo, UT', type: 'Dumpster Bin' },
+  { id: 't4', name: 'Enclosed Cargo 6x12', price: 60, image: '/images/trailer-hero.png', location: 'Lehi, UT', type: 'Utility Trailer' },
+  { id: 't5', name: 'Heavy Duty Flatbed', price: 100, image: '/images/trailer-hero.png', location: 'Draper, UT', type: 'Flatbed' },
 ];
 
 export default function TrailersPage() {
-    return (
-        <div className="category-page">
-            <header className="page-header">
-                <div className="container">
-                    <h1>Trailer Rentals</h1>
-                    <p>Haul it all. From cars to debris, we have the trailer for you.</p>
-                </div>
-            </header>
+  return (
+    <div className="category-page">
+      <header className="page-header">
+        <div className="container">
+          <h1>Trailer Rentals</h1>
+          <p>Haul it all. From cars to debris, we have the trailer for you.</p>
+        </div>
+      </header>
 
-            <div className="container main-content">
-                <div className="filters">
-                    <h3>Filters</h3>
-                    <div className="filter-group">
-                        <label>Type</label>
-                        <select>
-                            <option>All</option>
-                            <option>Car Trailer</option>
-                            <option>Dump Trailer</option>
-                            <option>Dumpster Bin</option>
-                            <option>Utility Trailer</option>
-                            <option>Horse Trailer</option>
-                        </select>
-                    </div>
-                    <div className="filter-group">
-                        <label>Price Range</label>
-                        <input type="range" min="0" max="500" />
-                    </div>
-                </div>
+      <div className="container main-content">
+        <div className="filters">
+          <h3>Filters</h3>
+          <div className="filter-group">
+            <label>Category</label>
+            <select>
+              <option>All</option>
+              <optgroup label="Hauling">
+                <option>Car Haulers</option>
+                <option>Utility</option>
+                <option>Dump</option>
+                <option>Enclosed</option>
+              </optgroup>
+              <optgroup label="Recreational">
+                <option>Toy Haulers</option>
+                <option>Travel Trailers</option>
+                <option>Teardrop</option>
+                <option>Boat Trailers</option>
+              </optgroup>
+              <optgroup label="Specialty">
+                <option>Livestock</option>
+                <option>Tow Dollies</option>
+              </optgroup>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label>Price Range</label>
+            <input type="range" min="0" max="500" />
+          </div>
+        </div>
 
-                <div className="item-grid">
-                    {TRAILER_ITEMS.map((item) => (
-                        <Link key={item.id} href={`/item/${item.id}`} className="item-card">
-                            <div className="card-image">
-                                <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
-                            </div>
-                            <div className="card-details">
-                                <div className="card-header">
-                                    <h3>{item.name}</h3>
-                                    <span className="price">${item.price}<span className="unit">/day</span></span>
-                                </div>
-                                <p className="location">📍 {item.location}</p>
-                                <div className="badge">{item.type}</div>
-                                <button className="btn btn-primary full-width" style={{ marginTop: '1rem' }}>Rent Now</button>
-                            </div>
-                        </Link>
-                    ))}
+        <div className="item-grid">
+          {TRAILER_ITEMS.map((item) => (
+            <Link key={item.id} href={`/item/${item.id}`} className="item-card">
+              <div className="card-image">
+                <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
+              </div>
+              <div className="card-details">
+                <div className="card-header">
+                  <h3>{item.name}</h3>
+                  <span className="price">${item.price}<span className="unit">/day</span></span>
                 </div>
-            </div>
+                <p className="location">📍 {item.location}</p>
+                <div className="badge">{item.type}</div>
+                <button className="btn btn-primary full-width" style={{ marginTop: '1rem' }}>Rent Now</button>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
 
-            <style jsx>{`
+      <style jsx>{`
         .page-header {
           background-color: var(--trailers-secondary);
           padding: 4rem 0 3rem;
@@ -182,6 +193,6 @@ export default function TrailersPage() {
           }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

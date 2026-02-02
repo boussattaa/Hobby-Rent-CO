@@ -24,12 +24,28 @@ export default function WaterPage() {
                 <div className="filters">
                     <h3>Filters</h3>
                     <div className="filter-group">
-                        <label>Type</label>
+                        <label>Category</label>
                         <select>
                             <option>All</option>
-                            <option>Jet Ski</option>
-                            <option>Boat</option>
-                            <option>Paddleboard</option>
+                            <optgroup label="Boats">
+                                <option>Pontoon</option>
+                                <option>Wake/Ski</option>
+                                <option>Fishing</option>
+                                <option>Bowriders</option>
+                            </optgroup>
+                            <optgroup label="PWC">
+                                <option>Jet Skis</option>
+                                <option>Sea-Doos</option>
+                            </optgroup>
+                            <optgroup label="Non-Powered">
+                                <option>Kayaks</option>
+                                <option>SUPs</option>
+                                <option>Canoes</option>
+                            </optgroup>
+                            <optgroup label="Accessories">
+                                <option>Wakeboards</option>
+                                <option>Tubes</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div className="filter-group">

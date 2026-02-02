@@ -24,12 +24,29 @@ export default function HousingPage() {
                 <div className="filters">
                     <h3>Filters</h3>
                     <div className="filter-group">
-                        <label>Type</label>
+                        <label>Category</label>
                         <select>
                             <option>All</option>
-                            <option>Power Tools</option>
-                            <option>Cleaning</option>
-                            <option>Landscaping</option>
+                            <optgroup label="Heavy Equipment">
+                                <option>Excavators</option>
+                                <option>Skid Steers</option>
+                                <option>Tractors</option>
+                            </optgroup>
+                            <optgroup label="Lawn & Garden">
+                                <option>Tillers</option>
+                                <option>Chippers</option>
+                                <option>Mowers</option>
+                            </optgroup>
+                            <optgroup label="Construction">
+                                <option>Generators</option>
+                                <option>Compressors</option>
+                                <option>Scaffolding</option>
+                            </optgroup>
+                            <optgroup label="Power Tools">
+                                <option>Drills</option>
+                                <option>Saws</option>
+                                <option>Sanders</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div className="filter-group">

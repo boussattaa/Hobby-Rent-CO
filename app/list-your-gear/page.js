@@ -23,8 +23,37 @@ export default function ListYourGear() {
     checkUser();
   }, [router, supabase]);
 
+  // Categories Config
+  const CATEGORY_DATA = {
+    dirt: [
+      { group: "UTVs / Side-by-Sides", items: ["2-Seaters (RZR, Can-Am)", "4-Seaters (Crew Cabs)", "Utility UTVs (Rangers/Defenders)"] },
+      { group: "ATVs / Quads", items: ["Sport Quads (Raptors/Banshees)", "Utility ATVs (4x4 with racks)", "Youth ATVs"] },
+      { group: "Two Wheels", items: ["Dirt Bikes (Trail/Enduro)", "Motocross Bikes", "Dual-Sport Bikes", "Electric Dirt Bikes (Sur-Ron/Talaria)"] },
+      { group: "Seasonal", items: ["Snowmobiles", "Snow Bikes"] }
+    ],
+    water: [
+      { group: "Boats", items: ["Pontoon Boats", "Wake/Ski Boats", "Fishing Boats", "Bowriders"] },
+      { group: "Personal Watercraft (PWC)", items: ["Jet Skis (Stand-up & Sit-down)", "Sea-Doos"] },
+      { group: "Non-Powered", items: ["Kayaks (Single & Tandem)", "Stand-Up Paddleboards (SUP)", "Canoes", "Pedal Boats"] },
+      { group: "Accessories", items: ["Wakeboards", "Water Skis", "Towable Tubes", "Floating Mats/Lilies"] }
+    ],
+    trailers: [
+      { group: "Hauling", items: ["Car Haulers / Flatbeds", "Utility Trailers (Landscape)", "Dump Trailers (Hydraulic)", "Enclosed Cargo Trailers"] },
+      { group: "Recreational", items: ["Toy Haulers", "Travel Trailers (Campers)", "Teardrop Trailers", "Boat Trailers (Stand-alone)"] },
+      { group: "Specialty", items: ["Horse/Livestock Trailers", "Tow Dollies"] }
+    ],
+    housing: [
+      { group: "Heavy Equipment", items: ["Mini Excavators", "Skid Steers / Bobcats", "Trenchers", "Compact Tractors"] },
+      { group: "Lawn & Garden", items: ["Tillers / Cultivators", "Wood Chippers", "Stump Grinders", "Aerators", "Commercial Mowers"] },
+      { group: "Construction", items: ["Cement Mixers", "Plate Compactors", "Scaffolding", "Generators", "Air Compressors"] },
+      { group: "Power Tools", items: ["Hammer Drills", "Saws (Miter, Table, Concrete)", "Sanders", "Nail Guns"] },
+      { group: "Cleaning/Finish", items: ["Pressure Washers", "Carpet Cleaners", "Paint Sprayers", "Floor Buffers"] }
+    ]
+  };
+
   const [imageUrl, setImageUrl] = useState('/images/dirt-hero.png'); // Default fallback
   const [uploading, setUploading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('dirt');
 
   const handleImageUpload = async (e) => {
     try {
@@ -75,82 +104,102 @@ export default function ListYourGear() {
             <input type="hidden" name="image_url" value={imageUrl} />
 
             <div className="form-grid">
-              <div className="form-group">
-                <label>Category</label>
-                <select name="category">
-                  <option value="dirt">Dirt</option>
-                  <option value="water">Watersports</option>
-                  <option value="trailers">Trailers</option>
-                  <option value="housing">Tools</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Item Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="e.g. 2023 KTM 300 XC"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Daily Price ($)</label>
-                <input
-                  type="number"
-                  name="price"
-                  placeholder="150"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Location</label>
-                <input
-                  type="text"
-                  name="location"
-                  placeholder="e.g. Moab, UT"
-                  required
-                />
-              </div>
-
-              <div className="form-group full">
-                <label>Description</label>
-                <textarea
-                  name="description"
-                  rows="4"
-                  placeholder="Describe your item..."
-                ></textarea>
-              </div>
-
-              <div className="form-group full">
-                <label>Photos</label>
-                <div className="upload-box">
-                  {imageUrl && imageUrl !== '/images/dirt-hero.png' ? (
-                    <img src={imageUrl} alt="Uploaded" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', borderRadius: '8px' }} />
-                  ) : (
-                    <span>{uploading ? 'Uploading...' : 'Click to select an image'}</span>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={uploading}
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
-                  />
-                </div>
-              </div>
+              <label>Category</label>
+              <select
+                name="category"
+                value={selectedCategory}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  // Reset subcategory when category changes
+                }}
+              >
+                <option value="dirt">Dirt</option>
+                <option value="water">Watersports</option>
+                <option value="trailers">Trailers</option>
+                <option value="housing">Tools</option>
+              </select>
             </div>
 
-            <div className="form-actions">
-              <button type="submit" className="btn btn-primary btn-lg">Create Listing</button>
+            <div className="form-group">
+              <label>Subcategory</label>
+              <select name="subcategory" required>
+                <option value="">Select a type...</option>
+                {CATEGORY_DATA[selectedCategory]?.map((group) => (
+                  <optgroup key={group.group} label={group.group}>
+                    {group.items.map((item) => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
             </div>
-          </form>
+
+            <div className="form-group">
+              <label>Item Name</label>
+              <input
+                type="text"
+                name="name"
+                placeholder="e.g. 2023 KTM 300 XC"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Daily Price ($)</label>
+              <input
+                type="number"
+                name="price"
+                placeholder="150"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Location</label>
+              <input
+                type="text"
+                name="location"
+                placeholder="e.g. Moab, UT"
+                required
+              />
+            </div>
+
+            <div className="form-group full">
+              <label>Description</label>
+              <textarea
+                name="description"
+                rows="4"
+                placeholder="Describe your item..."
+              ></textarea>
+            </div>
+
+            <div className="form-group full">
+              <label>Photos</label>
+              <div className="upload-box">
+                {imageUrl && imageUrl !== '/images/dirt-hero.png' ? (
+                  <img src={imageUrl} alt="Uploaded" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', borderRadius: '8px' }} />
+                ) : (
+                  <span>{uploading ? 'Uploading...' : 'Click to select an image'}</span>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={uploading}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                />
+              </div>
+            </div>
         </div>
-      </div>
 
-      <style jsx>{`
+        <div className="form-actions">
+          <button type="submit" className="btn btn-primary btn-lg">Create Listing</button>
+        </div>
+      </form>
+    </div>
+      </div >
+
+    <style jsx>{`
         .list-page {
           min-height: 100vh;
           padding: 4rem 0;
@@ -244,6 +293,6 @@ export default function ListYourGear() {
           }
         }
       `}</style>
-    </div>
+    </div >
   );
 }

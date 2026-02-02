@@ -4,60 +4,77 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const DIRT_ITEMS = [
-    { id: 'd1', name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT' },
-    { id: 'd2', name: 'Polaris RZR XP', price: 350, image: '/images/dirt-hero.png', location: 'Sand Hollow, UT' },
-    { id: 'd3', name: 'Honda CRF250R', price: 120, image: '/images/dirt-hero.png', location: 'St. George, UT' },
-    { id: 'd4', name: 'Can-Am Maverick', price: 400, image: '/images/dirt-hero.png', location: 'Dumont Dunes, CA' },
+  { id: 'd1', name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT' },
+  { id: 'd2', name: 'Polaris RZR XP', price: 350, image: '/images/dirt-hero.png', location: 'Sand Hollow, UT' },
+  { id: 'd3', name: 'Honda CRF250R', price: 120, image: '/images/dirt-hero.png', location: 'St. George, UT' },
+  { id: 'd4', name: 'Can-Am Maverick', price: 400, image: '/images/dirt-hero.png', location: 'Dumont Dunes, CA' },
 ];
 
 export default function DirtPage() {
-    return (
-        <div className="category-page">
-            <header className="page-header">
-                <div className="container">
-                    <h1>Dirt Collection</h1>
-                    <p>Tear up the trails with our premium off-road selection.</p>
-                </div>
-            </header>
+  return (
+    <div className="category-page">
+      <header className="page-header">
+        <div className="container">
+          <h1>Dirt Collection</h1>
+          <p>Tear up the trails with our premium off-road selection.</p>
+        </div>
+      </header>
 
-            <div className="container main-content">
-                <div className="filters">
-                    <h3>Filters</h3>
-                    <div className="filter-group">
-                        <label>Type</label>
-                        <select>
-                            <option>All</option>
-                            <option>Dirt Bike</option>
-                            <option>ATV / Quad</option>
-                            <option>Side by Side</option>
-                        </select>
-                    </div>
-                    <div className="filter-group">
-                        <label>Price Range</label>
-                        <input type="range" min="0" max="1000" />
-                    </div>
-                </div>
+      <div className="container main-content">
+        <div className="filters">
+          <h3>Filters</h3>
+          <div className="filter-group">
+            <label>Category</label>
+            <select>
+              <option>All</option>
+              <optgroup label="UTVs / Side-by-Sides">
+                <option>2-Seaters</option>
+                <option>4-Seaters</option>
+                <option>Utility</option>
+              </optgroup>
+              <optgroup label="ATVs / Quads">
+                <option>Sport Quads</option>
+                <option>Utility ATVs</option>
+                <option>Youth</option>
+              </optgroup>
+              <optgroup label="Two Wheels">
+                <option>Dirt Bikes</option>
+                <option>Motocross</option>
+                <option>Dual-Sport</option>
+                <option>Electric</option>
+              </optgroup>
+              <optgroup label="Seasonal">
+                <option>Snowmobiles</option>
+                <option>Snow Bikes</option>
+              </optgroup>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label>Price Range</label>
+            <input type="range" min="0" max="1000" />
+          </div>
+        </div>
 
-                <div className="item-grid">
-                    {DIRT_ITEMS.map((item) => (
-                        <Link key={item.id} href={`/item/${item.id}`} className="item-card">
-                            <div className="card-image">
-                                <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
-                            </div>
-                            <div className="card-details">
-                                <div className="card-header">
-                                    <h3>{item.name}</h3>
-                                    <span className="price">${item.price}<span className="unit">/day</span></span>
-                                </div>
-                                <p className="location">📍 {item.location}</p>
-                                <button className="btn btn-primary full-width">Rent Now</button>
-                            </div>
-                        </Link>
-                    ))}
+        <div className="item-grid">
+          {DIRT_ITEMS.map((item) => (
+            <Link key={item.id} href={`/item/${item.id}`} className="item-card">
+              <div className="card-image">
+                <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
+              </div>
+              <div className="card-details">
+                <div className="card-header">
+                  <h3>{item.name}</h3>
+                  <span className="price">${item.price}<span className="unit">/day</span></span>
                 </div>
-            </div>
+                <p className="location">📍 {item.location}</p>
+                <button className="btn btn-primary full-width">Rent Now</button>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
 
-            <style jsx>{`
+      <style jsx>{`
         .page-header {
           background-color: var(--dirt-secondary);
           padding: 4rem 0 3rem;
@@ -168,6 +185,6 @@ export default function DirtPage() {
           }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }
