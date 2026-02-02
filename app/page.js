@@ -57,7 +57,7 @@ export default function Home() {
         </div>
         <div className="hero-background-wrapper">
           <Image
-            src="/images/hero-bg-final.png"
+            src="/images/hero-bg-final.jpg"
             alt="Hero Background"
             fill
             style={{ objectFit: 'cover' }}
