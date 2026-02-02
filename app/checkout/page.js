@@ -37,7 +37,7 @@ export default function CheckoutPage() {
                 }),
             });
 
-            const { sessionId, error: apiError } = await response.json();
+            const { url, error: apiError } = await response.json();
 
             if (apiError) {
                 console.error(apiError);
@@ -46,14 +46,10 @@ export default function CheckoutPage() {
                 return;
             }
 
-            // Redirect to Stripe Checkout
-            const { error } = await stripe.redirectToCheckout({
-                sessionId,
-            });
-
-            if (error) {
-                console.error(error);
-                setLoading(false);
+            if (url) {
+                window.location.href = url;
+            } else {
+                throw new Error("No checkout URL returned");
             }
         } catch (err) {
             console.error(err);

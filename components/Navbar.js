@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
@@ -26,7 +27,14 @@ export default function Navbar({ user }) {
     <nav className="navbar glass">
       <div className="container navbar-content">
         <Link href="/" className="logo">
-          HobbyRent
+          <Image
+            src="/images/logo.png"
+            alt="HobbyRent Logo"
+            width={180}
+            height={60}
+            style={{ objectFit: 'contain' }}
+            priority
+          />
         </Link>
 
         <div className="nav-links">

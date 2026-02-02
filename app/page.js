@@ -34,6 +34,7 @@ export default function Home() {
   return (
     <div className="landing-page">
       {/* Hero Section */}
+      {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
           <h1>
@@ -54,7 +55,14 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        <div className="hero-background">
+        <div className="hero-background-wrapper">
+          <Image
+            src="/images/hero-bg-v2.jpg"
+            alt="Hero Background"
+            fill
+            style={{ objectFit: 'cover' }}
+            priority
+          />
           <div className="gradient-overlay" />
         </div>
       </section>
@@ -107,33 +115,48 @@ export default function Home() {
           padding-top: 80px;
         }
 
-        .hero-background {
+        .hero-background-wrapper {
           position: absolute;
           top: 0;
           left: 0;
           right: 0;
           bottom: 0;
           z-index: -1;
-          background: radial-gradient(circle at center, #f8fafc 0%, #e2e8f0 100%);
+        }
+        
+        .gradient-overlay {
+           position: absolute;
+           inset: 0;
+           z-index: 1; /* Above image */
+           background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.6));
         }
 
         .hero h1 {
           font-size: 4.5rem;
           margin-bottom: 1.5rem;
           line-height: 1.1;
+          color: white;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-content {
+          position: relative;
+          z-index: 2; /* Content above overlay */
         }
 
         .highlight {
-          background: linear-gradient(120deg, var(--accent-color), var(--housing-primary));
+          background: linear-gradient(120deg, #fbbf24, #f59e0b);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          text-shadow: none; /* Remove shadow from gradient text if needed, or keep it */
         }
 
         .hero-subtitle {
           font-size: 1.25rem;
-          color: var(--text-secondary);
+          color: rgba(255,255,255,0.9);
           max-width: 600px;
           margin: 0 auto 2.5rem;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
 
         .hero-actions {

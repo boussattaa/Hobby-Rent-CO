@@ -2,9 +2,13 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function POST(request) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+        return NextResponse.json({ error: 'Stripe Secret Key missing' }, { status: 500 });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
     try {
         const { itemId, price, name } = await request.json();
 
@@ -37,7 +41,7 @@ export async function POST(request) {
             cancel_url: `${request.headers.get('origin')}/item/${itemId}`,
         });
 
-        return NextResponse.json({ sessionId: session.id });
+        return NextResponse.json({ url: session.url });
     } catch (err) {
         console.error(err);
         return NextResponse.json({ error: 'Error creating checkout session' }, { status: 500 });
