@@ -33,7 +33,7 @@ export default function Navbar({ user }) {
             alt="HobbyRent Logo"
             width={180}
             height={60}
-            style={{ objectFit: 'contain' }}
+            style={{ objectFit: 'contain', mixBlendMode: 'multiply' }}
             priority
           />
         </Link>
