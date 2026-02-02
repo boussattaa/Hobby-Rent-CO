@@ -10,12 +10,12 @@ const DIRT_ITEMS = [
   { id: 'd4', name: 'Can-Am Maverick', price: 400, image: '/images/dirt-hero.png', location: 'Dumont Dunes, CA' },
 ];
 
-export default function DirtPage() {
+export default function OffroadPage() {
   return (
     <div className="category-page">
       <header className="page-header">
         <div className="container">
-          <h1>Dirt Collection</h1>
+          <h1>Offroad Collection</h1>
           <p>Tear up the trails with our premium off-road selection.</p>
         </div>
       </header>

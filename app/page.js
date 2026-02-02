@@ -6,11 +6,11 @@ import Link from "next/link";
 export default function Home() {
   const categories = [
     {
-      id: 'dirt',
-      name: 'Dirt',
+      id: 'offroad',
+      name: 'Offroad',
       description: 'Conquer the terrain. Bikes, ATVs, and more.',
       image: '/images/dirt-hero.png',
-      href: '/dirt',
+      href: '/offroad',
       accent: 'var(--dirt-primary)'
     },
     {

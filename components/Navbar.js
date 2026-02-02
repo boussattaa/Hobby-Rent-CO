@@ -16,7 +16,7 @@ export default function Navbar({ user }) {
   };
 
   const navLinks = [
-    { name: 'Dirt', href: '/dirt' },
+    { name: 'Offroad', href: '/offroad' },
     { name: 'Watersports', href: '/water' },
     { name: 'Trailers', href: '/trailers' },
     { name: 'Tools', href: '/housing' },

@@ -25,7 +25,7 @@ export default function ListYourGear() {
 
   // Categories Config
   const CATEGORY_DATA = {
-    dirt: [
+    offroad: [
       { group: "UTVs / Side-by-Sides", items: ["2-Seaters (RZR, Can-Am)", "4-Seaters (Crew Cabs)", "Utility UTVs (Rangers/Defenders)"] },
       { group: "ATVs / Quads", items: ["Sport Quads (Raptors/Banshees)", "Utility ATVs (4x4 with racks)", "Youth ATVs"] },
       { group: "Two Wheels", items: ["Dirt Bikes (Trail/Enduro)", "Motocross Bikes", "Dual-Sport Bikes", "Electric Dirt Bikes (Sur-Ron/Talaria)"] },
@@ -53,7 +53,7 @@ export default function ListYourGear() {
 
   const [imageUrl, setImageUrl] = useState('/images/dirt-hero.png'); // Default fallback
   const [uploading, setUploading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('dirt');
+  const [selectedCategory, setSelectedCategory] = useState('offroad');
 
   const handleImageUpload = async (e) => {
     try {
@@ -113,7 +113,7 @@ export default function ListYourGear() {
                   // Reset subcategory when category changes
                 }}
               >
-                <option value="dirt">Dirt</option>
+                <option value="offroad">Offroad</option>
                 <option value="water">Watersports</option>
                 <option value="trailers">Trailers</option>
                 <option value="housing">Tools</option>
