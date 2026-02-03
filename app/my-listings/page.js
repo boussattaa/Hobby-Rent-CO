@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import DeleteButton from '@/components/DeleteButton';
 
 export default async function MyListingsPage() {
     const supabase = await createClient();
@@ -44,7 +45,7 @@ export default async function MyListingsPage() {
                 ) : (
                     <div className="item-grid">
                         {items.map((item) => (
-                            <Link key={item.id} href={`/item/${item.id}`} className="item-card">
+                            <div key={item.id} className="item-card">
                                 <div className="card-image">
                                     <Image
                                         src={item.image_url || '/images/dirt-hero.png'}
@@ -52,6 +53,7 @@ export default async function MyListingsPage() {
                                         fill
                                         style={{ objectFit: 'cover' }}
                                     />
+                                    <span className="badge-overlay">{item.category}</span>
                                 </div>
                                 <div className="card-details">
                                     <div className="card-header">
@@ -59,13 +61,77 @@ export default async function MyListingsPage() {
                                         <span className="price">${item.price}<span className="unit">/day</span></span>
                                     </div>
                                     <p className="location">📍 {item.location}</p>
-                                    <div className="badge">{item.category}</div>
+
+                                    <div className="manage-actions">
+                                        <Link href={`/item/${item.id}`} className="btn btn-secondary btn-sm">
+                                            View
+                                        </Link>
+                                        <Link href={`/edit-listing/${item.id}`} className="btn btn-secondary btn-sm">
+                                            Edit
+                                        </Link>
+                                        <DeleteButton itemId={item.id} />
+                                    </div>
                                 </div>
-                            </Link>
+                            </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            <style jsx global>{`
+              .item-card {
+                background: white;
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                overflow: hidden;
+                transition: transform 0.2s;
+              }
+              .item-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 24px rgba(0,0,0,0.08); /* Re-adding hover effect */
+              }
+              .card-image {
+                 position: relative;
+                 height: 200px;
+                 background: #eee;
+              }
+              .badge-overlay {
+                 position: absolute;
+                 top: 10px;
+                 left: 10px;
+                 background: rgba(0,0,0,0.6);
+                 color: white;
+                 padding: 4px 8px;
+                 border-radius: 4px;
+                 font-size: 0.8rem;
+                 text-transform: capitalize;
+              }
+              .card-details {
+                 padding: 1.5rem;
+              }
+              .manage-actions {
+                 display: flex;
+                 gap: 0.5rem;
+                 margin-top: 1rem;
+                 padding-top: 1rem;
+                 border-top: 1px solid #eee;
+              }
+              .btn-secondary {
+                 background: #f1f5f9;
+                 color: #334155;
+                 border: 1px solid #cbd5e1;
+                 text-align: center;
+                 text-decoration: none;
+                 border-radius: 6px;
+                 padding: 0.5rem 1rem;
+                 font-size: 0.9rem;
+                 font-weight: 600;
+                 flex: 1;
+              }
+              .btn-secondary:hover {
+                 background: #e2e8f0;
+              }
+            `}</style>
         </div>
     );
 }
