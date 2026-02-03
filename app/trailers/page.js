@@ -3,48 +3,85 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { getDistanceFromLatLonInMiles } from '@/utils/distance';
 import SearchFilter from '@/components/SearchFilter';
+import FilterSidebar from '@/components/FilterSidebar';
 
-const TRAILER_ITEMS = [];
+const TRAILER_SUBCATEGORIES = [
+  'Car Haulers',
+  'Utility',
+  'Dump',
+  'Enclosed',
+  'Toy Haulers',
+  'Travel Trailers',
+  'Boat Trailers',
+  'Livestock'
+];
 
-export default function TrailersPage() {
+function TrailersPageContent() {
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const supabase = createClient();
 
-  // Search Params
+  // 1. Get Filters from URL
   const searchLat = parseFloat(searchParams.get('lat'));
   const searchLng = parseFloat(searchParams.get('lng'));
   const searchRadius = parseFloat(searchParams.get('radius')) || 50;
-
-  const filteredItems = items.filter(item => {
-    if (!searchLat || !searchLng) return true;
-    if (!item.lat || !item.lng) return false;
-    const distance = getDistanceFromLatLonInMiles(searchLat, searchLng, item.lat, item.lng);
-    return distance <= searchRadius;
-  });
+  const subcatFilter = searchParams.get('subcat')?.split(',') || [];
+  const maxPrice = parseFloat(searchParams.get('max_price')) || 500;
+  const sortOption = searchParams.get('sort') || 'newest';
 
   useEffect(() => {
     const fetchItems = async () => {
-      const { data, error } = await supabase
+      setLoading(true);
+      let query = supabase
         .from('items')
         .select('*')
-        .eq('category', 'trailers');
+        .eq('category', 'trailers')
+        .lte('price', maxPrice);
+
+      if (subcatFilter.length > 0) {
+        query = query.in('subcategory', subcatFilter);
+      }
+
+      if (sortOption === 'price_asc') {
+        query = query.order('price', { ascending: true });
+      } else if (sortOption === 'price_desc') {
+        query = query.order('price', { ascending: false });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query;
 
       if (data) {
-        const formattedItems = data.map(item => ({
+        let finalItems = data.map(item => ({
           ...item,
           image: item.image_url || '/images/trailer-hero.png',
           price: Number(item.price)
         }));
-        setItems(prev => [...TRAILER_ITEMS, ...formattedItems]);
+
+        if (searchLat && searchLng) {
+          finalItems = finalItems.filter(item => {
+            if (!item.lat || !item.lng) return false;
+            const distance = getDistanceFromLatLonInMiles(searchLat, searchLng, item.lat, item.lng);
+            return distance <= searchRadius;
+          });
+        }
+
+        setItems(finalItems);
+      } else if (error) {
+        console.error("Error fetching trailer items:", error);
       }
+      setLoading(false);
     };
+
     fetchItems();
-  }, [supabase]);
+  }, [supabase, searchLat, searchLng, searchRadius, searchParams.toString()]);
 
   return (
     <div className="category-page">
@@ -56,64 +93,64 @@ export default function TrailersPage() {
       </header>
 
       <div className="container main-content">
-        <aside className="filters">
-          <h3>Filters</h3>
-          <div className="filter-group">
-            <label>Category</label>
-            <select>
-              <option>All</option>
-              <optgroup label="Hauling">
-                <option>Car Haulers</option>
-                <option>Utility</option>
-                <option>Dump</option>
-                <option>Enclosed</option>
-              </optgroup>
-              <optgroup label="Recreational">
-                <option>Toy Haulers</option>
-                <option>Travel Trailers</option>
-                <option>Teardrop</option>
-                <option>Boat Trailers</option>
-              </optgroup>
-              <optgroup label="Specialty">
-                <option>Livestock</option>
-                <option>Tow Dollies</option>
-              </optgroup>
-            </select>
-          </div>
-          <div className="filter-group">
-            <label>Price Range</label>
-            <input type="range" min="0" max="500" />
-          </div>
-        </aside>
+        <FilterSidebar
+          categories={TRAILER_SUBCATEGORIES}
+          priceMax={500}
+        />
 
         <div className="content-area">
-          <SearchFilter />
+          <div className="controls-row">
+            <SearchFilter />
+
+            <div className="sort-wrapper">
+              <select
+                value={sortOption}
+                onChange={(e) => {
+                  const params = new URLSearchParams(searchParams.toString());
+                  params.set('sort', e.target.value);
+                  router.push(`?${params.toString()}`, { scroll: false });
+                }}
+                className="sort-select"
+              >
+                <option value="newest">Newest Listed</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+              </select>
+            </div>
+          </div>
 
           <div className="results-info">
-            {searchLat ? (
-              <p>Showing {filteredItems.length} results within {searchRadius} miles</p>
+            {loading ? (
+              <span>Loading listings...</span>
+            ) : searchLat ? (
+              <p>Found {items.length} results within {searchRadius} miles</p>
             ) : (
-              <p>Showing all {filteredItems.length} listings</p>
+              <p>Showing {items.length} listings</p>
             )}
           </div>
 
           <div className="item-grid">
-            {filteredItems.map((item) => (
-              <Link key={item.id} href={`/item/${item.id}`} className="item-card">
-                <div className="card-image">
-                  <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
-                </div>
-                <div className="card-details">
-                  <div className="card-header">
-                    <h3>{item.name}</h3>
-                    <span className="price">${item.price}<span className="unit">/day</span></span>
+            {items.length > 0 ? (
+              items.map((item) => (
+                <Link key={item.id} href={`/item/${item.id}`} className="item-card">
+                  <div className="card-image">
+                    <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
                   </div>
-                  <p className="location">📍 {item.location}</p>
-                  <div className="badge">{item.type || item.subcategory}</div>
-                  <button className="btn btn-primary full-width" style={{ marginTop: '1rem' }}>Rent Now</button>
-                </div>
-              </Link>
-            ))}
+                  <div className="card-details">
+                    <div className="card-header">
+                      <h3>{item.name}</h3>
+                      <span className="price">${item.price}<span className="unit">/day</span></span>
+                    </div>
+                    <p className="location">📍 {item.location}</p>
+                    <div className="card-footer">
+                      <span className="badge">{item.subcategory || 'Trailer'}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              !loading && <div className="empty-state">No items found matching your filters.</div>
+            )}
           </div>
         </div>
       </div>
@@ -130,41 +167,46 @@ export default function TrailersPage() {
         
         .main-content {
           display: grid;
-          grid-template-columns: 250px 1fr;
+          grid-template-columns: 280px 1fr;
           gap: 3rem;
           padding-bottom: 4rem;
         }
 
-        .filters {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 12px;
-          border: 1px solid var(--border-color);
-          height: fit-content;
-        }
-        
         .content-area { width: 100%; }
-        .results-info { margin-bottom: 1rem; color: var(--text-secondary); font-weight: 500; }
+        
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
 
-        .filter-group {
-          margin-top: 1.5rem;
+        .sort-select {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: white;
+            cursor: pointer;
+            font-size: 0.95rem;
         }
-        .filter-group label {
-          display: block;
-          margin-bottom: 0.5rem;
-          font-weight: 600;
-        }
-        .filter-group select, .filter-group input {
-          width: 100%;
-          padding: 0.5rem;
-          border-radius: 6px;
-          border: 1px solid var(--border-color);
-        }
+
+        .results-info { margin-bottom: 1.5rem; color: var(--text-secondary); font-weight: 500; }
 
         .item-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
           gap: 2rem;
+        }
+        
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            background: #f9fafb;
+            border-radius: 12px;
+            color: var(--text-secondary);
         }
 
         .item-card {
@@ -175,73 +217,33 @@ export default function TrailersPage() {
           text-decoration: none;
           color: var(--text-primary);
           transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .item-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 24px rgba(0,0,0,0.08);
-        }
-
-        .card-image {
-          position: relative;
-          height: 200px;
-          background: #eee;
-        }
-
-        .card-details {
-          padding: 1.5rem;
-        }
-
-        .card-header {
           display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 0.5rem;
+          flex-direction: column;
+          height: 100%;
         }
-
-        .card-header h3 {
-          font-size: 1.1rem;
-          margin: 0;
-        }
-
-        .price {
-          font-weight: 700;
-          font-size: 1.1rem;
-        }
-        .unit {
-          font-size: 0.8rem;
-          color: var(--text-secondary);
-          font-weight: 400;
-        }
-
-        .location {
-          color: var(--text-secondary);
-          font-size: 0.9rem;
-          margin-bottom: 0.5rem;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            background: var(--trailers-secondary);
-            color: var(--trailers-primary);
-            border-radius: 999px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .full-width {
-          width: 100%;
-        }
+        .item-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
+        .card-image { position: relative; height: 200px; background: #eee; }
+        .card-details { padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+        .card-header h3 { font-size: 1.1rem; margin: 0; font-weight: 700; }
+        .price { font-weight: 800; font-size: 1.1rem; white-space: nowrap; }
+        .unit { font-size: 0.8rem; color: var(--text-secondary); font-weight: 400; }
+        .location { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem; }
+        .card-footer { margin-top: auto; }
+        .badge { background: #f8fafc; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; color: var(--trailers-primary); font-weight: 600; }
 
         @media (max-width: 900px) {
-          .main-content {
-            grid-template-columns: 1fr;
-          }
-          .filters {
-            display: none; /* Hide filters on mobile for now */
-          }
+          .main-content { grid-template-columns: 1fr; }
         }
       `}</style>
     </div>
+  );
+}
+
+export default function TrailersPage() {
+  return (
+    <Suspense fallback={<div className="container" style={{ padding: '5rem' }}>Loading...</div>}>
+      <TrailersPageContent />
+    </Suspense>
   );
 }
