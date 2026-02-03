@@ -64,7 +64,7 @@ export default function ItemClient({ id, initialItem }) {
       setLoading(true);
       const { data, error } = await supabase
         .from('items')
-        .select('*')
+        .select('*, profiles:owner_id(email)')
         .eq('id', id)
         .single();
 
@@ -72,7 +72,8 @@ export default function ItemClient({ id, initialItem }) {
         setItem({
           ...data,
           price: Number(data.price),
-          weekend_price: data.weekend_price ? Number(data.weekend_price) : null
+          weekend_price: data.weekend_price ? Number(data.weekend_price) : null,
+          ownerEmail: data.profiles?.email
         });
         setItemsOwnerId(data.owner_id);
 
@@ -352,9 +353,15 @@ export default function ItemClient({ id, initialItem }) {
                 >
                   Request to Rent
                 </Link>
-                <button className="btn btn-secondary full-width" style={{ marginTop: '0.75rem', textAlign: 'center', justifyContent: 'center' }}>
-                  💬 Message Owner
-                </button>
+                {item.ownerEmail ? (
+                  <a href={`mailto:${item.ownerEmail}?subject=Question about ${item.name}`} className="btn btn-secondary full-width" style={{ marginTop: '0.75rem', textAlign: 'center', justifyContent: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                    💬 Message Owner
+                  </a>
+                ) : (
+                  <button onClick={() => alert('This is a demo item. No owner email available.')} className="btn btn-secondary full-width" style={{ marginTop: '0.75rem', textAlign: 'center', justifyContent: 'center' }}>
+                    💬 Message Owner
+                  </button>
+                )}
               </div>
             </div>
           </div>
