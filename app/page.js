@@ -1,6 +1,5 @@
 
 
-
 import Link from 'next/link';
 import Image from 'next/image';
 import SearchBar from '@/components/SearchBar';
@@ -9,10 +8,10 @@ import FeaturedRentals from '@/components/FeaturedRentals';
 
 export default function Home() {
   const categories = [
-    { name: 'Offroad', image: '/images/dirt-hero.png', href: '/offroad', desc: 'UTVs, ATVs, and Dirt Bikes' },
-    { name: 'Watersports', image: '/images/water-hero.png', href: '/water', desc: 'Jet Skis, Boats, and Kayaks' },
-    { name: 'Trailers', image: '/images/trailer-hero.png', href: '/trailers', desc: 'Car haulers, Dump, and Utility' },
-    { name: 'Tools', image: '/images/housing-hero.png', href: '/housing', desc: 'Heavy equipment and DIY tools' },
+    { name: 'Offroad', image: '/images/dirt-hero.png', href: '/offroad', desc: 'UTVs, ATVs, and Dirt Bikes', icon: '🏍️' },
+    { name: 'Watersports', image: '/images/water-hero.png', href: '/water', desc: 'Jet Skis, Boats, and Kayaks', icon: '🚤' },
+    { name: 'Trailers', image: '/images/trailer-hero.png', href: '/trailers', desc: 'Car haulers, Dump, and Utility', icon: '🚛' },
+    { name: 'Tools', image: '/images/housing-hero.png', href: '/housing', desc: 'Heavy equipment and DIY tools', icon: '🔧' },
   ];
 
   return (
@@ -25,10 +24,20 @@ export default function Home() {
             Rent the Adventure.<br />
             Earn from your Gear.
           </h1>
-          <p className="subtitle">
+          <p className="subtitle desktop-only">
             The premium marketplace for outdoor enthusiasts and DIY masters.
             <br />Rent what you need, list what you have.
           </p>
+
+          {/* Mobile Category Icons */}
+          <div className="mobile-category-icons">
+            {categories.map((cat) => (
+              <Link key={cat.name} href={cat.href} className="category-icon-link">
+                <span className="category-icon">{cat.icon}</span>
+                <span className="category-name">{cat.name}</span>
+              </Link>
+            ))}
+          </div>
 
           <div className="hero-search-wrapper">
             <SearchBar />
@@ -99,7 +108,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
 
     </main>
   );

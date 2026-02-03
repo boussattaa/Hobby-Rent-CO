@@ -28,13 +28,17 @@ const ITEMS_DB = {
 
 export default function ItemPage() {
   const params = useParams();
-  const router = useRouter(); // Added for redirect after delete
+  const router = useRouter();
   const supabase = createClient();
   const initialItem = ITEMS_DB[params.id] || null;
   const [item, setItem] = useState(initialItem);
   const [itemsOwnerId, setItemsOwnerId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(!initialItem);
+
+  // Photo gallery state
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   // Date state management
   const [startDate, setStartDate] = useState('');
@@ -67,6 +71,20 @@ export default function ItemPage() {
     fetchItem();
   }, [params.id, supabase]);
 
+  // Get all images (main + additional)
+  const getImages = () => {
+    if (!item) return [];
+    const mainImage = item.image || item.image_url || '/images/dirt-hero.png';
+    // If item has additional_images array, include them
+    if (item.additional_images && Array.isArray(item.additional_images)) {
+      return [mainImage, ...item.additional_images];
+    }
+    // Fallback: create array with just the main image (duplicated for demo)
+    return [mainImage];
+  };
+
+  const images = getImages();
+
   // Get today's date string for min attribute
   const today = new Date().toISOString().split('T')[0];
 
@@ -89,13 +107,75 @@ export default function ItemPage() {
 
   return (
     <div className="item-page">
-      <div className="item-hero">
-        <Image src={item.image || item.image_url || '/images/dirt-hero.png'} alt={item.name} fill style={{ objectFit: 'cover' }} priority />
-        <div className="gradient-overlay" />
+      {/* Photo Gallery */}
+      <div className="gallery-section">
+        <div className="main-image-container" onClick={() => setLightboxOpen(true)}>
+          <Image
+            src={images[selectedImage]}
+            alt={item.name}
+            fill
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+          <div className="image-zoom-hint">
+            <span>🔍 Tap to enlarge</span>
+          </div>
+        </div>
+
+        {/* Thumbnail Strip */}
+        {images.length > 1 && (
+          <div className="thumbnail-strip">
+            {images.map((img, index) => (
+              <button
+                key={index}
+                className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
+                onClick={() => setSelectedImage(index)}
+              >
+                <Image src={img} alt={`${item.name} ${index + 1}`} fill style={{ objectFit: 'cover' }} />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Image Counter */}
+        <div className="image-counter">
+          {selectedImage + 1} / {images.length}
+        </div>
       </div>
 
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div className="lightbox" onClick={() => setLightboxOpen(false)}>
+          <button className="lightbox-close" onClick={() => setLightboxOpen(false)}>✕</button>
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={images[selectedImage]}
+              alt={item.name}
+              fill
+              style={{ objectFit: 'contain' }}
+            />
+          </div>
+          {images.length > 1 && (
+            <>
+              <button
+                className="lightbox-prev"
+                onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev === 0 ? images.length - 1 : prev - 1); }}
+              >
+                ‹
+              </button>
+              <button
+                className="lightbox-next"
+                onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev === images.length - 1 ? 0 : prev + 1); }}
+              >
+                ›
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       <div className="container item-content">
-        <div className="content-wrapper glass">
+        <div className="content-wrapper">
           <div className="item-header">
             <div>
               <h1>{item.name}</h1>
@@ -186,36 +266,140 @@ export default function ItemPage() {
       <style jsx>{`
         .item-page {
           min-height: 100vh;
+          padding-top: 80px;
         }
 
-        .item-hero {
+        /* Gallery Section */
+        .gallery-section {
           position: relative;
-          height: 60vh;
-          width: 100%;
-          margin-top: -80px; /* Under navbar */
+          background: #000;
         }
-        
-        .gradient-overlay {
+
+        .main-image-container {
+          position: relative;
+          height: 50vh;
+          min-height: 300px;
+          max-height: 500px;
+          cursor: zoom-in;
+        }
+
+        .image-zoom-hint {
           position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 50%;
-          background: linear-gradient(to top, var(--background), transparent);
+          bottom: 1rem;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0,0,0,0.7);
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 50px;
+          font-size: 0.85rem;
+          opacity: 0.8;
         }
 
-        .item-content {
+        .thumbnail-strip {
+          display: flex;
+          gap: 0.5rem;
+          padding: 1rem;
+          overflow-x: auto;
+          background: #111;
+        }
+
+        .thumbnail {
           position: relative;
-          margin-top: -100px;
-          padding-bottom: 4rem;
+          width: 60px;
+          height: 60px;
+          border: 2px solid transparent;
+          border-radius: 8px;
+          overflow: hidden;
+          cursor: pointer;
+          flex-shrink: 0;
+          padding: 0;
+          background: none;
+        }
+
+        .thumbnail.active {
+          border-color: var(--accent-color);
+        }
+
+        .image-counter {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          background: rgba(0,0,0,0.7);
+          color: white;
+          padding: 0.25rem 0.75rem;
+          border-radius: 50px;
+          font-size: 0.85rem;
+          font-weight: 600;
+        }
+
+        /* Lightbox */
+        .lightbox {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.95);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .lightbox-content {
+          position: relative;
+          width: 90vw;
+          height: 80vh;
+        }
+
+        .lightbox-close {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          background: rgba(255,255,255,0.2);
+          border: none;
+          color: white;
+          font-size: 1.5rem;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          cursor: pointer;
+          z-index: 10001;
+        }
+
+        .lightbox-prev,
+        .lightbox-next {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background: rgba(255,255,255,0.2);
+          border: none;
+          color: white;
+          font-size: 2.5rem;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          cursor: pointer;
+          z-index: 10001;
+        }
+
+        .lightbox-prev { left: 1rem; }
+        .lightbox-next { right: 1rem; }
+
+        .lightbox-prev:hover,
+        .lightbox-next:hover,
+        .lightbox-close:hover {
+          background: rgba(255,255,255,0.3);
+        }
+
+        /* Content Section */
+        .item-content {
+          padding: 2rem 0 4rem;
         }
 
         .content-wrapper {
-          padding: 2.5rem;
-          border-radius: 24px;
-          border: 1px solid white;
-          background: rgba(255, 255, 255, 0.9);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+          padding: 2rem;
+          border-radius: 16px;
+          background: white;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
         .item-header {
@@ -223,58 +407,60 @@ export default function ItemPage() {
           justify-content: space-between;
           align-items: flex-start;
           border-bottom: 1px solid var(--border-color);
-          padding-bottom: 2rem;
-          margin-bottom: 2rem;
+          padding-bottom: 1.5rem;
+          margin-bottom: 1.5rem;
+          flex-wrap: wrap;
+          gap: 1rem;
         }
 
         .item-header h1 {
-          font-size: 2.5rem;
-          margin-bottom: 0.5rem;
+          font-size: 1.75rem;
+          margin-bottom: 0.25rem;
         }
 
         .location {
           color: var(--text-secondary);
-          font-size: 1.1rem;
+          font-size: 1rem;
         }
 
         .price-tag {
           text-align: right;
         }
-        .currency { font-size: 1.5rem; vertical-align: top; font-weight: 600; }
-        .amount { font-size: 3rem; font-weight: 800; line-height: 1; letter-spacing: -2px; }
+        .currency { font-size: 1.25rem; vertical-align: top; font-weight: 600; }
+        .amount { font-size: 2.5rem; font-weight: 800; line-height: 1; letter-spacing: -2px; }
         .per { color: var(--text-secondary); font-size: 1rem; margin-left: 4px; }
 
         .grid-layout {
           display: grid;
           grid-template-columns: 1fr 350px;
-          gap: 3rem;
+          gap: 2rem;
         }
 
         .description {
-          font-size: 1.1rem;
+          font-size: 1rem;
           line-height: 1.7;
           color: var(--text-secondary);
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem;
         }
 
         .features {
           display: flex;
-          gap: 1rem;
+          gap: 0.75rem;
           flex-wrap: wrap;
         }
 
         .feature-item {
-          background: var(--housing-secondary);
-          color: var(--housing-primary);
+          background: #f0f9ff;
+          color: #0369a1;
           padding: 0.5rem 1rem;
           border-radius: 8px;
           font-weight: 600;
-          font-size: 0.9rem;
+          font-size: 0.85rem;
         }
         
         .admin-controls {
             margin-top: 2rem;
-            padding-top: 2rem;
+            padding-top: 1.5rem;
             border-top: 1px solid var(--border-color);
         }
         .admin-controls h4 { margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; color: var(--text-secondary); }
@@ -293,10 +479,12 @@ export default function ItemPage() {
         .btn-edit:hover { background: #f5f5f5; }
 
         .booking-card {
-          background: var(--background);
+          background: #f8fafc;
           padding: 1.5rem;
           border-radius: 16px;
           border: 1px solid var(--border-color);
+          position: sticky;
+          top: 100px;
         }
 
         .booking-card h3 {
@@ -333,7 +521,30 @@ export default function ItemPage() {
 
         @media (max-width: 900px) {
           .grid-layout { grid-template-columns: 1fr; }
-          .item-hero { height: 40vh; }
+          
+          .main-image-container {
+            height: 40vh;
+            min-height: 250px;
+          }
+
+          .booking-card {
+            position: static;
+          }
+
+          .item-header h1 {
+            font-size: 1.5rem;
+          }
+
+          .amount {
+            font-size: 2rem;
+          }
+
+          .lightbox-prev,
+          .lightbox-next {
+            width: 44px;
+            height: 44px;
+            font-size: 1.5rem;
+          }
         }
       `}</style>
     </div>

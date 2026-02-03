@@ -10,6 +10,7 @@ import SearchSidebar from '@/components/SearchSidebar';
 
 function SearchContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const query = searchParams.get('q') || '';
 
     // New Filters from URL
@@ -20,7 +21,12 @@ function SearchContent() {
 
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showFilters, setShowFilters] = useState(false);
     const supabase = createClient();
+
+    // Mobile search state
+    const [mobileQuery, setMobileQuery] = useState(query);
+    const [mobileLocation, setMobileLocation] = useState(location);
 
     useEffect(() => {
         const fetchResults = async () => {
@@ -40,9 +46,6 @@ function SearchContent() {
 
             // 3. Subcategory Filter
             if (subcats.length > 0) {
-                // If checking array column: .contains('subcategory', subcats) 
-                // BUT current schema 'subcategory' is likely a single string. 
-                // So we want items where subcategory IS IN the list.
                 queryBuilder = queryBuilder.in('subcategory', subcats);
             }
 
@@ -53,8 +56,6 @@ function SearchContent() {
 
             // 5. Location Filter (Simple String Match)
             if (location) {
-                // Ideally this would be geospatial (lat/lng radius)
-                // For now, simple text match
                 queryBuilder = queryBuilder.ilike('location', `%${location}%`);
             }
 
@@ -72,15 +73,61 @@ function SearchContent() {
         fetchResults();
     }, [query, location, category, subcats.join(','), maxPrice, supabase]);
 
+    const handleMobileSearch = (e) => {
+        e.preventDefault();
+        const params = new URLSearchParams();
+        if (mobileQuery) params.set('q', mobileQuery);
+        if (mobileLocation) params.set('location', mobileLocation);
+        if (category) params.set('category', category);
+        if (maxPrice) params.set('max_price', maxPrice);
+        router.push(`/search?${params.toString()}`);
+    };
+
     return (
         <div className="search-page">
             <div className="container search-layout">
-                {/* 1. Sidebar */}
+                {/* Mobile Search Bar */}
+                <div className="mobile-search-bar">
+                    <form onSubmit={handleMobileSearch} className="mobile-search-form">
+                        <div className="mobile-search-inputs">
+                            <input
+                                type="text"
+                                placeholder="Search gear..."
+                                value={mobileQuery}
+                                onChange={(e) => setMobileQuery(e.target.value)}
+                                className="mobile-search-input"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Location"
+                                value={mobileLocation}
+                                onChange={(e) => setMobileLocation(e.target.value)}
+                                className="mobile-location-input"
+                            />
+                        </div>
+                        <button type="submit" className="mobile-search-btn">🔍</button>
+                    </form>
+                    <button
+                        className="filter-toggle-btn"
+                        onClick={() => setShowFilters(!showFilters)}
+                    >
+                        ⚙️ Filters {category || maxPrice ? '•' : ''}
+                    </button>
+                </div>
+
+                {/* Mobile Filter Panel */}
+                {showFilters && (
+                    <div className="mobile-filter-panel">
+                        <SearchSidebar onClose={() => setShowFilters(false)} />
+                    </div>
+                )}
+
+                {/* Desktop Sidebar */}
                 <div className="sidebar-area">
                     <SearchSidebar />
                 </div>
 
-                {/* 2. Results Area */}
+                {/* Results Area */}
                 <div className="results-area">
                     <header className="search-header">
                         <h1>Search Results</h1>
@@ -118,7 +165,7 @@ function SearchContent() {
 
             <style jsx>{`
         .search-page {
-            padding: 8rem 0 4rem; /* Top padding to clear fixed navbar */
+            padding: 8rem 0 4rem;
             min-height: 100vh;
             background: #f8fafc;
         }
@@ -129,12 +176,78 @@ function SearchContent() {
             gap: 3rem;
         }
 
+        .mobile-search-bar {
+            display: none;
+        }
+
         @media (max-width: 900px) {
+            .search-page {
+                padding: 6rem 0 4rem;
+            }
+
             .search-layout {
                 grid-template-columns: 1fr;
+                gap: 1rem;
             }
+
             .sidebar-area {
-                display: none; /* For MVP hide sidebar on mobile or move to drawer */
+                display: none;
+            }
+
+            .mobile-search-bar {
+                display: flex;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .mobile-search-form {
+                flex: 1;
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            .mobile-search-inputs {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .mobile-search-input,
+            .mobile-location-input {
+                padding: 0.75rem 1rem;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                font-size: 1rem;
+                width: 100%;
+            }
+
+            .mobile-search-btn {
+                padding: 0.75rem 1rem;
+                background: var(--accent-color);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 1.2rem;
+                cursor: pointer;
+            }
+
+            .filter-toggle-btn {
+                padding: 0.75rem 1rem;
+                background: white;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                font-size: 0.9rem;
+                cursor: pointer;
+                white-space: nowrap;
+            }
+
+            .mobile-filter-panel {
+                background: white;
+                padding: 1rem;
+                border-radius: 12px;
+                margin-bottom: 1rem;
+                border: 1px solid var(--border-color);
             }
         }
 
@@ -174,6 +287,7 @@ function SearchContent() {
             gap: 1rem;
             justify-content: center;
             margin-top: 1.5rem;
+            flex-wrap: wrap;
         }
         .pill {
             background: #f0f0f0;

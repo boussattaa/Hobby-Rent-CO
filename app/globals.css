@@ -622,16 +622,67 @@ h3 {
     padding-top: 60px;
     height: auto;
     min-height: 100vh;
-    padding-bottom: 6rem;
+    padding-bottom: 4rem;
     align-items: center;
   }
 
   .hero-content {
-    margin-top: 20px;
-    padding-bottom: 100px;
+    margin-top: 10px;
+    padding-bottom: 80px;
   }
 
   .hero h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* Mobile Category Icons */
+.mobile-category-icons {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-category-icons {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+  }
+
+  .category-icon-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    min-width: 70px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .category-icon-link:hover,
+  .category-icon-link:active {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .category-icon {
+    font-size: 1.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .category-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: center;
   }
 }
