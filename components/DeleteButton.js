@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { deleteItem } from '../app/my-listings/actions';
+import { deleteItem } from '@/app/my-listings/actions';
 
 export default function DeleteButton({ itemId }) {
     const [loading, setLoading] = useState(false);
