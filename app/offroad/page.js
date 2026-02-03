@@ -8,6 +8,7 @@ import { createClient } from '@/utils/supabase/client';
 import { getDistanceFromLatLonInMiles } from '@/utils/distance';
 import SearchFilter from '@/components/SearchFilter';
 import FilterSidebar from '@/components/FilterSidebar';
+import MobileFilterBar from '@/components/MobileFilterBar';
 
 const OFFROAD_SUBCATEGORIES = [
   'UTVs',
@@ -98,6 +99,8 @@ function OffroadPageContent() {
         />
 
         <div className="content-area">
+          <MobileFilterBar categories={OFFROAD_SUBCATEGORIES} />
+
           <div className="controls-row">
             <SearchFilter />
 
@@ -173,6 +176,8 @@ function OffroadPageContent() {
 
         .content-area { width: 100%; }
         
+        .content-area { width: 100%; }
+        
         .controls-row {
             display: flex;
             justify-content: space-between;
@@ -233,6 +238,7 @@ function OffroadPageContent() {
 
         @media (max-width: 900px) {
           .main-content { grid-template-columns: 1fr; }
+          .controls-row { display: none; }
         }
       `}</style>
     </div >

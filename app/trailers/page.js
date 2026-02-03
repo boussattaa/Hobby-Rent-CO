@@ -8,6 +8,7 @@ import { createClient } from '@/utils/supabase/client';
 import { getDistanceFromLatLonInMiles } from '@/utils/distance';
 import SearchFilter from '@/components/SearchFilter';
 import FilterSidebar from '@/components/FilterSidebar';
+import MobileFilterBar from '@/components/MobileFilterBar';
 
 const TRAILER_SUBCATEGORIES = [
   'Car Haulers',
@@ -99,6 +100,8 @@ function TrailersPageContent() {
         />
 
         <div className="content-area">
+          <MobileFilterBar categories={TRAILER_SUBCATEGORIES} />
+
           <div className="controls-row">
             <SearchFilter />
 
@@ -234,6 +237,7 @@ function TrailersPageContent() {
 
         @media (max-width: 900px) {
           .main-content { grid-template-columns: 1fr; }
+          .controls-row { display: none; }
         }
       `}</style>
     </div>

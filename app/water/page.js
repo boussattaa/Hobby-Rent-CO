@@ -8,6 +8,7 @@ import { createClient } from '@/utils/supabase/client';
 import { getDistanceFromLatLonInMiles } from '@/utils/distance';
 import SearchFilter from '@/components/SearchFilter';
 import FilterSidebar from '@/components/FilterSidebar';
+import MobileFilterBar from '@/components/MobileFilterBar';
 
 
 import { Suspense } from 'react';
@@ -109,6 +110,8 @@ function WaterPageContent() {
                 />
 
                 <div className="content-area">
+                    <MobileFilterBar categories={WATER_SUBCATEGORIES} />
+
                     <div className="controls-row">
                         <SearchFilter />
 
@@ -245,6 +248,7 @@ function WaterPageContent() {
 
         @media (max-width: 900px) {
           .main-content { grid-template-columns: 1fr; }
+          .controls-row { display: none; }
           /* In mobile, we might want to hide sidebar or make it a drawer. For now, just stacking. */
         }
       `}</style>

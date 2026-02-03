@@ -8,6 +8,7 @@ import { createClient } from '@/utils/supabase/client';
 import { getDistanceFromLatLonInMiles } from '@/utils/distance';
 import SearchFilter from '@/components/SearchFilter';
 import FilterSidebar from '@/components/FilterSidebar';
+import MobileFilterBar from '@/components/MobileFilterBar';
 
 const HOUSING_SUBCATEGORIES = [
     'Excavators',
@@ -99,6 +100,8 @@ function HousingPageContent() {
                 />
 
                 <div className="content-area">
+                    <MobileFilterBar categories={HOUSING_SUBCATEGORIES} />
+
                     <div className="controls-row">
                         <SearchFilter />
 
@@ -234,6 +237,7 @@ function HousingPageContent() {
 
         @media (max-width: 900px) {
           .main-content { grid-template-columns: 1fr; }
+          .controls-row { display: none; }
         }
       `}</style>
         </div>
