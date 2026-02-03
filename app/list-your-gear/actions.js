@@ -5,6 +5,8 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
+import { geocodeLocation } from '@/utils/geocoding'
+
 export async function createListing(formData) {
     const supabase = await createClient()
 
@@ -15,13 +17,18 @@ export async function createListing(formData) {
         redirect('/login')
     }
 
+    const locationStr = formData.get('location');
+    const coords = await geocodeLocation(locationStr);
+
     const itemData = {
         owner_id: user.id,
         name: formData.get('name'),
         category: formData.get('category'),
         subcategory: formData.get('subcategory'), // Add subcategory
         price: parseFloat(formData.get('price')),
-        location: formData.get('location'),
+        location: locationStr,
+        lat: coords ? coords.lat : null,
+        lng: coords ? coords.lng : null,
         description: formData.get('description'),
         image_url: formData.get('image_url') || '/images/dirt-hero.png'
     }

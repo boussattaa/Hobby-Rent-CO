@@ -4,6 +4,8 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { geocodeLocation } from '@/utils/geocoding';
+
 export async function updateListing(formData) {
     const supabase = await createClient();
 
@@ -13,6 +15,8 @@ export async function updateListing(formData) {
     }
 
     const itemId = formData.get('itemId');
+    const locationStr = formData.get('location');
+    const coords = await geocodeLocation(locationStr);
 
     const itemData = {
         name: formData.get('name'),
@@ -20,7 +24,9 @@ export async function updateListing(formData) {
         subcategory: formData.get('subcategory'),
         price: formData.get('price'),
         description: formData.get('description'),
-        location: formData.get('location'),
+        location: locationStr,
+        lat: coords ? coords.lat : null,
+        lng: coords ? coords.lng : null,
         image_url: formData.get('image_url'),
         // owner_id is not updated
     };

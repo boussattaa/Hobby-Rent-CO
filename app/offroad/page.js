@@ -1,9 +1,11 @@
 "use client";
 
-import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { getDistanceFromLatLonInMiles } from '@/utils/distance';
+import SearchFilter from '@/components/SearchFilter';
 
 const DIRT_ITEMS = [
   { id: 'd1', name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT' },
@@ -14,7 +16,27 @@ const DIRT_ITEMS = [
 
 export default function OffroadPage() {
   const [items, setItems] = useState(DIRT_ITEMS);
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  // Search Params
+  const searchLat = parseFloat(searchParams.get('lat'));
+  const searchLng = parseFloat(searchParams.get('lng'));
+  const searchRadius = parseFloat(searchParams.get('radius')) || 50;
+
+  const filteredItems = items.filter(item => {
+    // If no search, show all
+    if (!searchLat || !searchLng) return true;
+
+    // If item has no location logic yet, maybe hide or show? 
+    // For now, if item has no coords, we can't filter it accurately.
+    // But we can fallback to showing it if we want, or hiding.
+    // Let's hide items without coords if a geo-filter is active to be strict.
+    if (!item.lat || !item.lng) return false;
+
+    const distance = getDistanceFromLatLonInMiles(searchLat, searchLng, item.lat, item.lng);
+    return distance <= searchRadius;
+  });
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -99,6 +121,7 @@ export default function OffroadPage() {
           ))}
         </div>
       </div>
+     </div>
 
       <style jsx>{`
         .page-header {
@@ -111,18 +134,18 @@ export default function OffroadPage() {
         }
         
         .main-content {
-          display: grid;
-          grid-template-columns: 250px 1fr;
-          gap: 3rem;
+          display: block;
           padding-bottom: 4rem;
         }
+        
+        .content-area {
+            width: 100%;
+        }
 
-        .filters {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 12px;
-          border: 1px solid var(--border-color);
-          height: fit-content;
+        .results-info {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
         .filter-group {
@@ -211,6 +234,6 @@ export default function OffroadPage() {
           }
         }
       `}</style>
-    </div>
+    </div >
   );
 }
