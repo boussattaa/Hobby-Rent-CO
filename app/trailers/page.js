@@ -8,16 +8,10 @@ import { createClient } from '@/utils/supabase/client';
 import { getDistanceFromLatLonInMiles } from '@/utils/distance';
 import SearchFilter from '@/components/SearchFilter';
 
-const TRAILER_ITEMS = [
-  { id: 't1', name: '20\' Car Hauler', price: 85, image: '/images/trailer-hero.png', location: 'Salt Lake City, UT', type: 'Car Trailer', lat: 40.7608, lng: -111.8910 },
-  { id: 't2', name: '14\' Dump Trailer', price: 120, image: '/images/trailer-hero.png', location: 'Orem, UT', type: 'Dump Trailer', lat: 40.2969, lng: -111.6946 },
-  { id: 't3', name: '15 Yard Dumpster', price: 250, image: '/images/trailer-hero.png', location: 'Provo, UT', type: 'Dumpster Bin', lat: 40.2338, lng: -111.6585 },
-  { id: 't4', name: 'Enclosed Cargo 6x12', price: 60, image: '/images/trailer-hero.png', location: 'Lehi, UT', type: 'Utility Trailer', lat: 40.3916, lng: -111.8491 },
-  { id: 't5', name: 'Heavy Duty Flatbed', price: 100, image: '/images/trailer-hero.png', location: 'Draper, UT', type: 'Flatbed', lat: 40.5247, lng: -111.8638 },
-];
+const TRAILER_ITEMS = [];
 
 export default function TrailersPage() {
-  const [items, setItems] = useState(TRAILER_ITEMS);
+  const [items, setItems] = useState([]);
   const searchParams = useSearchParams();
   const supabase = createClient();
 

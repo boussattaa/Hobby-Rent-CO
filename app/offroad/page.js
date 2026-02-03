@@ -8,15 +8,10 @@ import { createClient } from '@/utils/supabase/client';
 import { getDistanceFromLatLonInMiles } from '@/utils/distance';
 import SearchFilter from '@/components/SearchFilter';
 
-const DIRT_ITEMS = [
-  { id: 'd1', name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT', lat: 38.5733, lng: -109.5498 },
-  { id: 'd2', name: 'Polaris RZR XP', price: 350, image: '/images/dirt-hero.png', location: 'Sand Hollow, UT', lat: 37.1232, lng: -113.3828 },
-  { id: 'd3', name: 'Honda CRF250R', price: 120, image: '/images/dirt-hero.png', location: 'St. George, UT', lat: 37.0965, lng: -113.5684 },
-  { id: 'd4', name: 'Can-Am Maverick', price: 400, image: '/images/dirt-hero.png', location: 'Dumont Dunes, CA', lat: 35.6836, lng: -116.2201 },
-];
+const DIRT_ITEMS = [];
 
 export default function OffroadPage() {
-  const [items, setItems] = useState(DIRT_ITEMS);
+  const [items, setItems] = useState([]);
   const searchParams = useSearchParams();
   const supabase = createClient();
 
@@ -29,10 +24,7 @@ export default function OffroadPage() {
     // If no search, show all
     if (!searchLat || !searchLng) return true;
 
-    // If item has no location logic yet, maybe hide or show? 
-    // For now, if item has no coords, we can't filter it accurately.
-    // But we can fallback to showing it if we want, or hiding.
-    // Let's hide items without coords if a geo-filter is active to be strict.
+    // Strict geo-filter
     if (!item.lat || !item.lng) return false;
 
     const distance = getDistanceFromLatLonInMiles(searchLat, searchLng, item.lat, item.lng);
@@ -47,14 +39,13 @@ export default function OffroadPage() {
         .eq('category', 'offroad');
 
       if (data) {
-        // Merge with mock items
         // Map DB fields to UI fields if necessary (DB has image_url, UI uses image)
         const formattedItems = data.map(item => ({
           ...item,
           image: item.image_url || '/images/dirt-hero.png',
           price: Number(item.price)
         }));
-        setItems(prev => [...DIRT_ITEMS, ...formattedItems]);
+        setItems(formattedItems);
       }
     };
     fetchItems();

@@ -26,6 +26,9 @@ export async function deleteItem(itemId) {
 
     revalidatePath('/my-listings');
     revalidatePath('/offroad');
+    revalidatePath('/trailers');
+    revalidatePath('/water');
+    revalidatePath('/housing');
     revalidatePath('/');
 
     return { success: true };

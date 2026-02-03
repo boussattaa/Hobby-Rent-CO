@@ -2,9 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import DeleteButton from '@/components/DeleteButton';
 
 // Mock database (consolidated from categories)
 const ITEMS_DB = {
@@ -27,9 +28,12 @@ const ITEMS_DB = {
 
 export default function ItemPage() {
   const params = useParams();
+  const router = useRouter(); // Added for redirect after delete
   const supabase = createClient();
   const initialItem = ITEMS_DB[params.id] || null;
   const [item, setItem] = useState(initialItem);
+  const [itemsOwnerId, setItemsOwnerId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(!initialItem);
 
   // Date state management
@@ -37,6 +41,12 @@ export default function ItemPage() {
   const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    checkAuth();
+
     if (ITEMS_DB[params.id]) return;
 
     const fetchItem = async () => {
@@ -48,6 +58,7 @@ export default function ItemPage() {
 
       if (data) {
         setItem({ ...data, price: Number(data.price) });
+        setItemsOwnerId(data.owner_id);
       }
       if (error) console.error('Error fetching item:', error);
       setLoading(false);
@@ -107,6 +118,17 @@ export default function ItemPage() {
                 <div className="feature-item">⭐ 4.9 Star Equipment</div>
                 <div className="feature-item">✅ Verified Owner</div>
               </div>
+
+              {/* Owner/Admin Controls */}
+              {currentUser && (
+                <div className="admin-controls">
+                  <h4>Admin Controls</h4>
+                  <div className="controls-row">
+                    <Link href={`/edit-listing/${item.id}`} className="btn-edit">✏️ Edit</Link>
+                    <DeleteButton itemId={item.id} />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="booking-column">
@@ -249,6 +271,26 @@ export default function ItemPage() {
           font-weight: 600;
           font-size: 0.9rem;
         }
+        
+        .admin-controls {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+        .admin-controls h4 { margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; color: var(--text-secondary); }
+        .controls-row { display: flex; gap: 1rem; }
+        .btn-edit {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            flex: 1;
+            text-align: center;
+        }
+        .btn-edit:hover { background: #f5f5f5; }
 
         .booking-card {
           background: var(--background);
