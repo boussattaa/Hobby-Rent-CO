@@ -19,7 +19,7 @@ export default async function FeaturedRentals() {
         <section className="featured-section">
             <div className="container">
                 <div className="header-row">
-                    <h2>Featured Rentals</h2>
+                    <h2>Featured Listings</h2>
                     <Link href="/search" className="view-all-link">View all listings →</Link>
                 </div>
 
