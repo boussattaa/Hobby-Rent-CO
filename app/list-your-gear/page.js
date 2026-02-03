@@ -111,8 +111,7 @@ export default function ListYourGear() {
     <div className="list-page">
       <div className="container">
 
-        {/* Earnings Calculator */}
-        <EarningsCalculator />
+
 
         <div className="form-wrapper glass">
           <div className="form-header">
@@ -221,6 +220,10 @@ export default function ListYourGear() {
           </form>
         </div>
       </div >
+
+      <div style={{ marginTop: '4rem' }}>
+        <EarningsCalculator />
+      </div>
 
       <style jsx>{`
         .list-page {

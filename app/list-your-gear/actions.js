@@ -17,6 +17,17 @@ export async function createListing(formData) {
         redirect('/login')
     }
 
+    // Check verification status
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_verified')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile?.is_verified) {
+        redirect('/verify')
+    }
+
     const locationStr = formData.get('location');
     const coords = await geocodeLocation(locationStr);
 
