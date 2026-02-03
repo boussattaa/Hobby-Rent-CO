@@ -30,38 +30,7 @@ export default async function FeaturedRentals() {
                 </div>
             </div>
 
-            <style jsx>{`
-        .featured-section {
-            padding: 5rem 0;
-        }
 
-        .header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .header-row h2 {
-            font-size: 2rem;
-            margin: 0;
-        }
-
-        .view-all-link {
-            text-decoration: none;
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-        .view-all-link:hover {
-            text-decoration: underline;
-        }
-
-        .featured-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 2rem;
-        }
-      `}</style>
         </section>
     );
 }
