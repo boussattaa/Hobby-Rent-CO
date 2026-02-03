@@ -686,3 +686,92 @@ h3 {
     text-align: center;
   }
 }
+/* Destination Page Styles */
+.destination-page .hero-section {
+    position: relative;
+    height: 50vh;;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    margin-top: -80px; /* Offset navbar */
+}
+
+.destination-page .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1;
+}
+
+.destination-page .hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.destination-page .hero-content h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    font-weight: 800;
+}
+
+.destination-page .hero-content p {
+    font-size: 1.25rem;
+    opacity: 0.9;
+}
+
+.destination-page .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.destination-page .item-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid var(--border-color);
+    display: block;
+}
+
+.destination-page .item-card:hover {
+    transform: translateY(-4px);
+}
+
+.destination-page .image-wrapper {
+    position: relative;
+    height: 200px;
+}
+
+.destination-page .card-content {
+   padding: 1.5rem;
+}
+
+.destination-page .card-content h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.destination-page .price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.destination-page .day {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #64748b;
+}
+
+.destination-page .location {
+    color: #64748b;
+    font-size: 0.9rem;
+}
+

@@ -1,0 +1,53 @@
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+ΓÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 1836.6ms
+  Running TypeScript ...
+  Collecting page data using 31 workers ...
+  Generating static pages using 31 workers (0/28) ...
+  Generating static pages using 31 workers (7/28) 
+  Generating static pages using 31 workers (14/28) 
+  Generating static pages using 31 workers (21/28) 
+Γ£ô Generating static pages using 31 workers (28/28) in 162.1ms
+  Finalizing page optimization ...
+
+Route (app)
+Γöî ╞Æ /
+Γö£ ╞Æ /_not-found
+Γö£ ╞Æ /account
+Γö£ ╞Æ /admin
+Γö£ ╞Æ /admin/rentals
+Γö£ ╞Æ /admin/users
+Γö£ ╞Æ /api/checkout
+Γö£ ╞Æ /api/send-phone-otp
+Γö£ ╞Æ /api/verify-identity
+Γö£ ╞Æ /api/verify-phone-otp
+Γö£ ╞Æ /api/webhooks/stripe
+Γö£ ╞Æ /auth/callback
+Γö£ ╞Æ /checkout
+Γö£ ╞Æ /destinations/[slug]
+Γö£ ╞Æ /earnings
+Γö£ ╞Æ /edit-listing/[id]
+Γö£ ╞Æ /error
+Γö£ ╞Æ /housing
+Γö£ ╞Æ /item/[id]
+Γö£ ╞Æ /list-your-gear
+Γö£ ╞Æ /login
+Γö£ ╞Æ /manage-availability/[id]
+Γö£ ╞Æ /my-listings
+Γö£ ╞Æ /offroad
+Γö£ ╞Æ /rentals
+Γö£ ╞Æ /rentals/[id]/inspection
+Γö£ ╞Æ /search
+Γö£ ╞Æ /success
+Γö£ ╞Æ /trailers
+Γö£ ╞Æ /verify
+Γöö ╞Æ /water
+
+
+╞Æ Proxy (Middleware)
+
+╞Æ  (Dynamic)  server-rendered on demand
+
