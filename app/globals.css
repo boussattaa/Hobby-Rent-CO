@@ -453,3 +453,41 @@ h3 {
   font-weight: 600;
   text-transform: capitalize;
 }
+
+/* My Listings Specific Styles */
+.badge-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+.manage-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.manage-actions .btn {
+  flex: 1;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.manage-actions .btn-secondary {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.manage-actions .btn-secondary:hover {
+  background: #e2e8f0;
+}
