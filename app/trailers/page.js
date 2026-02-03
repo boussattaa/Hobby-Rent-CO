@@ -24,6 +24,7 @@ const TRAILER_SUBCATEGORIES = [
 function TrailersPageContent() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedSearch, setExpandedSearch] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = createClient();
@@ -67,19 +68,33 @@ function TrailersPageContent() {
         }));
 
         if (searchLat && searchLng) {
-          finalItems = finalItems.filter(item => {
-            if (!item.lat || !item.lng) return false;
-            const distance = getDistanceFromLatLonInMiles(searchLat, searchLng, item.lat, item.lng);
-            return distance <= searchRadius;
+          // Calculate distance for all items first
+          finalItems.forEach(item => {
+            if (item.lat && item.lng) {
+              item.distance = getDistanceFromLatLonInMiles(searchLat, searchLng, item.lat, item.lng);
+            } else {
+              item.distance = 999999;
+            }
           });
-        }
 
-        if (sortOption === 'distance' && searchLat && searchLng) {
-          finalItems.sort((a, b) => {
-            const distA = getDistanceFromLatLonInMiles(searchLat, searchLng, a.lat, a.lng);
-            const distB = getDistanceFromLatLonInMiles(searchLat, searchLng, b.lat, b.lng);
-            return distA - distB;
-          });
+          // Try filtering by radius
+          const withinRadius = finalItems.filter(item => item.distance <= searchRadius);
+
+          if (withinRadius.length > 0) {
+            finalItems = withinRadius;
+            setExpandedSearch(false);
+
+            // Respect manual distance sort
+            if (sortOption === 'distance') {
+              finalItems.sort((a, b) => a.distance - b.distance);
+            }
+          } else {
+            // Fallback: Use all items, sorted by distance
+            setExpandedSearch(true);
+            finalItems.sort((a, b) => a.distance - b.distance);
+          }
+        } else {
+          setExpandedSearch(false);
         }
 
         setItems(finalItems);
@@ -132,6 +147,11 @@ function TrailersPageContent() {
           </div>
 
           <div className="results-info">
+            {expandedSearch && (
+              <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#fff7ed', border: '1px solid #fdba74', borderRadius: '8px', color: '#c2410c' }}>
+                ⚠️ No matches found within {searchRadius} miles. <strong>Showing {items.length} closest items.</strong>
+              </div>
+            )}
             {loading ? (
               <span>Loading listings...</span>
             ) : searchLat ? (
