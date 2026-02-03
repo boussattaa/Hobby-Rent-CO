@@ -1,16 +1,56 @@
 "use client";
 
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/utils/supabase/client';
+import { getDistanceFromLatLonInMiles } from '@/utils/distance';
+import SearchFilter from '@/components/SearchFilter';
 
 const WATER_ITEMS = [
-    { id: 'w1', name: 'Sea-Doo GTX', price: 250, image: '/images/water-hero.png', location: 'Miami, FL' },
-    { id: 'w2', name: 'MasterCraft NXT', price: 800, image: '/images/water-hero.png', location: 'Lake Powell, AZ' },
-    { id: 'w3', name: 'Inflatable Paddleboard', price: 40, image: '/images/water-hero.png', location: 'Austin, TX' },
-    { id: 'w4', name: 'Yamaha Waverunner', price: 220, image: '/images/water-hero.png', location: 'San Diego, CA' },
+    { id: 'w1', name: 'Sea-Doo GTX', price: 250, image: '/images/water-hero.png', location: 'Miami, FL', lat: 25.7617, lng: -80.1918 },
+    { id: 'w2', name: 'MasterCraft NXT', price: 800, image: '/images/water-hero.png', location: 'Lake Powell, AZ', lat: 36.9363, lng: -111.4838 },
+    { id: 'w3', name: 'Inflatable Paddleboard', price: 40, image: '/images/water-hero.png', location: 'Austin, TX', lat: 30.2672, lng: -97.7431 },
+    { id: 'w4', name: 'Yamaha Waverunner', price: 220, image: '/images/water-hero.png', location: 'San Diego, CA', lat: 32.7157, lng: -117.1611 },
 ];
 
 export default function WaterPage() {
+    const [items, setItems] = useState(WATER_ITEMS);
+    const searchParams = useSearchParams();
+    const supabase = createClient();
+
+    // Search Params
+    const searchLat = parseFloat(searchParams.get('lat'));
+    const searchLng = parseFloat(searchParams.get('lng'));
+    const searchRadius = parseFloat(searchParams.get('radius')) || 50;
+
+    const filteredItems = items.filter(item => {
+        if (!searchLat || !searchLng) return true;
+        if (!item.lat || !item.lng) return false;
+        const distance = getDistanceFromLatLonInMiles(searchLat, searchLng, item.lat, item.lng);
+        return distance <= searchRadius;
+    });
+
+    useEffect(() => {
+        const fetchItems = async () => {
+            const { data, error } = await supabase
+                .from('items')
+                .select('*')
+                .eq('category', 'water');
+
+            if (data) {
+                const formattedItems = data.map(item => ({
+                    ...item,
+                    image: item.image_url || '/images/water-hero.png',
+                    price: Number(item.price)
+                }));
+                setItems(prev => [...WATER_ITEMS, ...formattedItems]);
+            }
+        };
+        fetchItems();
+    }, [supabase]);
+
     return (
         <div className="category-page">
             <header className="page-header">
@@ -21,7 +61,7 @@ export default function WaterPage() {
             </header>
 
             <div className="container main-content">
-                <div className="filters">
+                <aside className="filters">
                     <h3>Filters</h3>
                     <div className="filter-group">
                         <label>Category</label>
@@ -52,24 +92,36 @@ export default function WaterPage() {
                         <label>Price Range</label>
                         <input type="range" min="0" max="1000" />
                     </div>
-                </div>
+                </aside>
 
-                <div className="item-grid">
-                    {WATER_ITEMS.map((item) => (
-                        <Link key={item.id} href={`/item/${item.id}`} className="item-card">
-                            <div className="card-image">
-                                <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
-                            </div>
-                            <div className="card-details">
-                                <div className="card-header">
-                                    <h3>{item.name}</h3>
-                                    <span className="price">${item.price}<span className="unit">/day</span></span>
+                <div className="content-area">
+                    <SearchFilter />
+
+                    <div className="results-info">
+                        {searchLat ? (
+                            <p>Showing {filteredItems.length} results within {searchRadius} miles</p>
+                        ) : (
+                            <p>Showing all {filteredItems.length} listings</p>
+                        )}
+                    </div>
+
+                    <div className="item-grid">
+                        {filteredItems.map((item) => (
+                            <Link key={item.id} href={`/item/${item.id}`} className="item-card">
+                                <div className="card-image">
+                                    <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
                                 </div>
-                                <p className="location">📍 {item.location}</p>
-                                <button className="btn btn-primary full-width">Rent Now</button>
-                            </div>
-                        </Link>
-                    ))}
+                                <div className="card-details">
+                                    <div className="card-header">
+                                        <h3>{item.name}</h3>
+                                        <span className="price">${item.price}<span className="unit">/day</span></span>
+                                    </div>
+                                    <p className="location">📍 {item.location}</p>
+                                    <button className="btn btn-primary full-width">Rent Now</button>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -82,13 +134,14 @@ export default function WaterPage() {
         .page-header h1 {
           color: var(--water-primary);
         }
-        /* Reuse styles from Dirt Page via global if preferred, or scoped here */
+        
         .main-content {
           display: grid;
           grid-template-columns: 250px 1fr;
           gap: 3rem;
           padding-bottom: 4rem;
         }
+
         .filters {
           background: white;
           padding: 1.5rem;
@@ -96,6 +149,10 @@ export default function WaterPage() {
           border: 1px solid var(--border-color);
           height: fit-content;
         }
+        
+        .content-area { width: 100%; }
+        .results-info { margin-bottom: 1rem; color: var(--text-secondary); font-weight: 500; }
+
         .filter-group { margin-top: 1.5rem; }
         .filter-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
         .filter-group select, .filter-group input { width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); }
@@ -124,7 +181,7 @@ export default function WaterPage() {
         .location { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; }
         .full-width { width: 100%; }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .main-content { grid-template-columns: 1fr; }
           .filters { display: none; }
         }

@@ -1,16 +1,56 @@
 "use client";
 
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/utils/supabase/client';
+import { getDistanceFromLatLonInMiles } from '@/utils/distance';
+import SearchFilter from '@/components/SearchFilter';
 
 const HOUSING_ITEMS = [
-    { id: 'h1', name: 'DeWalt 20V Drill Set', price: 25, image: '/images/housing-hero.png', location: 'Seattle, WA' },
-    { id: 'h2', name: 'Industrial Carpet Cleaner', price: 60, image: '/images/housing-hero.png', location: 'Portland, OR' },
-    { id: 'h3', name: 'Pressure Washer 3000PSI', price: 45, image: '/images/housing-hero.png', location: 'Vancouver, BC' },
-    { id: 'h4', name: 'Tile Saw', price: 35, image: '/images/housing-hero.png', location: 'Surrey, BC' },
+    { id: 'h1', name: 'DeWalt 20V Drill Set', price: 25, image: '/images/housing-hero.png', location: 'Seattle, WA', lat: 47.6062, lng: -122.3321 },
+    { id: 'h2', name: 'Industrial Carpet Cleaner', price: 60, image: '/images/housing-hero.png', location: 'Portland, OR', lat: 45.5152, lng: -122.6784 },
+    { id: 'h3', name: 'Pressure Washer 3000PSI', price: 45, image: '/images/housing-hero.png', location: 'Vancouver, BC', lat: 49.2827, lng: -123.1207 },
+    { id: 'h4', name: 'Tile Saw', price: 35, image: '/images/housing-hero.png', location: 'Surrey, BC', lat: 49.1913, lng: -122.8490 },
 ];
 
 export default function HousingPage() {
+    const [items, setItems] = useState(HOUSING_ITEMS);
+    const searchParams = useSearchParams();
+    const supabase = createClient();
+
+    // Search Params
+    const searchLat = parseFloat(searchParams.get('lat'));
+    const searchLng = parseFloat(searchParams.get('lng'));
+    const searchRadius = parseFloat(searchParams.get('radius')) || 50;
+
+    const filteredItems = items.filter(item => {
+        if (!searchLat || !searchLng) return true;
+        if (!item.lat || !item.lng) return false;
+        const distance = getDistanceFromLatLonInMiles(searchLat, searchLng, item.lat, item.lng);
+        return distance <= searchRadius;
+    });
+
+    useEffect(() => {
+        const fetchItems = async () => {
+            const { data, error } = await supabase
+                .from('items')
+                .select('*')
+                .eq('category', 'housing');
+
+            if (data) {
+                const formattedItems = data.map(item => ({
+                    ...item,
+                    image: item.image_url || '/images/housing-hero.png',
+                    price: Number(item.price)
+                }));
+                setItems(prev => [...HOUSING_ITEMS, ...formattedItems]);
+            }
+        };
+        fetchItems();
+    }, [supabase]);
+
     return (
         <div className="category-page">
             <header className="page-header">
@@ -21,7 +61,7 @@ export default function HousingPage() {
             </header>
 
             <div className="container main-content">
-                <div className="filters">
+                <aside className="filters">
                     <h3>Filters</h3>
                     <div className="filter-group">
                         <label>Category</label>
@@ -53,24 +93,36 @@ export default function HousingPage() {
                         <label>Price Range</label>
                         <input type="range" min="0" max="100" />
                     </div>
-                </div>
+                </aside>
 
-                <div className="item-grid">
-                    {HOUSING_ITEMS.map((item) => (
-                        <Link key={item.id} href={`/item/${item.id}`} className="item-card">
-                            <div className="card-image">
-                                <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
-                            </div>
-                            <div className="card-details">
-                                <div className="card-header">
-                                    <h3>{item.name}</h3>
-                                    <span className="price">${item.price}<span className="unit">/day</span></span>
+                <div className="content-area">
+                    <SearchFilter />
+
+                    <div className="results-info">
+                        {searchLat ? (
+                            <p>Showing {filteredItems.length} results within {searchRadius} miles</p>
+                        ) : (
+                            <p>Showing all {filteredItems.length} listings</p>
+                        )}
+                    </div>
+
+                    <div className="item-grid">
+                        {filteredItems.map((item) => (
+                            <Link key={item.id} href={`/item/${item.id}`} className="item-card">
+                                <div className="card-image">
+                                    <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
                                 </div>
-                                <p className="location">📍 {item.location}</p>
-                                <button className="btn btn-primary full-width">Rent Now</button>
-                            </div>
-                        </Link>
-                    ))}
+                                <div className="card-details">
+                                    <div className="card-header">
+                                        <h3>{item.name}</h3>
+                                        <span className="price">${item.price}<span className="unit">/day</span></span>
+                                    </div>
+                                    <p className="location">📍 {item.location}</p>
+                                    <button className="btn btn-primary full-width">Rent Now</button>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -97,6 +149,10 @@ export default function HousingPage() {
           border: 1px solid var(--border-color);
           height: fit-content;
         }
+        
+        .content-area { width: 100%; }
+        .results-info { margin-bottom: 1rem; color: var(--text-secondary); font-weight: 500; }
+        
         .filter-group { margin-top: 1.5rem; }
         .filter-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
         .filter-group select, .filter-group input { width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); }
@@ -125,7 +181,7 @@ export default function HousingPage() {
         .location { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; }
         .full-width { width: 100%; }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .main-content { grid-template-columns: 1fr; }
           .filters { display: none; }
         }
