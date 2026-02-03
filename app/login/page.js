@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { login, signup } from './actions'
 import { SubmitButton } from '@/components/submit-button'
+import { OAuthButton } from '@/components/OAuthButton'
 
 export default async function LoginPage(props) {
   const searchParams = await props.searchParams;
@@ -37,6 +38,14 @@ export default async function LoginPage(props) {
               >
                 Sign up
               </SubmitButton>
+            </div>
+
+            <div className="oauth-divider">
+              <span>Or continue with</span>
+            </div>
+
+            <div className="oauth-actions">
+              <OAuthButton />
             </div>
 
             {searchParams?.message && (

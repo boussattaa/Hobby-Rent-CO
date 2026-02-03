@@ -4,11 +4,23 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
+import { useState, useEffect } from 'react';
 
 export default function Navbar({ user }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const [isVerified, setIsVerified] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const fetchProfile = async () => {
+        const { data } = await supabase.from('profiles').select('is_verified').eq('id', user.id).single();
+        if (data?.is_verified) setIsVerified(true);
+      };
+      fetchProfile();
+    }
+  }, [user]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -53,9 +65,15 @@ export default function Navbar({ user }) {
         <div className="nav-actions">
           {user ? (
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {user.email}
+                {isVerified && <span title="Identity Verified">✅</span>}
               </span>
+              {!isVerified && (
+                <Link href="/verify" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                  Verify ID
+                </Link>
+              )}
               <Link href="/my-listings" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
                 My Listings
               </Link>
