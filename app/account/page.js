@@ -96,15 +96,15 @@ export default function AccountPage() {
         try {
             const { error } = await supabase
                 .from('profiles')
-                .update({
+                .upsert({
+                    id: user.id,
                     first_name: profile.first_name,
                     last_name: profile.last_name,
                     phone: profile.phone,
                     notification_email: profile.notification_email,
                     notification_sms: profile.notification_sms,
                     updated_at: new Date().toISOString(),
-                })
-                .eq('id', user.id);
+                });
 
             if (error) throw error;
 
