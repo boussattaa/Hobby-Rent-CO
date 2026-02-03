@@ -205,6 +205,12 @@ export default function FilterSidebar({ categories = [], priceMax = 1000 }) {
             color: var(--text-secondary);
             margin-top: 0.5rem;
         }
+
+        @media (max-width: 900px) {
+            .filters {
+                display: none;
+            }
+        }
       `}</style>
         </aside>
     );
