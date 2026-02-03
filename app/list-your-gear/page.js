@@ -290,9 +290,74 @@ export default function ListYourGear() {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>Item Name</label>
-                <input type="text" name="name" placeholder="e.g. 2023 KTM 300 XC" required />
+
+              <div className="form-group full">
+                <label>Year, Make, & Model (Required)</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                  <input type="number" name="year" placeholder="Year" required />
+                  <input type="text" name="make" placeholder="Make" required />
+                  <input type="text" name="model" placeholder="Model" required />
+                </div>
+              </div>
+
+              {/* Dynamic Specs Section based on Category */}
+              {selectedCategory === 'offroad' && (
+                <div className="form-group full">
+                  <label>Offroad Specs</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <input type="text" placeholder="Engine Size (cc)" onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), engine_cc: e.target.value };
+                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                    }} />
+                    <input type="text" placeholder="Seat Height" onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), seat_height: e.target.value };
+                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                    }} />
+                  </div>
+                </div>
+              )}
+
+              {selectedCategory === 'water' && (
+                <div className="form-group full">
+                  <label>Watercraft Specs</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                    <input type="number" placeholder="Passenger Capacity" onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), capacity: e.target.value };
+                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                    }} />
+                    <input type="text" placeholder="Horsepower" onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), horsepower: e.target.value };
+                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                    }} />
+                    <input type="text" placeholder="Ball Hitch Size (if trailer incl.)" onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), hitch_size: e.target.value };
+                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                    }} />
+                  </div>
+                </div>
+              )}
+
+              {selectedCategory === 'trailers' && (
+                <div className="form-group full">
+                  <label>Trailer Specs</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <input type="text" placeholder="Towing Capacity (lbs)" onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), towing_capacity: e.target.value };
+                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                    }} />
+                    <input type="text" placeholder="Ball Hitch Size (e.g. 2 inch)" onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), hitch_size: e.target.value };
+                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                    }} />
+                  </div>
+                </div>
+              )}
+
+              <input type="hidden" name="specs" />
+
+              <div className="form-group full">
+                <label>Rules & Requirements</label>
+                <textarea name="rules" rows="2" placeholder="e.g. Must have 3/4 ton truck, Age 25+, etc." />
               </div>
 
               <div className="form-group">
@@ -305,9 +370,33 @@ export default function ListYourGear() {
                 <input type="number" name="weekend_price" placeholder="Optional (e.g. 200)" />
               </div>
 
+              {/* Private Owner Details Section */}
+              <div style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#475569' }}>🔒 Private Owner Details (Only you see this)</h3>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.9rem' }}>VIN / Serial #</label>
+                    <input type="text" name="vin" placeholder="Private Record" />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.9rem' }}>License Plate</label>
+                    <input type="text" name="license_plate" placeholder="Private Record" />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.9rem' }}>Insurance Policy #</label>
+                    <input type="text" name="insurance_policy" placeholder="Policy Number" />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ fontSize: '0.9rem' }}>Storage Address</label>
+                    <input type="text" name="storage_address" placeholder="If different from pickup" />
+                  </div>
+                </div>
+              </div>
+
               <div className="form-group">
-                <label>Location</label>
-                <input type="text" name="location" placeholder="e.g. Moab, UT" required />
+                <label>Zip Code</label>
+                <input type="text" name="location" placeholder="e.g. 83646" required pattern="[0-9]*" />
               </div>
 
               <div className="form-group full">
