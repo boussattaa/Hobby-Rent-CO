@@ -10,6 +10,15 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata = {
   title: 'HobbyRent | Rent Dirt, Watersports, Trailers & Tools',
   description: 'The premium marketplace for renting outdoor gear and tools.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'HobbyRent',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 }
 
 export default async function RootLayout({ children }) {

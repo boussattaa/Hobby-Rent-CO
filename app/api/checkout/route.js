@@ -10,32 +10,48 @@ export async function POST(request) {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     try {
-        const { itemId, price, name } = await request.json();
+        const { itemId, price, name, addProtection } = await request.json();
+
+        const line_items = [
+            {
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: `Rental: ${name}`,
+                    },
+                    unit_amount: Math.round(price * 100), // Stripe expects cents
+                },
+                quantity: 1,
+            },
+            {
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: 'Service Fee',
+                    },
+                    unit_amount: 1500, // $15.00
+                },
+                quantity: 1,
+            }
+        ];
+
+        if (addProtection) {
+            line_items.push({
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: 'Damage Protection Plan',
+                        description: 'Coverage for accidental damage up to $5,000'
+                    },
+                    unit_amount: 2000, // $20.00
+                },
+                quantity: 1,
+            });
+        }
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
-            line_items: [
-                {
-                    price_data: {
-                        currency: 'usd',
-                        product_data: {
-                            name: `Rental: ${name}`,
-                        },
-                        unit_amount: Math.round(price * 100), // Stripe expects cents
-                    },
-                    quantity: 1,
-                },
-                {
-                    price_data: {
-                        currency: 'usd',
-                        product_data: {
-                            name: 'Service Fee',
-                        },
-                        unit_amount: 1500, // $15.00
-                    },
-                    quantity: 1,
-                }
-            ],
+            line_items: line_items,
             mode: 'payment',
             success_url: `${request.headers.get('origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${request.headers.get('origin')}/item/${itemId}`,

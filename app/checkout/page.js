@@ -21,6 +21,7 @@ export default function CheckoutPage() {
     const [item, setItem] = useState(ITEMS_DB[itemId] || null);
     const [fetching, setFetching] = useState(!ITEMS_DB[itemId] && !!itemId);
     const [loading, setLoading] = useState(false);
+    const [addProtection, setAddProtection] = useState(false);
 
     useEffect(() => {
         if (!itemId || ITEMS_DB[itemId]) return;
@@ -71,7 +72,8 @@ export default function CheckoutPage() {
     }
 
     const rentalTotal = itemPrice * days;
-    const total = rentalTotal + serviceFee;
+    const protectionFee = 20;
+    const total = rentalTotal + serviceFee + (addProtection ? protectionFee : 0);
 
 
 
@@ -90,6 +92,7 @@ export default function CheckoutPage() {
                     itemId,
                     price: rentalTotal, // Send total rental price (days * daily)
                     name: `${itemName} (${days} days)`,
+                    addProtection,
                 }),
             });
 
@@ -144,6 +147,27 @@ export default function CheckoutPage() {
                             <span>Service Fee</span>
                             <span>${serviceFee}</span>
                         </div>
+
+                        <div className="protection-option" style={{ margin: '1.5rem 0', padding: '1rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '0.75rem' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={addProtection}
+                                    onChange={(e) => setAddProtection(e.target.checked)}
+                                    style={{ width: '20px', height: '20px' }}
+                                />
+                                <div>
+                                    <div style={{ fontWeight: '600' }}>Add Damage Protection (+$20)</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Cover accidental damage up to $5,000</div>
+                                </div>
+                            </label>
+                        </div>
+                        {addProtection && (
+                            <div className="summary-row">
+                                <span>Damage Protection</span>
+                                <span>${protectionFee}</span>
+                            </div>
+                        )}
                         <div className="summary-row total">
                             <span>Total</span>
                             <span>${total}</span>
@@ -200,6 +224,6 @@ export default function CheckoutPage() {
           .checkout-grid { grid-template-columns: 1fr; }
         }
       `}</style>
-        </div>
+        </div >
     );
 }
