@@ -35,6 +35,9 @@ export default function Home() {
           </div>
 
           <div className="hero-actions">
+            <Link href="/search" className="btn btn-secondary" style={{ fontWeight: 'bold' }}>
+              Browse Rentals
+            </Link>
             <Link href="/list-your-gear" className="btn btn-primary" style={{ fontWeight: 'bold' }}>
               List Your Gear
             </Link>

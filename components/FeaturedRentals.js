@@ -6,24 +6,59 @@ import Link from 'next/link';
 export default async function FeaturedRentals() {
     const supabase = await createClient();
 
-    // Fetch 4 random items (using limits for now as random() is tricky in simple Supabase queries without RPC)
-    // We'll just fetch a mix by taking the first 4. In a real app we'd use an rpc('get_random_items')
-    const { data: items } = await supabase
-        .from('items')
-        .select('*')
-        .limit(4);
+    // Fetch curated featured listings:
+    // 1 most expensive offroad, 2 most expensive watersports, 1 trailer
+    const [offroadRes, waterRes, trailerRes] = await Promise.all([
+        supabase
+            .from('items')
+            .select('*')
+            .eq('category', 'offroad')
+            .order('price', { ascending: false })
+            .limit(1),
+        supabase
+            .from('items')
+            .select('*')
+            .eq('category', 'water')
+            .order('price', { ascending: false })
+            .limit(2),
+        supabase
+            .from('items')
+            .select('*')
+            .eq('category', 'trailers')
+            .order('price', { ascending: false })
+            .limit(1),
+    ]);
 
-    if (!items || items.length === 0) return null;
+    const items = [
+        ...(offroadRes.data || []),
+        ...(waterRes.data || []),
+        ...(trailerRes.data || []),
+    ];
+
+    if (items.length === 0) return null;
+
+    const gridStyle = {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '1.5rem',
+    };
+
+    const headerStyle = {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '1.5rem',
+    };
 
     return (
-        <section className="featured-section">
+        <section className="featured-section" style={{ padding: '4rem 0', background: '#f8fafc' }}>
             <div className="container">
-                <div className="header-row">
-                    <h2>Featured Listings</h2>
-                    <Link href="/search" className="view-all-link">View all listings →</Link>
+                <div style={headerStyle}>
+                    <h2 style={{ margin: 0 }}>Featured Listings</h2>
+                    <Link href="/search" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 600 }}>View all listings →</Link>
                 </div>
 
-                <div className="featured-grid">
+                <div style={gridStyle}>
                     {items.map(item => (
                         <ListingCard key={item.id} item={item} />
                     ))}

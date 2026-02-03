@@ -491,43 +491,59 @@ h3 {
 .manage-actions .btn-secondary:hover {
   background: #e2e8f0;
 }
+
 /* Featured Carousel Styles - Horizontal Scroll */
 .featured-grid {
-    display: flex;
-    overflow-x: auto;
-    gap: 1.5rem;
-    padding: 1rem 1rem 2rem;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+  display: flex;
+  overflow-x: auto;
+  gap: 1.5rem;
+  padding: 1rem 1rem 2rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .featured-grid::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 .featured-grid .listing-card {
-    min-width: 280px;
-    width: 280px;
-    scroll-snap-align: center;
-    flex-shrink: 0;
+  min-width: 280px;
+  width: 280px;
+  scroll-snap-align: center;
+  flex-shrink: 0;
+}
+
+/* Featured Grid Responsive */
+@media (max-width: 1024px) {
+  .featured-section .container>div:last-child {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .featured-section .container>div:last-child {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* Mobile Hero Fix */
 @media (max-width: 768px) {
-    .hero {
-        margin-top: 0;
-        padding-top: 60px;
-        height: auto;
-        min-height: 100vh;
-        padding-bottom: 6rem;
-        align-items: center;
-    }
-    .hero-content {
-        margin-top: 20px;
-        padding-bottom: 100px;
-    }
-    .hero h1 {
-        font-size: 2.5rem;
-    }
+  .hero {
+    margin-top: 0;
+    padding-top: 60px;
+    height: auto;
+    min-height: 100vh;
+    padding-bottom: 6rem;
+    align-items: center;
+  }
+
+  .hero-content {
+    margin-top: 20px;
+    padding-bottom: 100px;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+  }
 }
