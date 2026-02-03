@@ -96,36 +96,37 @@ export default function ListYourGear() {
     const style = {
       transform: CSS.Transform.toString(transform),
       transition,
-      zIndex: isDragging ? 10 : 1,
-      opacity: isDragging ? 0.5 : 1,
+      zIndex: isDragging ? 20 : 1, // Higher z-index while dragging
+      opacity: isDragging ? 0.8 : 1,
     };
 
     return (
       <div ref={setNodeRef} style={style} className={`img-preview ${index === 0 ? 'main' : ''}`} {...attributes} {...listeners}>
         <img src={url} alt={`Photo ${index}`} />
-        {index === 0 && <span className="badge">Main</span>}
 
-        {/* Action Buttons - Stop propagation ONLY on buttons so dragging the image works */}
-        <div className="overlay-actions">
-          {index !== 0 && (
-            <button
-              type="button"
-              onClick={() => onMakeMain(index)}
-              onPointerDown={(e) => e.stopPropagation()}
-              className="action-btn"
-            >
-              Make Main
-            </button>
-          )}
+        {/* Buttons independent of overlay for better touch accessibility */}
+        {index !== 0 && (
           <button
             type="button"
-            onClick={() => onRemove(index)}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="action-btn delete"
+            onClick={() => onMakeMain(index)}
+            onPointerDown={(e) => e.stopPropagation()} // Stop drag start
+            className="action-btn make-main-btn"
           >
-            Remove
+            Make Main
           </button>
-        </div>
+        )}
+
+        {index === 0 && <span className="badge">Main Photo</span>}
+
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          onPointerDown={(e) => e.stopPropagation()} // Stop drag start
+          className="remove-btn-x"
+          title="Remove photo"
+        >
+          ✕
+        </button>
       </div>
     );
   };
