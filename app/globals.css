@@ -507,23 +507,111 @@ h3 {
   display: none;
 }
 
-.featured-grid .listing-card {
-  min-width: 280px;
-  width: 280px;
-  scroll-snap-align: center;
-  flex-shrink: 0;
+/* Featured Listings Carousel */
+.featured-section {
+  padding: 4rem 0;
+  background: #f8fafc;
 }
 
-/* Featured Grid Responsive */
-@media (max-width: 1024px) {
-  .featured-section .container>div:last-child {
-    grid-template-columns: repeat(2, 1fr) !important;
+.featured-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.featured-header h2 {
+  margin: 0;
+}
+
+.view-all-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.featured-scroll {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.featured-card-wrapper {
+  min-width: 0;
+}
+
+.scroll-indicator {
+  display: none;
+  justify-content: center;
+  padding-top: 1rem;
+}
+
+.scroll-hint {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
   }
 }
 
-@media (max-width: 600px) {
-  .featured-section .container>div:last-child {
-    grid-template-columns: 1fr !important;
+/* Tablet - 2 columns */
+@media (max-width: 1024px) {
+  .featured-scroll {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile - Horizontal scroll carousel */
+@media (max-width: 700px) {
+  .featured-scroll {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+    margin: 0 -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .featured-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .featured-card-wrapper {
+    flex: 0 0 85%;
+    scroll-snap-align: center;
+    min-width: 280px;
+    max-width: 320px;
+  }
+
+  .scroll-indicator {
+    display: flex;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 400px) {
+  .featured-card-wrapper {
+    flex: 0 0 92%;
+    min-width: 260px;
   }
 }
 

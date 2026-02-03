@@ -37,35 +37,28 @@ export default async function FeaturedRentals() {
 
     if (items.length === 0) return null;
 
-    const gridStyle = {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '1.5rem',
-    };
-
-    const headerStyle = {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '1.5rem',
-    };
-
     return (
-        <section className="featured-section" style={{ padding: '4rem 0', background: '#f8fafc' }}>
+        <section className="featured-section">
             <div className="container">
-                <div style={headerStyle}>
-                    <h2 style={{ margin: 0 }}>Featured Listings</h2>
-                    <Link href="/search" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: 600 }}>View all listings →</Link>
+                <div className="featured-header">
+                    <h2>Featured Listings</h2>
+                    <Link href="/search" className="view-all-link">View all listings →</Link>
                 </div>
 
-                <div style={gridStyle}>
+                {/* Horizontal scrolling container for mobile */}
+                <div className="featured-scroll">
                     {items.map(item => (
-                        <ListingCard key={item.id} item={item} />
+                        <div key={item.id} className="featured-card-wrapper">
+                            <ListingCard item={item} />
+                        </div>
                     ))}
                 </div>
+
+                {/* Scroll indicator for mobile */}
+                <div className="scroll-indicator">
+                    <span className="scroll-hint">← Swipe for more →</span>
+                </div>
             </div>
-
-
         </section>
     );
 }

@@ -4,26 +4,42 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function Navbar({ user }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
   const [isVerified, setIsVerified] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     if (user) {
       const fetchProfile = async () => {
-        const { data } = await supabase.from('profiles').select('is_verified').eq('id', user.id).single();
+        const { data } = await supabase.from('profiles').select('is_verified, first_name').eq('id', user.id).single();
         if (data?.is_verified) setIsVerified(true);
+        if (data?.first_name) setFirstName(data.first_name);
       };
       fetchProfile();
     }
   }, [user]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    setDropdownOpen(false);
     router.refresh();
   };
 
@@ -64,25 +80,70 @@ export default function Navbar({ user }) {
 
         <div className="nav-actions">
           {user ? (
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                {user.email}
-                {isVerified && <span title="Identity Verified">✅</span>}
-              </span>
-              {!isVerified && (
-                <Link href="/verify" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
-                  Verify ID
+            <div className="user-actions">
+              {/* Show List Gear for verified users, Verify Now for unverified */}
+              {isVerified ? (
+                <Link href="/list-your-gear" className="list-gear-btn">
+                  ➕ List Gear
+                </Link>
+              ) : (
+                <Link href="/verify" className="verify-btn">
+                  🛡️ Verify Now
                 </Link>
               )}
-              <Link href="/my-listings" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
-                My Listings
-              </Link>
-              <Link href="/list-your-gear" className="btn btn-primary">
-                List Gear
-              </Link>
-              <button onClick={handleSignOut} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
-                Sign Out
-              </button>
+
+              <div className="account-wrapper" ref={dropdownRef}>
+                <button
+                  className="account-btn"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                >
+                  <span className="account-avatar">
+                    {user.email?.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="account-label">
+                    {/* Use profile first name, or extract from email */}
+                    {firstName || (user.email?.split('@')[0]?.split('.')[0]?.charAt(0).toUpperCase() +
+                      user.email?.split('@')[0]?.split('.')[0]?.slice(1)) || 'Account'}
+                    {isVerified && <span className="verified-check" title="Verified">✓</span>}
+                  </span>
+                  <span className={`chevron ${dropdownOpen ? 'open' : ''}`}>▼</span>
+                </button>
+
+                {dropdownOpen && (
+                  <div className="dropdown-menu">
+                    <div className="dropdown-header">
+                      <span className="user-email">{user.email}</span>
+                      {isVerified && <span className="verified-badge" title="Verified">✓</span>}
+                    </div>
+
+                    <div className="dropdown-divider" />
+
+                    <Link href="/my-listings" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      <span className="item-icon">📦</span>
+                      My Listings
+                    </Link>
+                    <Link href="/list-your-gear" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      <span className="item-icon">➕</span>
+                      List Gear
+                    </Link>
+                    <Link href="/earnings" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      <span className="item-icon">💰</span>
+                      Earnings
+                    </Link>
+                    <Link href="/account" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      <span className="item-icon">⚙️</span>
+                      Account Settings
+                    </Link>
+
+                    <div className="dropdown-divider" />
+
+                    <button onClick={handleSignOut} className="dropdown-item signout">
+                      <span className="item-icon">🚪</span>
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '1rem' }}>
@@ -141,8 +202,207 @@ export default function Navbar({ user }) {
           color: var(--text-primary);
         }
 
+        /* Account Dropdown Styles */
+        .user-actions {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .verify-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          border-radius: 50px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          text-decoration: none;
+          transition: all 0.2s;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .verify-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .list-gear-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border-radius: 50px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          text-decoration: none;
+          transition: all 0.2s;
+          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .list-gear-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .verified-check {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 16px;
+          height: 16px;
+          background: #10b981;
+          color: white;
+          border-radius: 50%;
+          font-size: 0.65rem;
+          margin-left: 0.35rem;
+        }
+
+        .account-wrapper {
+          position: relative;
+        }
+
+        .account-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.5rem 1rem;
+          background: white;
+          border: 1px solid var(--border-color);
+          border-radius: 50px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .account-btn:hover {
+          border-color: var(--text-secondary);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .account-avatar {
+          width: 32px;
+          height: 32px;
+          background: linear-gradient(135deg, var(--accent-color), #1e40af);
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 0.9rem;
+        }
+
+        .account-label {
+          font-weight: 600;
+          font-size: 0.95rem;
+          color: var(--text-primary);
+        }
+
+        .chevron {
+          font-size: 0.6rem;
+          color: var(--text-secondary);
+          transition: transform 0.2s;
+        }
+
+        .chevron.open {
+          transform: rotate(180deg);
+        }
+
+        .dropdown-menu {
+          position: absolute;
+          top: calc(100% + 8px);
+          right: 0;
+          min-width: 220px;
+          background: white;
+          border: 1px solid var(--border-color);
+          border-radius: 12px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+          overflow: hidden;
+          animation: slideDown 0.2s ease;
+          display: flex;
+          flex-direction: column;
+        }
+
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-header {
+          padding: 1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .user-email {
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .verified-badge {
+          background: #10b981;
+          color: white;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.7rem;
+          flex-shrink: 0;
+        }
+
+        .dropdown-divider {
+          height: 1px;
+          background: var(--border-color);
+        }
+
+        .dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.85rem 1rem;
+          text-decoration: none;
+          color: var(--text-primary);
+          font-size: 0.95rem;
+          transition: background 0.15s;
+          cursor: pointer;
+          border: none;
+          background: none;
+          width: 100%;
+          text-align: left;
+        }
+
+        .dropdown-item:hover {
+          background: #f8fafc;
+        }
+
+        .dropdown-item.highlight {
+          color: var(--accent-color);
+          font-weight: 600;
+        }
+
+        .dropdown-item.signout {
+          color: #dc2626;
+        }
+
+        .item-icon {
+          font-size: 1rem;
+        }
+
         @media (max-width: 768px) {
           .nav-links {
+            display: none;
+          }
+          .account-label {
             display: none;
           }
         }
@@ -150,3 +410,4 @@ export default function Navbar({ user }) {
     </nav>
   );
 }
+
