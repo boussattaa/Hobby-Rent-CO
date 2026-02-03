@@ -15,6 +15,11 @@ export default function Navbar({ user }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Notification State
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifRef = useRef(null);
+
   useEffect(() => {
     if (user) {
       const fetchProfile = async () => {
@@ -25,6 +30,46 @@ export default function Navbar({ user }) {
       fetchProfile();
     }
   }, [user]);
+
+  // Fetch Notifications
+  useEffect(() => {
+    if (user) {
+      const fetchNotifs = async () => {
+        const { data } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('is_read', false)
+          .order('created_at', { ascending: false });
+        if (data) setNotifications(data);
+      };
+      fetchNotifs();
+      // Poll every 30s
+      const interval = setInterval(fetchNotifs, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const handleNotificationClick = async (notif) => {
+    // Optimistic update
+    setNotifications(prev => prev.filter(n => n.id !== notif.id));
+    setShowNotifications(false);
+
+    // Mark read in DB
+    await supabase.from('notifications').update({ is_read: true }).eq('id', notif.id);
+
+    if (notif.link) router.push(notif.link);
+  };
+
+  // Close notif dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -91,6 +136,54 @@ export default function Navbar({ user }) {
                   🛡️ Verify Now
                 </Link>
               )}
+
+
+
+              {/* Notification Bell */}
+              <div className="notif-wrapper" ref={notifRef}>
+                <button
+                  className="notif-btn"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                >
+                  <span className="bell-icon">🔔</span>
+                  {notifications.length > 0 && (
+                    <span className="notif-badge">{notifications.length}</span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div className="notif-dropdown">
+                    <div className="dropdown-header">
+                      <span className="notif-title">Notifications</span>
+                    </div>
+                    <div className="dropdown-divider" />
+                    <div className="notif-list">
+                      {notifications.length === 0 ? (
+                        <div className="empty-notif">No new notifications</div>
+                      ) : (
+                        notifications.map(notif => (
+                          <div
+                            key={notif.id}
+                            className="notif-item"
+                            onClick={() => handleNotificationClick(notif)}
+                          >
+                            <div className="notif-icon">
+                              {notif.type === 'new_request' ? '📩' : 'ℹ️'}
+                            </div>
+                            <div className="notif-content">
+                              <p className="notif-msg-title">{notif.title}</p>
+                              <p className="notif-msg">{notif.message}</p>
+                              <span className="notif-time">
+                                {new Date(notif.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="account-wrapper" ref={dropdownRef}>
                 <button
@@ -287,6 +380,73 @@ export default function Navbar({ user }) {
           border-color: var(--text-secondary);
           box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
+
+        .notif-wrapper { position: relative; }
+        .notif-btn { 
+            background: white; 
+            border: 1px solid var(--border-color); 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            position: relative;
+            transition: all 0.2s;
+        }
+        .notif-btn:hover { background: #f8fafc; }
+        .bell-icon { font-size: 1.2rem; }
+        .notif-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+
+        .notif-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: -60px;
+            width: 320px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            z-index: 1001;
+            overflow: hidden;
+            animation: slideDown 0.2s ease;
+        }
+        .notif-title { font-weight: 600; font-size: 0.95rem; }
+        .notif-list { max-height: 300px; overflow-y: auto; }
+        .empty-notif { padding: 2rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem; }
+        
+        .notif-item {
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item:hover { background: #f8fafc; }
+        
+        .notif-icon { font-size: 1.2rem; margin-top: 0.2rem; }
+        .notif-content { flex: 1; }
+        .notif-msg-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
+        .notif-msg { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 0.4rem; }
+        .notif-time { font-size: 0.75rem; color: #94a3b8; }
 
         .account-avatar {
           width: 32px;

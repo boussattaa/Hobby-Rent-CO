@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { submitInspection } from '../actions';
+import { submitInspection } from '../../actions';
 import Image from 'next/image';
 
 export default function InspectionPage() {
@@ -86,6 +86,13 @@ export default function InspectionPage() {
                         {photos.map((url, i) => (
                             <div key={i} className="photo-preview">
                                 <Image src={url} alt="Inspection" fill style={{ objectFit: 'cover' }} />
+                                <button
+                                    type="button"
+                                    className="btn-remove-photo"
+                                    onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
+                                >
+                                    ×
+                                </button>
                             </div>
                         ))}
 
@@ -123,6 +130,26 @@ export default function InspectionPage() {
                 .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1rem; margin-top: 1rem; }
                 .photo-preview { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; }
                 
+                .btn-remove-photo {
+                    position: absolute;
+                    top: 4px;
+                    right: 4px;
+                    background: rgba(0,0,0,0.6);
+                    color: white;
+                    border: none;
+                    border-radius: 50%;
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    font-size: 1rem;
+                    line-height: 1;
+                    z-index: 10;
+                }
+                .btn-remove-photo:hover { background: rgba(220, 38, 38, 0.9); }
+
                 .upload-btn-wrapper { position: relative; width: 100%; aspect-ratio: 1; border: 2px dashed var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
                 .btn-upload { font-size: 2rem; color: var(--text-secondary); background: none; border: none; }
                 .upload-btn-wrapper input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
