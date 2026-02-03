@@ -8,15 +8,10 @@ import { createClient } from '@/utils/supabase/client';
 import { getDistanceFromLatLonInMiles } from '@/utils/distance';
 import SearchFilter from '@/components/SearchFilter';
 
-const WATER_ITEMS = [
-    { id: 'w1', name: 'Sea-Doo GTX', price: 250, image: '/images/water-hero.png', location: 'Miami, FL', lat: 25.7617, lng: -80.1918 },
-    { id: 'w2', name: 'MasterCraft NXT', price: 800, image: '/images/water-hero.png', location: 'Lake Powell, AZ', lat: 36.9363, lng: -111.4838 },
-    { id: 'w3', name: 'Inflatable Paddleboard', price: 40, image: '/images/water-hero.png', location: 'Austin, TX', lat: 30.2672, lng: -97.7431 },
-    { id: 'w4', name: 'Yamaha Waverunner', price: 220, image: '/images/water-hero.png', location: 'San Diego, CA', lat: 32.7157, lng: -117.1611 },
-];
+const WATER_ITEMS = [];
 
 export default function WaterPage() {
-    const [items, setItems] = useState(WATER_ITEMS);
+    const [items, setItems] = useState([]);
     const searchParams = useSearchParams();
     const supabase = createClient();
 
@@ -45,7 +40,7 @@ export default function WaterPage() {
                     image: item.image_url || '/images/water-hero.png',
                     price: Number(item.price)
                 }));
-                setItems(prev => [...WATER_ITEMS, ...formattedItems]);
+                setItems(formattedItems);
             }
         };
         fetchItems();

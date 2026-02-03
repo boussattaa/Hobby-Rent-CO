@@ -8,15 +8,10 @@ import { createClient } from '@/utils/supabase/client';
 import { getDistanceFromLatLonInMiles } from '@/utils/distance';
 import SearchFilter from '@/components/SearchFilter';
 
-const HOUSING_ITEMS = [
-    { id: 'h1', name: 'DeWalt 20V Drill Set', price: 25, image: '/images/housing-hero.png', location: 'Seattle, WA', lat: 47.6062, lng: -122.3321 },
-    { id: 'h2', name: 'Industrial Carpet Cleaner', price: 60, image: '/images/housing-hero.png', location: 'Portland, OR', lat: 45.5152, lng: -122.6784 },
-    { id: 'h3', name: 'Pressure Washer 3000PSI', price: 45, image: '/images/housing-hero.png', location: 'Vancouver, BC', lat: 49.2827, lng: -123.1207 },
-    { id: 'h4', name: 'Tile Saw', price: 35, image: '/images/housing-hero.png', location: 'Surrey, BC', lat: 49.1913, lng: -122.8490 },
-];
+const HOUSING_ITEMS = [];
 
 export default function HousingPage() {
-    const [items, setItems] = useState(HOUSING_ITEMS);
+    const [items, setItems] = useState([]);
     const searchParams = useSearchParams();
     const supabase = createClient();
 
@@ -45,7 +40,7 @@ export default function HousingPage() {
                     image: item.image_url || '/images/housing-hero.png',
                     price: Number(item.price)
                 }));
-                setItems(prev => [...HOUSING_ITEMS, ...formattedItems]);
+                setItems(formattedItems);
             }
         };
         fetchItems();

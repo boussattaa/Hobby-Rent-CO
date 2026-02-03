@@ -48,7 +48,7 @@ export default function Home() {
           <h1>
             Rent the <span className="highlight">Adventure</span>.
             <br />
-            Earn from the <span className="highlight">Gear</span>.
+            Earn from your <span className="highlight">Gear</span>.
           </h1>
           <p className="hero-subtitle">
             The premium marketplace for outdoor enthusiasts and DIY masters.

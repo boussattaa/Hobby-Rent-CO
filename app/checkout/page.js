@@ -9,20 +9,7 @@ import { createClient } from '@/utils/supabase/client';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 // Mock database (for legacy support)
-const ITEMS_DB = {
-    'd1': { name: 'KTM 450 SX-F', price: 150 },
-    'd2': { name: 'Polaris RZR XP', price: 350 },
-    'd3': { name: 'Honda CRF250R', price: 120 },
-    'd4': { name: 'Can-Am Maverick', price: 400 },
-    'w1': { name: 'Sea-Doo GTX', price: 250 },
-    'w2': { name: 'MasterCraft NXT', price: 800 },
-    'w3': { name: 'Inflatable Paddleboard', price: 40 },
-    'w4': { name: 'Yamaha Waverunner', price: 220 },
-    'h1': { name: 'DeWalt 20V Drill Set', price: 25 },
-    'h2': { name: 'Industrial Carpet Cleaner', price: 60 },
-    'h3': { name: 'Pressure Washer 3000PSI', price: 45 },
-    'h4': { name: 'Tile Saw', price: 35 },
-};
+const ITEMS_DB = {};
 
 export default function CheckoutPage() {
     const searchParams = useSearchParams();
@@ -33,6 +20,7 @@ export default function CheckoutPage() {
 
     const [item, setItem] = useState(ITEMS_DB[itemId] || null);
     const [fetching, setFetching] = useState(!ITEMS_DB[itemId] && !!itemId);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (!itemId || ITEMS_DB[itemId]) return;
@@ -85,7 +73,7 @@ export default function CheckoutPage() {
     const rentalTotal = itemPrice * days;
     const total = rentalTotal + serviceFee;
 
-    const [loading, setLoading] = useState(false);
+
 
     const handleCheckout = async () => {
         setLoading(true);
