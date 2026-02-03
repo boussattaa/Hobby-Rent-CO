@@ -90,9 +90,11 @@ export default function CheckoutPage() {
                 },
                 body: JSON.stringify({
                     itemId,
-                    price: rentalTotal, // Send total rental price (days * daily)
+                    price: rentalTotal,
                     name: `${itemName} (${days} days)`,
                     addProtection,
+                    startDate: startParam,
+                    endDate: endParam
                 }),
             });
 

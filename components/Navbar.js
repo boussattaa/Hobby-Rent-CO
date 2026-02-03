@@ -118,6 +118,11 @@ export default function Navbar({ user }) {
 
                     <div className="dropdown-divider" />
 
+                    <Link href="/rentals" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      <span className="item-icon">🔑</span>
+                      My Rentals
+                    </Link>
+
                     <Link href="/my-listings" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
                       <span className="item-icon">📦</span>
                       My Listings

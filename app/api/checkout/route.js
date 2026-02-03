@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request) {
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -10,7 +11,32 @@ export async function POST(request) {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     try {
-        const { itemId, price, name, addProtection } = await request.json();
+        const { itemId, price, name, addProtection, startDate, endDate } = await request.json();
+        const supabase = await createClient();
+
+        // 1. Get User/Owner info
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("User not logged in");
+
+        const { data: item } = await supabase.from('items').select('owner_id').eq('id', itemId).single();
+        if (!item) throw new Error("Item not found");
+
+        // 2. Create Rental Record
+        const { data: rental, error: rentalError } = await supabase
+            .from('rentals')
+            .insert({
+                item_id: itemId,
+                renter_id: user.id,
+                owner_id: item.owner_id,
+                start_date: startDate || new Date().toISOString(),
+                end_date: endDate || new Date().toISOString(),
+                total_price: price + 15 + (addProtection ? 20 : 0),
+                status: 'approved' // Auto-approve for MVP/Demo so user can test inspection immediately
+            })
+            .select()
+            .single();
+
+        if (rentalError) throw new Error("Failed to create rental: " + rentalError.message);
 
         const line_items = [
             {
@@ -53,6 +79,9 @@ export async function POST(request) {
             payment_method_types: ['card'],
             line_items: line_items,
             mode: 'payment',
+            metadata: {
+                rentalId: rental.id
+            },
             success_url: `${request.headers.get('origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${request.headers.get('origin')}/item/${itemId}`,
         });

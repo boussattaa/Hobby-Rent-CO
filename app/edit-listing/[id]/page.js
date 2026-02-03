@@ -43,11 +43,14 @@ export default function EditListingPage() {
     const [formData, setFormData] = useState({
         name: '',
         price: '',
+        weekend_price: '',
         location: '',
         description: '',
         category: 'offroad',
         subcategory: '',
-        image_url: ''
+        subcategory: '',
+        image_url: '',
+        video_url: ''
     });
 
     useEffect(() => {
@@ -68,11 +71,14 @@ export default function EditListingPage() {
                 setFormData({
                     name: data.name,
                     price: data.price,
+                    weekend_price: data.weekend_price || '',
                     location: data.location,
                     description: data.description || '',
                     category: data.category || 'offroad',
                     subcategory: data.subcategory || '',
-                    image_url: data.image_url || ''
+                    subcategory: data.subcategory || '',
+                    image_url: data.image_url || '',
+                    video_url: data.video_url || ''
                 });
             } else if (error) {
                 console.error("Error fetching item:", error);
@@ -87,6 +93,28 @@ export default function EditListingPage() {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleVideoUpload = async (e) => {
+        try {
+            setUploading(true);
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `vid_${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await supabase.storage.from('items').upload(filePath, file);
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage.from('items').getPublicUrl(filePath);
+            setFormData(prev => ({ ...prev, video_url: data.publicUrl }));
+        } catch (error) {
+            alert('Error uploading video: ' + error.message);
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleImageUpload = async (e) => {
@@ -173,6 +201,11 @@ export default function EditListingPage() {
                             </div>
 
                             <div className="form-group">
+                                <label>Weekend Rate ($/night)</label>
+                                <input type="number" name="weekend_price" value={formData.weekend_price} onChange={handleChange} placeholder="Optional" />
+                            </div>
+
+                            <div className="form-group">
                                 <label>Location</label>
                                 <input type="text" name="location" value={formData.location} onChange={handleChange} required />
                             </div>
@@ -191,6 +224,18 @@ export default function EditListingPage() {
                                         <span>Click to upload new image</span>
                                     )}
                                     <input type="file" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
+                                </div>
+                            </div>
+
+                            <div className="form-group full">
+                                <label>Walkaround Video</label>
+                                <div className="upload-box">
+                                    {formData.video_url ? (
+                                        <video src={formData.video_url} controls style={{ width: '100%', borderRadius: '8px', maxHeight: '300px' }} />
+                                    ) : (
+                                        <span>Click to upload video</span>
+                                    )}
+                                    <input type="file" accept="video/*" onChange={handleVideoUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
                                 </div>
                             </div>
                         </div>

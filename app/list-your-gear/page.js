@@ -69,8 +69,32 @@ export default function ListYourGear() {
   };
 
   const [imageUrl, setImageUrl] = useState('/images/dirt-hero.png'); // Default fallback
+  const [videoUrl, setVideoUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('offroad');
+
+  const handleVideoUpload = async (e) => {
+    try {
+      setUploading(true);
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `vid_${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from('items').upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('items').getPublicUrl(filePath);
+      setVideoUrl(data.publicUrl);
+    } catch (error) {
+      alert('Error uploading video: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleImageUpload = async (e) => {
     try {
@@ -121,7 +145,9 @@ export default function ListYourGear() {
 
           <form onSubmit={handleSubmit}>
             {/* Hidden field to pass the uploaded image URL to the server action */}
+            {/* Hidden field to pass the uploaded image URL to the server action */}
             <input type="hidden" name="image_url" value={imageUrl} />
+            <input type="hidden" name="video_url" value={videoUrl} />
 
             <div className="form-grid">
               <div className="form-group">
@@ -176,6 +202,15 @@ export default function ListYourGear() {
               </div>
 
               <div className="form-group">
+                <label>Weekend Rate ($/night)</label>
+                <input
+                  type="number"
+                  name="weekend_price"
+                  placeholder="Optional (e.g. 200)"
+                />
+              </div>
+
+              <div className="form-group">
                 <label>Location</label>
                 <input
                   type="text"
@@ -206,6 +241,24 @@ export default function ListYourGear() {
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
+                    disabled={uploading}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group full">
+                <label>Walkaround Video (15s max)</label>
+                <div className="upload-box">
+                  {videoUrl ? (
+                    <video src={videoUrl} controls style={{ width: '100%', maxHeight: '300px', borderRadius: '8px' }} />
+                  ) : (
+                    <span>{uploading ? 'Uploading...' : 'Click to upload a video'}</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
                     disabled={uploading}
                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
                   />

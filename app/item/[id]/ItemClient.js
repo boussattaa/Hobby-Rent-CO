@@ -69,7 +69,11 @@ export default function ItemClient({ id, initialItem }) {
         .single();
 
       if (data) {
-        setItem({ ...data, price: Number(data.price) });
+        setItem({
+          ...data,
+          price: Number(data.price),
+          weekend_price: data.weekend_price ? Number(data.weekend_price) : null
+        });
         setItemsOwnerId(data.owner_id);
 
         // Fetch Availability
@@ -90,20 +94,31 @@ export default function ItemClient({ id, initialItem }) {
     fetchItem();
   }, [id, supabase, item]); // Check dependency on 'item' to prevent loop
 
-  // Get all images (main + additional)
-  const getImages = () => {
+  // Get all media (images + video)
+  const getMedia = () => {
     if (!item) return [];
-    // Prioritize image_url (Supabase) then image (Mock)
+
+    const mediaList = [];
+
+    // Main Image
     const mainImage = item.image_url || item.image || '/images/dirt-hero.png';
-    // If item has additional_images array, include them
+    mediaList.push({ type: 'image', url: mainImage });
+
+    // Additional Images
     if (item.additional_images && Array.isArray(item.additional_images)) {
-      return [mainImage, ...item.additional_images];
+      item.additional_images.forEach(img => mediaList.push({ type: 'image', url: img }));
     }
-    // Fallback: create array with just the main image
-    return [mainImage];
+
+    // Video
+    if (item.video_url) {
+      mediaList.push({ type: 'video', url: item.video_url });
+    }
+
+    return mediaList;
   };
 
-  const images = getImages();
+  const mediaItems = getMedia();
+  const activeMedia = mediaItems[selectedImage] || mediaItems[0];
 
   // Get today's date string for min attribute
   const today = new Date().toISOString().split('T')[0];
@@ -129,29 +144,45 @@ export default function ItemClient({ id, initialItem }) {
     <div className="item-page">
       {/* Photo Gallery */}
       <div className="gallery-section">
-        <div className="main-image-container" onClick={() => setLightboxOpen(true)}>
-          <Image
-            src={images[selectedImage]}
-            alt={item.name}
-            fill
-            style={{ objectFit: 'cover' }}
-            priority
-          />
-          <div className="image-zoom-hint">
-            <span>🔍 Tap to enlarge</span>
-          </div>
+        <div className="main-image-container" onClick={() => activeMedia.type === 'image' && setLightboxOpen(true)}>
+          {activeMedia.type === 'video' ? (
+            <video
+              src={activeMedia.url}
+              controls
+              style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#000' }}
+            />
+          ) : (
+            <>
+              <Image
+                src={activeMedia.url}
+                alt={item.name}
+                fill
+                style={{ objectFit: 'cover' }}
+                priority
+              />
+              <div className="image-zoom-hint">
+                <span>🔍 Tap to enlarge</span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Thumbnail Strip */}
-        {images.length > 1 && (
+        {mediaItems.length > 1 && (
           <div className="thumbnail-strip">
-            {images.map((img, index) => (
+            {mediaItems.map((media, index) => (
               <button
                 key={index}
                 className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
                 onClick={() => setSelectedImage(index)}
               >
-                <Image src={img} alt={`${item.name} ${index + 1}`} fill style={{ objectFit: 'cover' }} />
+                {media.type === 'video' ? (
+                  <div style={{ width: '100%', height: '100%', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.5rem' }}>
+                    ▶
+                  </div>
+                ) : (
+                  <Image src={media.url} alt={`${item.name} ${index + 1}`} fill style={{ objectFit: 'cover' }} />
+                )}
               </button>
             ))}
           </div>
@@ -159,33 +190,33 @@ export default function ItemClient({ id, initialItem }) {
 
         {/* Image Counter */}
         <div className="image-counter">
-          {selectedImage + 1} / {images.length}
+          {selectedImage + 1} / {mediaItems.length}
         </div>
       </div>
 
       {/* Lightbox Modal */}
-      {lightboxOpen && (
+      {lightboxOpen && activeMedia.type === 'image' && (
         <div className="lightbox" onClick={() => setLightboxOpen(false)}>
           <button className="lightbox-close" onClick={() => setLightboxOpen(false)}>✕</button>
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
             <Image
-              src={images[selectedImage]}
+              src={activeMedia.url}
               alt={item.name}
               fill
               style={{ objectFit: 'contain' }}
             />
           </div>
-          {images.length > 1 && (
+          {mediaItems.length > 1 && (
             <>
               <button
                 className="lightbox-prev"
-                onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev === 0 ? images.length - 1 : prev - 1); }}
+                onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev === 0 ? mediaItems.length - 1 : prev - 1); }}
               >
                 ‹
               </button>
               <button
                 className="lightbox-next"
-                onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev === images.length - 1 ? 0 : prev + 1); }}
+                onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev === mediaItems.length - 1 ? 0 : prev + 1); }}
               >
                 ›
               </button>
@@ -205,6 +236,11 @@ export default function ItemClient({ id, initialItem }) {
               <span className="currency">$</span>
               <span className="amount">{item.price}</span>
               <span className="per">/day</span>
+              {item.weekend_price && (
+                <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
+                  Weekend: ${item.weekend_price}
+                </div>
+              )}
             </div>
           </div>
 
@@ -282,7 +318,26 @@ export default function ItemClient({ id, initialItem }) {
                 </div>
                 <div className="summary-row total">
                   <span>Total (est)</span>
-                  <span>${item.price + 15}</span>
+                  <span>${(() => {
+                    if (!startDate || !endDate) return item.price + 15;
+                    let s = new Date(startDate);
+                    const e = new Date(endDate);
+                    let diff = Math.ceil((e - s) / (1000 * 3600 * 24));
+                    if (diff <= 0) diff = 1;
+
+                    let est = 0;
+                    for (let i = 0; i < diff; i++) {
+                      let d = new Date(s);
+                      d.setDate(s.getDate() + i);
+                      let dow = d.getDay();
+                      if (item.weekend_price && (dow === 5 || dow === 6)) {
+                        est += item.weekend_price;
+                      } else {
+                        est += item.price;
+                      }
+                    }
+                    return est + 15;
+                  })()}</span>
                 </div>
 
                 <Link
@@ -590,6 +645,6 @@ export default function ItemClient({ id, initialItem }) {
           }
         }
       `}</style>
-    </div>
+    </div >
   );
 }

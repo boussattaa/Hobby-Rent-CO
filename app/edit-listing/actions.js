@@ -23,11 +23,13 @@ export async function updateListing(formData) {
         category: formData.get('category'),
         subcategory: formData.get('subcategory'),
         price: formData.get('price'),
+        weekend_price: formData.get('weekend_price') ? parseFloat(formData.get('weekend_price')) : null,
         description: formData.get('description'),
         location: locationStr,
         lat: coords ? coords.lat : null,
         lng: coords ? coords.lng : null,
         image_url: formData.get('image_url'),
+        video_url: formData.get('video_url'),
         // owner_id is not updated
     };
 

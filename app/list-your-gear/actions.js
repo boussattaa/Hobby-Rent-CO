@@ -37,11 +37,14 @@ export async function createListing(formData) {
         category: formData.get('category'),
         subcategory: formData.get('subcategory'), // Add subcategory
         price: parseFloat(formData.get('price')),
+        weekend_price: formData.get('weekend_price') ? parseFloat(formData.get('weekend_price')) : null,
         location: locationStr,
         lat: coords ? coords.lat : null,
         lng: coords ? coords.lng : null,
         description: formData.get('description'),
-        image_url: formData.get('image_url') || '/images/dirt-hero.png'
+        description: formData.get('description'),
+        image_url: formData.get('image_url') || '/images/dirt-hero.png',
+        video_url: formData.get('video_url')
     }
 
     console.log('Attempting to create listing:', itemData)
