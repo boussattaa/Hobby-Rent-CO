@@ -10,31 +10,45 @@ export async function createStripeConnectAccount() {
 
     if (!user) throw new Error('Not authenticated');
 
+    // Default to localhost for development if not set
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+    if (!baseUrl) {
+        // Should effectively never happen with the default above, but good for safety
+        throw new Error('Missing NEXT_PUBLIC_BASE_URL environment variable');
+    }
+
     // 1. Create a Standard/Express account
-    const account = await stripe.accounts.create({
-        type: 'express',
-        email: user.email,
-        capabilities: {
-            card_payments: { requested: true },
-            transfers: { requested: true },
-        },
-    });
+    try {
+        const account = await stripe.accounts.create({
+            type: 'express',
+            email: user.email,
+            capabilities: {
+                card_payments: { requested: true },
+                transfers: { requested: true },
+            },
+        });
 
-    // 2. Save account ID to profile
-    await supabase
-        .from('profiles')
-        .update({ stripe_account_id: account.id })
-        .eq('id', user.id);
+        // 2. Save account ID to profile
+        // Only update if not already set, or handle updates gracefully
+        await supabase
+            .from('profiles')
+            .update({ stripe_account_id: account.id })
+            .eq('id', user.id);
 
-    // 3. Create Account Link for onboarding
-    const accountLink = await stripe.accountLinks.create({
-        account: account.id,
-        refresh_url: `${process.env.NEXT_PUBLIC_BASE_URL}/earnings`,
-        return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/earnings`,
-        type: 'account_onboarding',
-    });
+        // 3. Create Account Link for onboarding
+        const accountLink = await stripe.accountLinks.create({
+            account: account.id,
+            refresh_url: `${baseUrl}/earnings`,
+            return_url: `${baseUrl}/earnings`,
+            type: 'account_onboarding',
+        });
 
-    return accountLink.url;
+        return accountLink.url;
+    } catch (error) {
+        console.error('Stripe Connect Error:', error);
+        throw new Error(`Stripe Error: ${error.message}`);
+    }
 }
 
 export async function getStripeDashboardLink() {

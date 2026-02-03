@@ -16,9 +16,10 @@ export default function EarningsClient({ profile, rentals, totalEarnings, active
                 const link = await createStripeConnectAccount();
                 window.location.href = link;
             }
+            setLoading(false);
         } catch (error) {
             console.error(error);
-            alert('Error connecting to Stripe');
+            alert(error.message || 'Error connecting to Stripe');
             setLoading(false);
         }
     };
