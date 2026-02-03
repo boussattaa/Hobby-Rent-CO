@@ -73,6 +73,14 @@ function OffroadPageContent() {
           });
         }
 
+        if (sortOption === 'distance' && searchLat && searchLng) {
+          finalItems.sort((a, b) => {
+            const distA = getDistanceFromLatLonInMiles(searchLat, searchLng, a.lat, a.lng);
+            const distB = getDistanceFromLatLonInMiles(searchLat, searchLng, b.lat, b.lng);
+            return distA - distB;
+          });
+        }
+
         setItems(finalItems);
       } else if (error) {
         console.error("Error fetching offroad items:", error);
@@ -117,6 +125,7 @@ function OffroadPageContent() {
                 <option value="newest">Newest Listed</option>
                 <option value="price_asc">Price: Low to High</option>
                 <option value="price_desc">Price: High to Low</option>
+                <option value="distance" disabled={!searchLat}>Distance: Nearest</option>
               </select>
             </div>
           </div>
