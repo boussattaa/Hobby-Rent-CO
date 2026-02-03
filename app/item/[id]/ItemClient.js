@@ -42,6 +42,10 @@ export default function ItemClient({ id, initialItem }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  // Availability state
+  const [blockedDates, setBlockedDates] = useState(new Set());
+  const [availabilityError, setAvailabilityError] = useState('');
+
   // Date state management
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -67,6 +71,17 @@ export default function ItemClient({ id, initialItem }) {
       if (data) {
         setItem({ ...data, price: Number(data.price) });
         setItemsOwnerId(data.owner_id);
+
+        // Fetch Availability
+        const { data: availData } = await supabase
+          .from('item_availability')
+          .select('date')
+          .eq('item_id', id);
+
+        if (availData) {
+          const dates = new Set(availData.map(r => r.date));
+          setBlockedDates(dates);
+        }
       }
       if (error) console.error('Error fetching item:', error);
       setLoading(false);
@@ -210,6 +225,7 @@ export default function ItemClient({ id, initialItem }) {
                   <h4>Admin Controls</h4>
                   <div className="controls-row">
                     <Link href={`/edit-listing/${item.id}`} className="btn-edit">✏️ Edit</Link>
+                    <Link href={`/manage-availability/${item.id}`} className="btn-edit">📅 Calendar</Link>
                     <DeleteButton itemId={item.id} />
                   </div>
                 </div>
@@ -231,15 +247,34 @@ export default function ItemClient({ id, initialItem }) {
                   </div>
                   <div className="date-field">
                     <label>End Date</label>
+
                     <input
                       type="date"
                       min={startDate || today}
                       value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
+                      onChange={(e) => {
+                        setEndDate(e.target.value);
+                        setAvailabilityError('');
+
+                        // Check for overlap
+                        if (startDate && e.target.value) {
+                          let curr = new Date(startDate);
+                          const end = new Date(e.target.value);
+                          // Simple loop check
+                          while (curr <= end) {
+                            if (blockedDates.has(curr.toISOString().split('T')[0])) {
+                              setAvailabilityError('Selected dates include unavailable days.');
+                              break;
+                            }
+                            curr.setDate(curr.getDate() + 1);
+                          }
+                        }
+                      }}
                       disabled={!startDate}
                     />
                   </div>
                 </div>
+                {availabilityError && <p style={{ color: '#ef4444', fontSize: '0.9rem', marginBottom: '1rem', fontWeight: 'bold' }}>{availabilityError}</p>}
 
                 <div className="summary-row">
                   <span>Service Fee</span>
@@ -251,8 +286,8 @@ export default function ItemClient({ id, initialItem }) {
                 </div>
 
                 <Link
-                  href={startDate && endDate ? `/checkout?itemId=${id}&start=${startDate}&end=${endDate}` : '#'}
-                  className={`btn btn-primary full-width ${(!startDate || !endDate) ? 'disabled' : ''}`}
+                  href={startDate && endDate && !availabilityError ? `/checkout?itemId=${id}&start=${startDate}&end=${endDate}` : '#'}
+                  className={`btn btn-primary full-width ${(!startDate || !endDate || availabilityError) ? 'disabled' : ''}`}
                   style={{
                     textAlign: 'center',
                     textDecoration: 'none',
