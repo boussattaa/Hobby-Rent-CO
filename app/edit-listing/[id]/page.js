@@ -67,6 +67,13 @@ export default function EditListingPage() {
                 .eq('id', params.id)
                 .single();
 
+            // Fetch private details
+            const { data: privateDetails } = await supabase
+                .from('item_private_details')
+                .select('*')
+                .eq('item_id', params.id)
+                .single();
+
             if (data) {
                 setFormData({
                     name: data.name,
@@ -76,9 +83,20 @@ export default function EditListingPage() {
                     description: data.description || '',
                     category: data.category || 'offroad',
                     subcategory: data.subcategory || '',
-                    subcategory: data.subcategory || '',
                     image_url: data.image_url || '',
-                    video_url: data.video_url || ''
+                    video_url: data.video_url || '',
+                    year: data.year || '',
+                    make: data.make || '',
+                    model: data.model || '',
+                    rules: data.rules || '',
+                    specs: data.specs || {},
+                    // Private
+                    vin: privateDetails?.vin || '',
+                    license_plate: privateDetails?.license_plate || '',
+                    maintenance_notes: privateDetails?.maintenance_notes || '',
+                    insurance_policy: privateDetails?.insurance_policy || '',
+                    storage_address: privateDetails?.storage_address || '',
+                    emergency_contact: privateDetails?.emergency_contact || ''
                 });
             } else if (error) {
                 console.error("Error fetching item:", error);
@@ -146,10 +164,15 @@ export default function EditListingPage() {
 
         const data = new FormData();
         data.append('itemId', params.id);
-        Object.keys(formData).forEach(key => data.append(key, formData[key]));
+        Object.keys(formData).forEach(key => {
+            if (key === 'specs') {
+                data.append('specs', JSON.stringify(formData[key]));
+            } else {
+                data.append(key, formData[key]);
+            }
+        });
 
         await updateListing(data);
-        // Action handles redirect
         setUploading(false);
     };
 
@@ -190,9 +213,66 @@ export default function EditListingPage() {
                                 </select>
                             </div>
 
-                            <div className="form-group">
-                                <label>Item Name</label>
-                                <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+                            {/* Removed Name Input - Auto Generated */}
+
+                            <div className="form-group full">
+                                <label>Year, Make, & Model (Required)</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                                    <input type="number" name="year" value={formData.year} onChange={handleChange} placeholder="Year" required />
+                                    <input type="text" name="make" value={formData.make} onChange={handleChange} placeholder="Make" required />
+                                    <input type="text" name="model" value={formData.model} onChange={handleChange} placeholder="Model" required />
+                                </div>
+                            </div>
+
+                            {/* Dynamic Specs Section based on Category */}
+                            {formData.category === 'offroad' && (
+                                <div className="form-group full">
+                                    <label>Offroad Specs</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                        <input type="text" placeholder="Engine Size (cc)" value={formData.specs?.engine_cc || ''} onChange={(e) => {
+                                            setFormData(prev => ({ ...prev, specs: { ...prev.specs, engine_cc: e.target.value } }));
+                                        }} />
+                                        <input type="text" placeholder="Seat Height" value={formData.specs?.seat_height || ''} onChange={(e) => {
+                                            setFormData(prev => ({ ...prev, specs: { ...prev.specs, seat_height: e.target.value } }));
+                                        }} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {formData.category === 'water' && (
+                                <div className="form-group full">
+                                    <label>Watercraft Specs</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                                        <input type="number" placeholder="Passenger Capacity" value={formData.specs?.capacity || ''} onChange={(e) => {
+                                            setFormData(prev => ({ ...prev, specs: { ...prev.specs, capacity: e.target.value } }));
+                                        }} />
+                                        <input type="text" placeholder="Horsepower" value={formData.specs?.horsepower || ''} onChange={(e) => {
+                                            setFormData(prev => ({ ...prev, specs: { ...prev.specs, horsepower: e.target.value } }));
+                                        }} />
+                                        <input type="text" placeholder="Ball Hitch Size" value={formData.specs?.hitch_size || ''} onChange={(e) => {
+                                            setFormData(prev => ({ ...prev, specs: { ...prev.specs, hitch_size: e.target.value } }));
+                                        }} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {formData.category === 'trailers' && (
+                                <div className="form-group full">
+                                    <label>Trailer Specs</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                        <input type="text" placeholder="Towing Capacity (lbs)" value={formData.specs?.towing_capacity || ''} onChange={(e) => {
+                                            setFormData(prev => ({ ...prev, specs: { ...prev.specs, towing_capacity: e.target.value } }));
+                                        }} />
+                                        <input type="text" placeholder="Ball Hitch Size" value={formData.specs?.hitch_size || ''} onChange={(e) => {
+                                            setFormData(prev => ({ ...prev, specs: { ...prev.specs, hitch_size: e.target.value } }));
+                                        }} />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="form-group full">
+                                <label>Rules & Requirements</label>
+                                <textarea name="rules" value={formData.rules} onChange={handleChange} rows="2" placeholder="e.g. Must have 3/4 ton truck, Age 25+, etc." />
                             </div>
 
                             <div className="form-group">
@@ -205,9 +285,33 @@ export default function EditListingPage() {
                                 <input type="number" name="weekend_price" value={formData.weekend_price} onChange={handleChange} placeholder="Optional" />
                             </div>
 
+                            {/* Private Owner Details Section */}
+                            <div style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#475569' }}>🔒 Private Owner Details (Only you see this)</h3>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <div className="form-group">
+                                        <label style={{ fontSize: '0.9rem' }}>VIN / Serial #</label>
+                                        <input type="text" name="vin" value={formData.vin || ''} onChange={handleChange} placeholder="Private Record" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label style={{ fontSize: '0.9rem' }}>License Plate</label>
+                                        <input type="text" name="license_plate" value={formData.license_plate || ''} onChange={handleChange} placeholder="Private Record" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label style={{ fontSize: '0.9rem' }}>Insurance Policy #</label>
+                                        <input type="text" name="insurance_policy" value={formData.insurance_policy || ''} onChange={handleChange} placeholder="Policy Number" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label style={{ fontSize: '0.9rem' }}>Storage Address</label>
+                                        <input type="text" name="storage_address" value={formData.storage_address || ''} onChange={handleChange} placeholder="If different from pickup" />
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="form-group">
-                                <label>Location</label>
-                                <input type="text" name="location" value={formData.location} onChange={handleChange} required />
+                                <label>Zip Code</label>
+                                <input type="text" name="location" value={formData.location} onChange={handleChange} required pattern="[0-9]*" />
                             </div>
 
                             <div className="form-group full">

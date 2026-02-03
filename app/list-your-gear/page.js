@@ -16,6 +16,7 @@ export default function ListYourGear() {
   const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -24,7 +25,14 @@ export default function ListYourGear() {
         if (!user) {
           router.push('/login?message=Please log in to list your gear');
         } else {
-          // Add a small artificial delay to prevent flicker if desired, or just set loading
+          // Check verification status
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_verified')
+            .eq('id', user.id)
+            .single();
+
+          setIsVerified(!!profile?.is_verified);
           setLoading(false);
         }
       } catch (e) {
@@ -255,6 +263,18 @@ export default function ListYourGear() {
             <h1>List Your Gear</h1>
             <p>Ready to list? Fill out the details below.</p>
           </div>
+
+          {!isVerified && (
+            <div className="verification-banner" style={{ background: '#fffbeb', border: '1px solid #fcd34d', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', color: '#92400e' }}>
+              <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+              <div>
+                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Verification Required</h4>
+                <p style={{ margin: '4px 0 0', fontSize: '0.9rem' }}>
+                  Your account must be verified to approve listings. <a href="/verify" style={{ textDecoration: 'underline', fontWeight: 'bold', color: '#b45309' }}>Click here to verify now in seconds.</a>
+                </p>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <input type="hidden" name="image_url" value={images.length > 0 ? images[0] : '/images/dirt-hero.png'} />
