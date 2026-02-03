@@ -9,266 +9,269 @@ import DeleteButton from '@/components/DeleteButton';
 
 // Mock database (legacy/demo items)
 const ITEMS_DB = {
-    // Dirt
-    'd1': { name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT', description: 'Championship winning motocross bike. Perfect for the dunes or the track. Well maintained and ready to rip.' },
-    'd2': { name: 'Polaris RZR XP', price: 350, image: '/images/dirt-hero.png', location: 'Sand Hollow, UT', description: 'The ultimate side-by-side experience. 4 seats, turbo charged, plenty of suspension travel.' },
-    'd3': { name: 'Honda CRF250R', price: 120, image: '/images/dirt-hero.png', location: 'St. George, UT', description: 'Reliable and fun. Great for intermediate riders looking to explore the trails.' },
-    'd4': { name: 'Can-Am Maverick', price: 400, image: '/images/dirt-hero.png', location: 'Dumont Dunes, CA', description: 'High performance beast. Conquer any dune with this machine.' },
-    // Water
-    'w1': { name: 'Sea-Doo GTX', price: 250, image: '/images/water-hero.png', location: 'Miami, FL', description: 'Luxury personal watercraft. Stable, fast, and comfortable for 3 riders.' },
-    'w2': { name: 'MasterCraft NXT', price: 800, image: '/images/water-hero.png', location: 'Lake Powell, AZ', description: 'Premium wakeboard boat. Create the perfect wave for surfing or boarding.' },
-    'w3': { name: 'Inflatable Paddleboard', price: 40, image: '/images/water-hero.png', location: 'Austin, TX', description: 'Portable fun. easy to carry and inflate. Includes paddle and pump.' },
-    'w4': { name: 'Yamaha Waverunner', price: 220, image: '/images/water-hero.png', location: 'San Diego, CA', description: 'Reliable jet ski for cruising the bay or jumping waves.' },
-    // Housing
-    'h1': { name: 'DeWalt 20V Drill Set', price: 25, image: '/images/housing-hero.png', location: 'Seattle, WA', description: 'Complete drill and impact driver set. Batteries included.' },
-    'h2': { name: 'Industrial Carpet Cleaner', price: 60, image: '/images/housing-hero.png', location: 'Portland, OR', description: 'Deep clean your carpets like a pro. Removes tough stains and odors.' },
-    'h3': { name: 'Pressure Washer 3000PSI', price: 45, image: '/images/housing-hero.png', location: 'Vancouver, BC', description: 'Blast away dirt and grime from driveways, decks, and siding.' },
-    'h4': { name: 'Tile Saw', price: 35, image: '/images/housing-hero.png', location: 'Surrey, BC', description: 'Precision cutting for ceramic and stone tiles. Water cooled blade.' },
+  // Dirt
+  'd1': { name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT', description: 'Championship winning motocross bike. Perfect for the dunes or the track. Well maintained and ready to rip.' },
+  'd2': { name: 'Polaris RZR XP', price: 350, image: '/images/dirt-hero.png', location: 'Sand Hollow, UT', description: 'The ultimate side-by-side experience. 4 seats, turbo charged, plenty of suspension travel.' },
+  'd3': { name: 'Honda CRF250R', price: 120, image: '/images/dirt-hero.png', location: 'St. George, UT', description: 'Reliable and fun. Great for intermediate riders looking to explore the trails.' },
+  'd4': { name: 'Can-Am Maverick', price: 400, image: '/images/dirt-hero.png', location: 'Dumont Dunes, CA', description: 'High performance beast. Conquer any dune with this machine.' },
+  // Water
+  'w1': { name: 'Sea-Doo GTX', price: 250, image: '/images/water-hero.png', location: 'Miami, FL', description: 'Luxury personal watercraft. Stable, fast, and comfortable for 3 riders.' },
+  'w2': { name: 'MasterCraft NXT', price: 800, image: '/images/water-hero.png', location: 'Lake Powell, AZ', description: 'Premium wakeboard boat. Create the perfect wave for surfing or boarding.' },
+  'w3': { name: 'Inflatable Paddleboard', price: 40, image: '/images/water-hero.png', location: 'Austin, TX', description: 'Portable fun. easy to carry and inflate. Includes paddle and pump.' },
+  'w4': { name: 'Yamaha Waverunner', price: 220, image: '/images/water-hero.png', location: 'San Diego, CA', description: 'Reliable jet ski for cruising the bay or jumping waves.' },
+  // Housing
+  'h1': { name: 'DeWalt 20V Drill Set', price: 25, image: '/images/housing-hero.png', location: 'Seattle, WA', description: 'Complete drill and impact driver set. Batteries included.' },
+  'h2': { name: 'Industrial Carpet Cleaner', price: 60, image: '/images/housing-hero.png', location: 'Portland, OR', description: 'Deep clean your carpets like a pro. Removes tough stains and odors.' },
+  'h3': { name: 'Pressure Washer 3000PSI', price: 45, image: '/images/housing-hero.png', location: 'Vancouver, BC', description: 'Blast away dirt and grime from driveways, decks, and siding.' },
+  'h4': { name: 'Tile Saw', price: 35, image: '/images/housing-hero.png', location: 'Surrey, BC', description: 'Precision cutting for ceramic and stone tiles. Water cooled blade.' },
 };
 
 export default function ItemClient({ id, initialItem }) {
-    const router = useRouter();
-    const supabase = createClient();
+  const router = useRouter();
+  const supabase = createClient();
 
-    // Use passed initialItem or fallback to Mock DB
-    const [item, setItem] = useState(initialItem || ITEMS_DB[id] || null);
-    const [itemsOwnerId, setItemsOwnerId] = useState(initialItem?.owner_id || null);
-    const [currentUser, setCurrentUser] = useState(null);
+  // Use passed initialItem or fallback to Mock DB
+  const [item, setItem] = useState(initialItem || ITEMS_DB[id] || null);
+  const [itemsOwnerId, setItemsOwnerId] = useState(initialItem?.owner_id || null);
+  const [currentUser, setCurrentUser] = useState(null);
 
-    // Initialize loading state: false if we have an item, true otherwise
-    const [loading, setLoading] = useState(!item);
+  // Initialize loading state: false if we have an item, true otherwise
+  const [loading, setLoading] = useState(!item);
 
-    // Photo gallery state
-    const [selectedImage, setSelectedImage] = useState(0);
-    const [lightboxOpen, setLightboxOpen] = useState(false);
+  // Photo gallery state
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
-    // Date state management
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+  // Date state management
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setCurrentUser(user);
-        };
-        checkAuth();
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+    };
+    checkAuth();
 
-        // If we already have the item from Server (initialItem) or Mock DB, don't fetch
-        if (item) return;
+    // If we already have the item from Server (initialItem) or Mock DB, don't fetch
+    if (item) return;
 
-        const fetchItem = async () => {
-            setLoading(true);
-            const { data, error } = await supabase
-                .from('items')
-                .select('*')
-                .eq('id', id)
-                .single();
+    const fetchItem = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-            if (data) {
-                setItem({ ...data, price: Number(data.price) });
-                setItemsOwnerId(data.owner_id);
-            }
-            if (error) console.error('Error fetching item:', error);
-            setLoading(false);
-        };
-
-        fetchItem();
-    }, [id, supabase, item]); // Check dependency on 'item' to prevent loop
-
-    // Get all images (main + additional)
-    const getImages = () => {
-        if (!item) return [];
-        // Prioritize image_url (Supabase) then image (Mock)
-        const mainImage = item.image_url || item.image || '/images/dirt-hero.png';
-        // If item has additional_images array, include them
-        if (item.additional_images && Array.isArray(item.additional_images)) {
-            return [mainImage, ...item.additional_images];
-        }
-        // Fallback: create array with just the main image
-        return [mainImage];
+      if (data) {
+        setItem({ ...data, price: Number(data.price) });
+        setItemsOwnerId(data.owner_id);
+      }
+      if (error) console.error('Error fetching item:', error);
+      setLoading(false);
     };
 
-    const images = getImages();
+    fetchItem();
+  }, [id, supabase, item]); // Check dependency on 'item' to prevent loop
 
-    // Get today's date string for min attribute
-    const today = new Date().toISOString().split('T')[0];
-
-    if (loading) {
-        return (
-            <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center' }}>
-                <h2>Loading gear...</h2>
-            </div>
-        );
+  // Get all images (main + additional)
+  const getImages = () => {
+    if (!item) return [];
+    // Prioritize image_url (Supabase) then image (Mock)
+    const mainImage = item.image_url || item.image || '/images/dirt-hero.png';
+    // If item has additional_images array, include them
+    if (item.additional_images && Array.isArray(item.additional_images)) {
+      return [mainImage, ...item.additional_images];
     }
+    // Fallback: create array with just the main image
+    return [mainImage];
+  };
 
-    if (!item) {
-        return (
-            <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center' }}>
-                <h1>Item not found</h1>
-                <Link href="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>Return Home</Link>
-            </div>
-        );
-    }
+  const images = getImages();
 
+  // Get today's date string for min attribute
+  const today = new Date().toISOString().split('T')[0];
+
+  if (loading) {
     return (
-        <div className="item-page">
-            {/* Photo Gallery */}
-            <div className="gallery-section">
-                <div className="main-image-container" onClick={() => setLightboxOpen(true)}>
-                    <Image
-                        src={images[selectedImage]}
-                        alt={item.name}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                        priority
+      <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center' }}>
+        <h2>Loading gear...</h2>
+      </div>
+    );
+  }
+
+  if (!item) {
+    return (
+      <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center' }}>
+        <h1>Item not found</h1>
+        <Link href="/" className="btn btn-primary" style={{ marginTop: '1rem' }}>Return Home</Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="item-page">
+      {/* Photo Gallery */}
+      <div className="gallery-section">
+        <div className="main-image-container" onClick={() => setLightboxOpen(true)}>
+          <Image
+            src={images[selectedImage]}
+            alt={item.name}
+            fill
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+          <div className="image-zoom-hint">
+            <span>🔍 Tap to enlarge</span>
+          </div>
+        </div>
+
+        {/* Thumbnail Strip */}
+        {images.length > 1 && (
+          <div className="thumbnail-strip">
+            {images.map((img, index) => (
+              <button
+                key={index}
+                className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
+                onClick={() => setSelectedImage(index)}
+              >
+                <Image src={img} alt={`${item.name} ${index + 1}`} fill style={{ objectFit: 'cover' }} />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Image Counter */}
+        <div className="image-counter">
+          {selectedImage + 1} / {images.length}
+        </div>
+      </div>
+
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div className="lightbox" onClick={() => setLightboxOpen(false)}>
+          <button className="lightbox-close" onClick={() => setLightboxOpen(false)}>✕</button>
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={images[selectedImage]}
+              alt={item.name}
+              fill
+              style={{ objectFit: 'contain' }}
+            />
+          </div>
+          {images.length > 1 && (
+            <>
+              <button
+                className="lightbox-prev"
+                onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev === 0 ? images.length - 1 : prev - 1); }}
+              >
+                ‹
+              </button>
+              <button
+                className="lightbox-next"
+                onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev === images.length - 1 ? 0 : prev + 1); }}
+              >
+                ›
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="container item-content">
+        <div className="content-wrapper">
+          <div className="item-header">
+            <div>
+              <h1>{item.name}</h1>
+              <p className="location">📍 {item.location}</p>
+            </div>
+            <div className="price-tag">
+              <span className="currency">$</span>
+              <span className="amount">{item.price}</span>
+              <span className="per">/day</span>
+            </div>
+          </div>
+
+          <div className="grid-layout">
+            <div className="details-column">
+              <h3>Description</h3>
+              <p className="description">{item.description}</p>
+
+              <div className="features">
+                <div className="feature-item">🛡️ Insurance Included</div>
+                <div className="feature-item">⭐ 4.9 Star Equipment</div>
+                <div className="feature-item">✅ Verified Owner</div>
+              </div>
+
+              {/* Owner/Admin Controls */}
+              {currentUser && (
+                <div className="admin-controls">
+                  <h4>Admin Controls</h4>
+                  <div className="controls-row">
+                    <Link href={`/edit-listing/${item.id}`} className="btn-edit">✏️ Edit</Link>
+                    <DeleteButton itemId={item.id} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="booking-column">
+              <div className="booking-card">
+                <h3>Book this Item</h3>
+                <div className="date-picker-mock">
+                  <div className="date-field">
+                    <label>Start Date</label>
+                    <input
+                      type="date"
+                      min={today}
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
                     />
-                    <div className="image-zoom-hint">
-                        <span>🔍 Tap to enlarge</span>
-                    </div>
+                  </div>
+                  <div className="date-field">
+                    <label>End Date</label>
+                    <input
+                      type="date"
+                      min={startDate || today}
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      disabled={!startDate}
+                    />
+                  </div>
                 </div>
 
-                {/* Thumbnail Strip */}
-                {images.length > 1 && (
-                    <div className="thumbnail-strip">
-                        {images.map((img, index) => (
-                            <button
-                                key={index}
-                                className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
-                                onClick={() => setSelectedImage(index)}
-                            >
-                                <Image src={img} alt={`${item.name} ${index + 1}`} fill style={{ objectFit: 'cover' }} />
-                            </button>
-                        ))}
-                    </div>
-                )}
-
-                {/* Image Counter */}
-                <div className="image-counter">
-                    {selectedImage + 1} / {images.length}
+                <div className="summary-row">
+                  <span>Service Fee</span>
+                  <span>$15</span>
                 </div>
+                <div className="summary-row total">
+                  <span>Total (est)</span>
+                  <span>${item.price + 15}</span>
+                </div>
+
+                <Link
+                  href={startDate && endDate ? `/checkout?itemId=${id}&start=${startDate}&end=${endDate}` : '#'}
+                  className={`btn btn-primary full-width ${(!startDate || !endDate) ? 'disabled' : ''}`}
+                  style={{
+                    textAlign: 'center',
+                    textDecoration: 'none',
+                    opacity: (!startDate || !endDate) ? 0.5 : 1,
+                    pointerEvents: (!startDate || !endDate) ? 'none' : 'auto'
+                  }}
+                >
+                  Request to Rent
+                </Link>
+                <button className="btn btn-secondary full-width" style={{ marginTop: '0.75rem', textAlign: 'center', justifyContent: 'center' }}>
+                  💬 Message Owner
+                </button>
+              </div>
             </div>
+          </div>
+        </div>
+      </div>
 
-            {/* Lightbox Modal */}
-            {lightboxOpen && (
-                <div className="lightbox" onClick={() => setLightboxOpen(false)}>
-                    <button className="lightbox-close" onClick={() => setLightboxOpen(false)}>✕</button>
-                    <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-                        <Image
-                            src={images[selectedImage]}
-                            alt={item.name}
-                            fill
-                            style={{ objectFit: 'contain' }}
-                        />
-                    </div>
-                    {images.length > 1 && (
-                        <>
-                            <button
-                                className="lightbox-prev"
-                                onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev === 0 ? images.length - 1 : prev - 1); }}
-                            >
-                                ‹
-                            </button>
-                            <button
-                                className="lightbox-next"
-                                onClick={(e) => { e.stopPropagation(); setSelectedImage(prev => prev === images.length - 1 ? 0 : prev + 1); }}
-                            >
-                                ›
-                            </button>
-                        </>
-                    )}
-                </div>
-            )}
-
-            <div className="container item-content">
-                <div className="content-wrapper">
-                    <div className="item-header">
-                        <div>
-                            <h1>{item.name}</h1>
-                            <p className="location">📍 {item.location}</p>
-                        </div>
-                        <div className="price-tag">
-                            <span className="currency">$</span>
-                            <span className="amount">{item.price}</span>
-                            <span className="per">/day</span>
-                        </div>
-                    </div>
-
-                    <div className="grid-layout">
-                        <div className="details-column">
-                            <h3>Description</h3>
-                            <p className="description">{item.description}</p>
-
-                            <div className="features">
-                                <div className="feature-item">🛡️ Insurance Included</div>
-                                <div className="feature-item">⭐ 4.9 Star Equipment</div>
-                                <div className="feature-item">✅ Verified Owner</div>
-                            </div>
-
-                            {/* Owner/Admin Controls */}
-                            {currentUser && (
-                                <div className="admin-controls">
-                                    <h4>Admin Controls</h4>
-                                    <div className="controls-row">
-                                        <Link href={`/edit-listing/${item.id}`} className="btn-edit">✏️ Edit</Link>
-                                        <DeleteButton itemId={item.id} />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="booking-column">
-                            <div className="booking-card">
-                                <h3>Book this Item</h3>
-                                <div className="date-picker-mock">
-                                    <div className="date-field">
-                                        <label>Start Date</label>
-                                        <input
-                                            type="date"
-                                            min={today}
-                                            value={startDate}
-                                            onChange={(e) => setStartDate(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="date-field">
-                                        <label>End Date</label>
-                                        <input
-                                            type="date"
-                                            min={startDate || today}
-                                            value={endDate}
-                                            onChange={(e) => setEndDate(e.target.value)}
-                                            disabled={!startDate}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="summary-row">
-                                    <span>Service Fee</span>
-                                    <span>$15</span>
-                                </div>
-                                <div className="summary-row total">
-                                    <span>Total (est)</span>
-                                    <span>${item.price + 15}</span>
-                                </div>
-
-                                <Link
-                                    href={startDate && endDate ? `/checkout?itemId=${id}&start=${startDate}&end=${endDate}` : '#'}
-                                    className={`btn btn-primary full-width ${(!startDate || !endDate) ? 'disabled' : ''}`}
-                                    style={{
-                                        textAlign: 'center',
-                                        textDecoration: 'none',
-                                        opacity: (!startDate || !endDate) ? 0.5 : 1,
-                                        pointerEvents: (!startDate || !endDate) ? 'none' : 'auto'
-                                    }}
-                                >
-                                    Request to Rent
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <style jsx>{`
+      <style jsx>{`
         .item-page {
           min-height: 100vh;
           padding-top: 80px;
@@ -552,6 +555,6 @@ export default function ItemClient({ id, initialItem }) {
           }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

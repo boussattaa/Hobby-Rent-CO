@@ -175,6 +175,10 @@ function OffroadPageContent() {
                     <p className="location">📍 {item.location}</p>
                     <div className="card-footer">
                       <span className="badge">{item.subcategory || 'Gear'}</span>
+                      {item.distance && item.distance < 900000 && (
+                        <span className="distance-badge">📍 {Math.round(item.distance)} mi</span>
+                      )}
+                      <span className="verified-badge">✨ New Listing</span>
                     </div>
                   </div>
                 </Link>
@@ -264,6 +268,9 @@ function OffroadPageContent() {
         .location { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem; }
         .card-footer { margin-top: auto; }
         .badge { background: #fff7ed; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; color: var(--dirt-primary); font-weight: 600; }
+        .distance-badge { font-size: 0.8rem; color: var(--text-secondary); margin-left: auto; }
+        .verified-badge { background: #ecfdf5; color: #059669; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; margin-top: 4px; display: inline-block; }
+        .card-footer { margin-top: auto; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 
         @media (max-width: 900px) {
           .main-content { grid-template-columns: 1fr; }
