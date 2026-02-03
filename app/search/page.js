@@ -1,14 +1,13 @@
-
 "use client";
 
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import ListingCard from '@/components/ListingCard';
-import ListingCardSkeleton from '@/components/ListingCard'; // Reusing for now or just loading state
 
-export default function SearchPage() {
+function SearchContent() {
     const searchParams = useSearchParams();
     const query = searchParams.get('q') || '';
     const location = searchParams.get('location') || '';
@@ -140,5 +139,13 @@ export default function SearchPage() {
         }
       `}</style>
         </div>
+    );
+}
+
+export default function SearchPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: '8rem' }}>Loading Search...</div>}>
+            <SearchContent />
+        </Suspense>
     );
 }
