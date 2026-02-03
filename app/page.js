@@ -55,18 +55,20 @@ export default function Home() {
           <div className="category-grid">
             {categories.map((cat) => (
               <Link key={cat.name} href={cat.href} className="category-card">
-                <div className="card-image">
+                <div className="image-wrapper">
                   <Image
                     src={cat.image}
                     alt={cat.name}
                     fill
+                    className="category-image"
                     style={{ objectFit: 'cover' }}
                     sizes="(max-width: 768px) 100vw, 25vw"
                   />
-                  <div className="card-overlay">
-                    <h3>{cat.name}</h3>
-                    <p>{cat.desc}</p>
-                  </div>
+                </div>
+                <div className="overlay"></div>
+                <div className="card-content">
+                  <h3>{cat.name}</h3>
+                  <p>{cat.desc}</p>
                 </div>
               </Link>
             ))}
