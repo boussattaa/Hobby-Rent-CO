@@ -13,20 +13,37 @@ function SearchContent() {
     const router = useRouter();
     const query = searchParams.get('q') || '';
 
-    // New Filters from URL
+    // Filters from URL
     const location = searchParams.get('location') || '';
-    const category = searchParams.get('category');
+    const category = searchParams.get('category') || '';
     const subcats = searchParams.get('subcat')?.split(',') || [];
-    const maxPrice = searchParams.get('max_price');
+    const maxPrice = searchParams.get('max_price') || '';
 
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showFilters, setShowFilters] = useState(false);
     const supabase = createClient();
 
     // Mobile search state
     const [mobileQuery, setMobileQuery] = useState(query);
     const [mobileLocation, setMobileLocation] = useState(location);
+    const [mobileCategory, setMobileCategory] = useState(category);
+    const [mobileMaxPrice, setMobileMaxPrice] = useState(maxPrice);
+
+    const categories = [
+        { value: '', label: 'All Categories' },
+        { value: 'offroad', label: '🏍️ Offroad' },
+        { value: 'water', label: '🚤 Watersports' },
+        { value: 'trailers', label: '🚛 Trailers' },
+        { value: 'housing', label: '🔧 Tools' },
+    ];
+
+    const priceRanges = [
+        { value: '', label: 'Any Price' },
+        { value: '50', label: 'Under $50/day' },
+        { value: '100', label: 'Under $100/day' },
+        { value: '200', label: 'Under $200/day' },
+        { value: '500', label: 'Under $500/day' },
+    ];
 
     useEffect(() => {
         const fetchResults = async () => {
@@ -34,27 +51,18 @@ function SearchContent() {
 
             let queryBuilder = supabase.from('items').select('*');
 
-            // 1. Text Search
             if (query) {
                 queryBuilder = queryBuilder.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
             }
-
-            // 2. Category Filter
             if (category) {
                 queryBuilder = queryBuilder.eq('category', category);
             }
-
-            // 3. Subcategory Filter
             if (subcats.length > 0) {
                 queryBuilder = queryBuilder.in('subcategory', subcats);
             }
-
-            // 4. Price Filter
             if (maxPrice) {
                 queryBuilder = queryBuilder.lte('price', maxPrice);
             }
-
-            // 5. Location Filter (Simple String Match)
             if (location) {
                 queryBuilder = queryBuilder.ilike('location', `%${location}%`);
             }
@@ -73,54 +81,70 @@ function SearchContent() {
         fetchResults();
     }, [query, location, category, subcats.join(','), maxPrice, supabase]);
 
-    const handleMobileSearch = (e) => {
-        e.preventDefault();
+    const applyFilters = () => {
         const params = new URLSearchParams();
         if (mobileQuery) params.set('q', mobileQuery);
         if (mobileLocation) params.set('location', mobileLocation);
-        if (category) params.set('category', category);
-        if (maxPrice) params.set('max_price', maxPrice);
+        if (mobileCategory) params.set('category', mobileCategory);
+        if (mobileMaxPrice) params.set('max_price', mobileMaxPrice);
         router.push(`/search?${params.toString()}`);
     };
+
+    const handleMobileSearch = (e) => {
+        e.preventDefault();
+        applyFilters();
+    };
+
+    // Auto-apply filter when dropdowns change
+    useEffect(() => {
+        if (mobileCategory !== category || mobileMaxPrice !== maxPrice) {
+            const params = new URLSearchParams();
+            if (mobileQuery || query) params.set('q', mobileQuery || query);
+            if (mobileLocation || location) params.set('location', mobileLocation || location);
+            if (mobileCategory) params.set('category', mobileCategory);
+            if (mobileMaxPrice) params.set('max_price', mobileMaxPrice);
+            router.push(`/search?${params.toString()}`);
+        }
+    }, [mobileCategory, mobileMaxPrice]);
 
     return (
         <div className="search-page">
             <div className="container search-layout">
-                {/* Mobile Search Bar */}
-                <div className="mobile-search-bar">
-                    <form onSubmit={handleMobileSearch} className="mobile-search-form">
-                        <div className="mobile-search-inputs">
-                            <input
-                                type="text"
-                                placeholder="Search gear..."
-                                value={mobileQuery}
-                                onChange={(e) => setMobileQuery(e.target.value)}
-                                className="mobile-search-input"
-                            />
-                            <input
-                                type="text"
-                                placeholder="Location"
-                                value={mobileLocation}
-                                onChange={(e) => setMobileLocation(e.target.value)}
-                                className="mobile-location-input"
-                            />
-                        </div>
+                {/* Mobile Search & Filters */}
+                <div className="mobile-controls">
+                    <form onSubmit={handleMobileSearch} className="mobile-search-row">
+                        <input
+                            type="text"
+                            placeholder="Search gear..."
+                            value={mobileQuery}
+                            onChange={(e) => setMobileQuery(e.target.value)}
+                            className="mobile-search-input"
+                        />
                         <button type="submit" className="mobile-search-btn">🔍</button>
                     </form>
-                    <button
-                        className="filter-toggle-btn"
-                        onClick={() => setShowFilters(!showFilters)}
-                    >
-                        ⚙️ Filters {category || maxPrice ? '•' : ''}
-                    </button>
-                </div>
 
-                {/* Mobile Filter Panel */}
-                {showFilters && (
-                    <div className="mobile-filter-panel">
-                        <SearchSidebar onClose={() => setShowFilters(false)} />
+                    <div className="mobile-filter-row">
+                        <select
+                            value={mobileCategory}
+                            onChange={(e) => setMobileCategory(e.target.value)}
+                            className="filter-dropdown"
+                        >
+                            {categories.map(cat => (
+                                <option key={cat.value} value={cat.value}>{cat.label}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={mobileMaxPrice}
+                            onChange={(e) => setMobileMaxPrice(e.target.value)}
+                            className="filter-dropdown"
+                        >
+                            {priceRanges.map(range => (
+                                <option key={range.value} value={range.value}>{range.label}</option>
+                            ))}
+                        </select>
                     </div>
-                )}
+                </div>
 
                 {/* Desktop Sidebar */}
                 <div className="sidebar-area">
@@ -176,7 +200,7 @@ function SearchContent() {
             gap: 3rem;
         }
 
-        .mobile-search-bar {
+        .mobile-controls {
             display: none;
         }
 
@@ -194,32 +218,24 @@ function SearchContent() {
                 display: none;
             }
 
-            .mobile-search-bar {
+            .mobile-controls {
                 display: flex;
-                gap: 0.5rem;
+                flex-direction: column;
+                gap: 0.75rem;
                 margin-bottom: 1rem;
             }
 
-            .mobile-search-form {
-                flex: 1;
+            .mobile-search-row {
                 display: flex;
                 gap: 0.5rem;
             }
 
-            .mobile-search-inputs {
+            .mobile-search-input {
                 flex: 1;
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-
-            .mobile-search-input,
-            .mobile-location-input {
                 padding: 0.75rem 1rem;
                 border: 1px solid var(--border-color);
                 border-radius: 8px;
                 font-size: 1rem;
-                width: 100%;
             }
 
             .mobile-search-btn {
@@ -228,26 +244,28 @@ function SearchContent() {
                 color: white;
                 border: none;
                 border-radius: 8px;
-                font-size: 1.2rem;
+                font-size: 1.1rem;
                 cursor: pointer;
             }
 
-            .filter-toggle-btn {
-                padding: 0.75rem 1rem;
-                background: white;
+            .mobile-filter-row {
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            .filter-dropdown {
+                flex: 1;
+                padding: 0.6rem 0.75rem;
                 border: 1px solid var(--border-color);
                 border-radius: 8px;
                 font-size: 0.9rem;
-                cursor: pointer;
-                white-space: nowrap;
-            }
-
-            .mobile-filter-panel {
                 background: white;
-                padding: 1rem;
-                border-radius: 12px;
-                margin-bottom: 1rem;
-                border: 1px solid var(--border-color);
+                cursor: pointer;
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 10px center;
+                padding-right: 30px;
             }
         }
 

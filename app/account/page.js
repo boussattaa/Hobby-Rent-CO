@@ -283,71 +283,17 @@ export default function AccountPage() {
                                 </div>
                             </div>
 
-                            {/* Phone with Verification */}
+                            {/* Phone */}
                             <div className="form-group">
-                                <label htmlFor="phone">
-                                    Phone Number
-                                    {phoneVerified ? (
-                                        <span className="verified-inline">✓ Verified</span>
-                                    ) : profile.phone ? (
-                                        <span className="unverified-inline">⚠ Not Verified</span>
-                                    ) : null}
-                                </label>
-                                <div className="input-with-action">
-                                    <input
-                                        type="tel"
-                                        id="phone"
-                                        name="phone"
-                                        value={profile.phone}
-                                        onChange={handleChange}
-                                        placeholder="(555) 123-4567"
-                                        disabled={phoneVerified}
-                                        className={phoneVerified ? 'disabled' : ''}
-                                    />
-                                    {!phoneVerified && profile.phone && !phoneOtpSent && (
-                                        <button
-                                            type="button"
-                                            className="verify-action-btn"
-                                            onClick={handleSendPhoneOtp}
-                                            disabled={sendingPhoneCode}
-                                        >
-                                            {sendingPhoneCode ? 'Sending...' : 'Verify Phone'}
-                                        </button>
-                                    )}
-                                </div>
-
-                                {/* OTP Input */}
-                                {phoneOtpSent && !phoneVerified && (
-                                    <div className="otp-section">
-                                        <p className="otp-instruction">Enter the 6-digit code sent to your phone:</p>
-                                        <div className="otp-input-row">
-                                            <input
-                                                type="text"
-                                                value={phoneOtp}
-                                                onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                                placeholder="000000"
-                                                className="otp-input"
-                                                maxLength={6}
-                                            />
-                                            <button
-                                                type="button"
-                                                className="btn btn-primary"
-                                                onClick={handleVerifyPhoneOtp}
-                                                disabled={verifyingPhone || phoneOtp.length !== 6}
-                                            >
-                                                {verifyingPhone ? 'Verifying...' : 'Confirm'}
-                                            </button>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            className="resend-link"
-                                            onClick={handleSendPhoneOtp}
-                                            disabled={sendingPhoneCode}
-                                        >
-                                            Resend code
-                                        </button>
-                                    </div>
-                                )}
+                                <label htmlFor="phone">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    id="phone"
+                                    name="phone"
+                                    value={profile.phone}
+                                    onChange={handleChange}
+                                    placeholder="(555) 123-4567"
+                                />
                             </div>
 
                             <h3>Notification Preferences</h3>
