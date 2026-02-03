@@ -43,17 +43,21 @@ export default function Home() {
     <div className="landing-page">
       {/* Hero Section */}
       {/* Hero Section */}
-      <section className="hero">
+      <section className="hero" style={{ alignItems: 'flex-end', paddingBottom: '6rem' }}>
         <div className="hero-content">
-          <h1>
-            Rent the <span className="highlight">Adventure</span>.
-            <br />
-            Earn from your <span className="highlight">Gear</span>.
-          </h1>
-          <p className="hero-subtitle">
-            The premium marketplace for outdoor enthusiasts and DIY masters.
-            Rent what you need, list what you have.
-          </p>
+          {/* Text hidden to visualy match the new hero image which has embedded text */}
+          <div className="sr-only">
+            <h1>
+              Rent the <span className="highlight">Adventure</span>.
+              <br />
+              Earn from your <span className="highlight">Gear</span>.
+            </h1>
+            <p className="hero-subtitle">
+              The premium marketplace for outdoor enthusiasts and DIY masters.
+              Rent what you need, list what you have.
+            </p>
+          </div>
+
           <div className="hero-actions">
             <Link href="/list-your-gear" className="btn btn-primary btn-lg">
               Start Earning
@@ -65,13 +69,13 @@ export default function Home() {
         </div>
         <div className="hero-background-wrapper">
           <Image
-            src="/images/hero-bg-final.jpg"
-            alt="Hero Background"
+            src="/images/hero-collage.jpg"
+            alt="Turn your toys into income"
             fill
             style={{ objectFit: 'cover' }}
             priority
           />
-          <div className="gradient-overlay" />
+          <div className="gradient-overlay" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent 40%)' }} />
         </div>
       </section>
 
