@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
 import { createListing } from './actions';
+import EarningsCalculator from '@/components/EarningsCalculator';
 
 export default function ListYourGear() {
   const router = useRouter();
@@ -109,10 +110,14 @@ export default function ListYourGear() {
   return (
     <div className="list-page">
       <div className="container">
+
+        {/* Earnings Calculator */}
+        <EarningsCalculator />
+
         <div className="form-wrapper glass">
           <div className="form-header">
             <h1>List Your Gear</h1>
-            <p>Start earning money from your idle equipment today.</p>
+            <p>Ready to list? Fill out the details below.</p>
           </div>
 
           <form onSubmit={handleSubmit}>

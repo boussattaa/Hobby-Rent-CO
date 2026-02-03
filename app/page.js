@@ -9,10 +9,10 @@ import FeaturedRentals from '@/components/FeaturedRentals';
 
 export default function Home() {
   const categories = [
-    { name: 'Offroad', image: '/images/offroad-card.jpg', href: '/offroad', desc: 'UTVs, ATVs, and Dirt Bikes' },
-    { name: 'Watersports', image: '/images/water-card.jpg', href: '/water', desc: 'Jet Skis, Boats, and Kayaks' },
-    { name: 'Trailers', image: '/images/trailer-card.jpg', href: '/trailers', desc: 'Car haulers, Dump, and Utility' },
-    { name: 'Tools', image: '/images/tool-card.jpg', href: '/housing', desc: 'Heavy equipment and DIY tools' },
+    { name: 'Offroad', image: '/images/dirt-hero.png', href: '/offroad', desc: 'UTVs, ATVs, and Dirt Bikes' },
+    { name: 'Watersports', image: '/images/water-hero.png', href: '/water', desc: 'Jet Skis, Boats, and Kayaks' },
+    { name: 'Trailers', image: '/images/trailer-hero.png', href: '/trailers', desc: 'Car haulers, Dump, and Utility' },
+    { name: 'Tools', image: '/images/housing-hero.png', href: '/housing', desc: 'Heavy equipment and DIY tools' },
   ];
 
   return (
