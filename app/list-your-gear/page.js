@@ -7,6 +7,10 @@ import { createClient } from '@/utils/supabase/client';
 import { createListing } from './actions';
 import EarningsCalculator from '@/components/EarningsCalculator';
 
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 export default function ListYourGear() {
   const router = useRouter();
   const supabase = createClient();
@@ -15,14 +19,31 @@ export default function ListYourGear() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login?message=Please log in to list your gear');
-      } else {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.push('/login?message=Please log in to list your gear');
+        } else {
+          // Add a small artificial delay to prevent flicker if desired, or just set loading
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error('Auth check error', e);
         setLoading(false);
       }
     };
+
     checkUser();
+
+    // Safety timeout
+    const timer = setTimeout(() => {
+      setLoading(l => {
+        if (l) console.warn('Auth check timeout');
+        return false;
+      });
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, [router, supabase]);
 
   const handleSubmit = async (e) => {
@@ -68,10 +89,71 @@ export default function ListYourGear() {
     ]
   };
 
-  const [imageUrl, setImageUrl] = useState('/images/dirt-hero.png'); // Default fallback
+  // Sortable Item Component
+  const SortablePhoto = ({ url, index, onRemove, onMakeMain }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: url });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      zIndex: isDragging ? 10 : 1,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <div ref={setNodeRef} style={style} className={`img-preview ${index === 0 ? 'main' : ''}`} {...attributes} {...listeners}>
+        <img src={url} alt={`Photo ${index}`} />
+        {index === 0 && <span className="badge">Main</span>}
+
+        {/* Action Buttons - Stop propagation ONLY on buttons so dragging the image works */}
+        <div className="overlay-actions">
+          {index !== 0 && (
+            <button
+              type="button"
+              onClick={() => onMakeMain(index)}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="action-btn"
+            >
+              Make Main
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onRemove(index)}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="action-btn delete"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  //   const [imageUrl, setImageUrl] = useState('/images/dirt-hero.png'); // Default fallback
+  //   const [additionalImages, setAdditionalImages] = useState([]);
+  // Refactored to single array for easier DnD
+  const [images, setImages] = useState([]); // If empty, we show placeholder in UI logic if needed, or just empty
+
   const [videoUrl, setVideoUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('offroad');
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      setImages((items) => {
+        const oldIndex = items.indexOf(active.id);
+        const newIndex = items.indexOf(over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   const handleVideoUpload = async (e) => {
     try {
@@ -99,28 +181,44 @@ export default function ListYourGear() {
   const handleImageUpload = async (e) => {
     try {
       setUploading(true);
-      if (!e.target.files || e.target.files.length === 0) {
-        throw new Error('You must select an image to upload.');
+      if (!e.target.files || e.target.files.length === 0) return;
+
+      const files = Array.from(e.target.files);
+      const newImages = [];
+
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage.from('items').upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from('items').getPublicUrl(filePath);
+        newImages.push(data.publicUrl);
       }
 
-      const file = e.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      setImages(prev => [...prev, ...newImages]);
 
-      const { error: uploadError } = await supabase.storage.from('items').upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data } = supabase.storage.from('items').getPublicUrl(filePath);
-      setImageUrl(data.publicUrl);
     } catch (error) {
       alert('Error uploading image: ' + error.message);
     } finally {
       setUploading(false);
     }
+  };
+
+  const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const setAsMain = (index) => {
+    setImages(prev => {
+      const newArr = [...prev];
+      const [selected] = newArr.splice(index, 1);
+      newArr.unshift(selected); // Move to front
+      return newArr;
+    });
   };
 
   if (loading) {
@@ -146,7 +244,11 @@ export default function ListYourGear() {
           <form onSubmit={handleSubmit}>
             {/* Hidden field to pass the uploaded image URL to the server action */}
             {/* Hidden field to pass the uploaded image URL to the server action */}
-            <input type="hidden" name="image_url" value={imageUrl} />
+            {/* Hidden field to pass the uploaded image URL to the server action */}
+            {/* Hidden field to pass the uploaded image URL to the server action */}
+            {/* Logic: index 0 is main, rest additional. If empty, default. */}
+            <input type="hidden" name="image_url" value={images.length > 0 ? images[0] : '/images/dirt-hero.png'} />
+            <input type="hidden" name="additional_images" value={JSON.stringify(images.slice(1))} />
             <input type="hidden" name="video_url" value={videoUrl} />
 
             <div className="form-grid">
@@ -230,16 +332,47 @@ export default function ListYourGear() {
               </div>
 
               <div className="form-group full">
-                <label>Photos</label>
-                <div className="upload-box">
-                  {imageUrl && imageUrl !== '/images/dirt-hero.png' ? (
-                    <img src={imageUrl} alt="Uploaded" style={{ width: '100%', maxHeight: '300px', objectFit: 'cover', borderRadius: '8px' }} />
-                  ) : (
-                    <span>{uploading ? 'Uploading...' : 'Click to select an image'}</span>
+                <label>Photos (Select multiple - Drag to Reorder)</label>
+                {/* Gallery Preview - Moved OUTSIDE of upload-box to fix click issues */}
+                <div className="gallery-preview" style={{ marginBottom: '1rem' }}>
+
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={images}
+                      strategy={rectSortingStrategy}
+                    >
+                      {images.map((url, idx) => (
+                        <SortablePhoto
+                          key={url}
+                          url={url}
+                          index={idx}
+                          onRemove={removeImage}
+                          onMakeMain={setAsMain}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+
+                  {images.length === 0 && (
+                    <div style={{ padding: '2rem', color: '#999', fontStyle: 'italic', width: '100%', textAlign: 'center' }}>
+                      No photos selected.
+                    </div>
                   )}
+                </div>
+
+                <div className="upload-box">
+                  <div style={{ color: '#666' }}>
+                    {uploading ? 'Uploading...' : 'Click to select images (or drag them here)'}
+                  </div>
+
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleImageUpload}
                     disabled={uploading}
                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
@@ -278,7 +411,7 @@ export default function ListYourGear() {
         <EarningsCalculator />
       </div>
 
-      <style jsx>{`
+      <style jsx global>{`
         .list-page {
           min-height: 100vh;
           padding: 4rem 0;
@@ -287,7 +420,7 @@ export default function ListYourGear() {
             radial-gradient(at 90% 90%, rgba(226, 232, 240, 0.8) 0%, transparent 40%);
         }
 
-        .form-wrapper {
+        .list-page .form-wrapper {
           max-width: 800px;
           margin: 0 auto;
           padding: 3rem;
@@ -297,35 +430,37 @@ export default function ListYourGear() {
           box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
 
-        .form-header {
+        .list-page .form-header {
           text-align: center;
           margin-bottom: 3rem;
         }
 
-        .form-header h1 {
+        .list-page .form-header h1 {
           font-size: 2.5rem;
           margin-bottom: 0.5rem;
         }
 
-        .form-header p {
+        .list-page .form-header p {
           color: var(--text-secondary);
         }
 
-        .form-grid {
+        .list-page .form-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 1.5rem;
           margin-bottom: 2rem;
         }
 
-        .form-group label {
+        .list-page .form-group label {
           display: block;
           margin-bottom: 0.5rem;
           font-weight: 600;
           color: var(--text-primary);
         }
 
-        .form-group input, .form-group select, .form-group textarea {
+        .list-page .form-group input, 
+        .list-page .form-group select, 
+        .list-page .form-group textarea {
           width: 100%;
           padding: 0.75rem;
           border: 1px solid var(--border-color);
@@ -334,14 +469,14 @@ export default function ListYourGear() {
           font-family: inherit;
         }
         
-        .form-group.full {
+        .list-page .form-group.full {
           grid-column: 1 / -1;
         }
 
-        .upload-box {
+        .list-page .upload-box {
           border: 2px dashed var(--border-color);
           border-radius: 12px;
-          padding: 3rem;
+          padding: 2rem;
           text-align: center;
           color: var(--text-secondary);
           cursor: pointer;
@@ -349,28 +484,111 @@ export default function ListYourGear() {
           position: relative;
           overflow: hidden;
         }
-        .upload-box:hover {
+        .list-page .upload-box:hover {
           border-color: var(--accent-color);
           color: var(--accent-color);
         }
 
-        .form-actions {
+        .list-page .form-actions {
           text-align: center;
         }
 
-        .btn-lg {
+        .list-page .btn-lg {
           padding: 1rem 3rem;
           font-size: 1.1rem;
         }
 
         @media (max-width: 600px) {
-          .form-grid {
+          .list-page .form-grid {
              grid-template-columns: 1fr;
           }
-          .form-wrapper {
+          .list-page .form-wrapper {
             padding: 1.5rem;
           }
         }
+
+        .list-page .gallery-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .list-page .img-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #cbd5e1; /* Darker border */
+            background: white;
+            touch-action: none; /* Crucial for DnD */
+        }
+        .list-page .img-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none; /* Prevent image drag interfering */
+        }
+        .list-page .img-preview.main {
+            border: 3px solid var(--primary-color);
+        }
+        .list-page .badge {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.7rem;
+            text-align: center;
+            padding: 2px 0;
+        }
+        .list-page .remove-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            line-height: 1;
+        }
+        
+        .list-page .overlay-actions {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            gap: 4px;
+        }
+        .list-page .img-preview:hover .overlay-actions {
+            opacity: 1;
+        }
+        
+        .list-page .action-btn {
+            background: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            width: 80%;
+            font-weight: 600;
+        }
+        .list-page .action-btn:hover { background: #f1f5f9; }
+        .list-page .action-btn.delete { color: red; }
       `}</style>
     </div >
   );

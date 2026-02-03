@@ -44,6 +44,7 @@ export async function createListing(formData) {
         description: formData.get('description'),
         description: formData.get('description'),
         image_url: formData.get('image_url') || '/images/dirt-hero.png',
+        additional_images: JSON.parse(formData.get('additional_images') || '[]'),
         video_url: formData.get('video_url')
     }
 

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import DeleteButton from '@/components/DeleteButton';
+import ChatWindow from '@/components/ChatWindow';
 
 // Mock database (legacy/demo items)
 const ITEMS_DB = {
@@ -42,9 +43,17 @@ export default function ItemClient({ id, initialItem }) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  // Availability state
   const [blockedDates, setBlockedDates] = useState(new Set());
   const [availabilityError, setAvailabilityError] = useState('');
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const handleMessageOwner = () => {
+    if (!currentUser) {
+      router.push('/login');
+      return;
+    }
+    setIsChatOpen(true);
+  };
 
   // Date state management
   const [startDate, setStartDate] = useState('');
@@ -353,20 +362,28 @@ export default function ItemClient({ id, initialItem }) {
                 >
                   Request to Rent
                 </Link>
-                {item.ownerEmail ? (
-                  <a href={`mailto:${item.ownerEmail}?subject=Question about ${item.name}`} className="btn btn-secondary full-width" style={{ marginTop: '0.75rem', textAlign: 'center', justifyContent: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                    💬 Message Owner
-                  </a>
-                ) : (
-                  <button onClick={() => alert('This is a demo item. No owner email available.')} className="btn btn-secondary full-width" style={{ marginTop: '0.75rem', textAlign: 'center', justifyContent: 'center' }}>
-                    💬 Message Owner
-                  </button>
-                )}
+                <button
+                  onClick={handleMessageOwner}
+                  className="btn btn-secondary full-width"
+                  style={{ marginTop: '0.75rem', textAlign: 'center', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  💬 Message Owner
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <ChatWindow
+        currentUser={currentUser}
+        receiverId={itemsOwnerId}
+        receiverName="Owner"
+        receiverEmail={item.ownerEmail} // Pass the email we already fetched
+        rentalId={null}
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
 
       <style jsx>{`
         .item-page {

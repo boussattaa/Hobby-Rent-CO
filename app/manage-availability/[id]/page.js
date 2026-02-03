@@ -66,7 +66,8 @@ export default function ManageAvailability() {
 
     const toggleDate = async (dateObj) => {
         if (!dateObj) return;
-        const dateStr = dateObj.toISOString().split('T')[0];
+        // Fix: use local date string construction
+        const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
         const newBlocked = new Set(blockedDates);
 
         if (newBlocked.has(dateStr)) {
@@ -115,7 +116,8 @@ export default function ManageAvailability() {
                     {days.map((date, idx) => {
                         if (!date) return <div key={idx}></div>;
 
-                        const dateStr = date.toISOString().split('T')[0];
+                        // Fix: use local date string to match DB "YYYY-MM-DD"
+                        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
                         const isBlocked = blockedDates.has(dateStr);
                         const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
 
