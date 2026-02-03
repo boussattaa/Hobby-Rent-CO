@@ -9,10 +9,10 @@ import { getDistanceFromLatLonInMiles } from '@/utils/distance';
 import SearchFilter from '@/components/SearchFilter';
 
 const DIRT_ITEMS = [
-  { id: 'd1', name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT' },
-  { id: 'd2', name: 'Polaris RZR XP', price: 350, image: '/images/dirt-hero.png', location: 'Sand Hollow, UT' },
-  { id: 'd3', name: 'Honda CRF250R', price: 120, image: '/images/dirt-hero.png', location: 'St. George, UT' },
-  { id: 'd4', name: 'Can-Am Maverick', price: 400, image: '/images/dirt-hero.png', location: 'Dumont Dunes, CA' },
+  { id: 'd1', name: 'KTM 450 SX-F', price: 150, image: '/images/dirt-hero.png', location: 'Moab, UT', lat: 38.5733, lng: -109.5498 },
+  { id: 'd2', name: 'Polaris RZR XP', price: 350, image: '/images/dirt-hero.png', location: 'Sand Hollow, UT', lat: 37.1232, lng: -113.3828 },
+  { id: 'd3', name: 'Honda CRF250R', price: 120, image: '/images/dirt-hero.png', location: 'St. George, UT', lat: 37.0965, lng: -113.5684 },
+  { id: 'd4', name: 'Can-Am Maverick', price: 400, image: '/images/dirt-hero.png', location: 'Dumont Dunes, CA', lat: 35.6836, lng: -116.2201 },
 ];
 
 export default function OffroadPage() {
@@ -70,6 +70,41 @@ export default function OffroadPage() {
       </header>
 
       <div className="container main-content">
+        {/* Restored Sidebar */}
+        <aside className="filters">
+          <h3>Filters</h3>
+          <div className="filter-group">
+            <label>Category</label>
+            <select>
+              <option>All</option>
+              <optgroup label="UTVs / Side-by-Sides">
+                <option>2-Seaters</option>
+                <option>4-Seaters</option>
+                <option>Utility</option>
+              </optgroup>
+              <optgroup label="ATVs / Quads">
+                <option>Sport Quads</option>
+                <option>Utility ATVs</option>
+                <option>Youth</option>
+              </optgroup>
+              <optgroup label="Two Wheels">
+                <option>Dirt Bikes</option>
+                <option>Motocross</option>
+                <option>Dual-Sport</option>
+                <option>Electric</option>
+              </optgroup>
+              <optgroup label="Seasonal">
+                <option>Snowmobiles</option>
+                <option>Snow Bikes</option>
+              </optgroup>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label>Price Range</label>
+            <input type="range" min="0" max="1000" />
+          </div>
+        </aside>
+
         <div className="content-area">
           <SearchFilter />
 
@@ -112,12 +147,18 @@ export default function OffroadPage() {
         }
         
         .main-content {
-          display: block;
+          display: grid;
+          grid-template-columns: 250px 1fr;
+          gap: 3rem;
           padding-bottom: 4rem;
         }
-        
-        .content-area {
-            width: 100%;
+
+        .filters {
+          background: white;
+          padding: 1.5rem;
+          border-radius: 12px;
+          border: 1px solid var(--border-color);
+          height: fit-content;
         }
 
         .results-info {
@@ -203,12 +244,12 @@ export default function OffroadPage() {
           width: 100%;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .main-content {
-            grid-template-columns: 1fr;
+             grid-template-columns: 1fr;
           }
           .filters {
-            display: none; /* Hide filters on mobile for now */
+             display: none;
           }
         }
       `}</style>
