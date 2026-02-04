@@ -28,46 +28,37 @@ export default function RentalDetailsPage({ params }) {
             }
             setCurrentUser(user);
 
-            // Fetch Rental + Public Item Details + Profiles
-            // We'll fetch private details separately if allowed
-            const { data, error } = await supabase
+            // 1. Fetch Rental Basic Data
+            const { data: rentalData, error: rentalError } = await supabase
                 .from('rentals')
-                .select(`
-                    *,
-                    items (
-                        id,
-                        name,
-                        image_url,
-                        price,
-                        location,
-                        owner_id
-                    ),
-                    renter:profiles!renter_id (
-                        id,
-                        first_name,
-                        email,
-                        is_verified
-                    ),
-                    owner:profiles!owner_id (
-                        id,
-                        first_name,
-                        email,
-                        is_verified
-                    )
-                `)
+                .select('*')
                 .eq('id', id)
                 .single();
 
-            if (error) {
-                console.error("Error fetching rental:", error);
+            if (rentalError) {
+                console.error("Error fetching rental:", JSON.stringify(rentalError, null, 2));
                 setError("Rental not found or access denied.");
                 setLoading(false);
                 return;
             }
 
+            // 2. Fetch Related Data Manually
+            const [itemRes, renterRes, ownerRes] = await Promise.all([
+                supabase.from('items').select('id, name, image_url, price, location, owner_id').eq('id', rentalData.item_id).single(),
+                supabase.from('profiles').select('id, first_name, email, is_verified').eq('id', rentalData.renter_id).single(),
+                supabase.from('profiles').select('id, first_name, email, is_verified').eq('id', rentalData.owner_id).single()
+            ]);
+
+            const enrichedRental = {
+                ...rentalData,
+                items: itemRes.data,
+                renter: renterRes.data,
+                owner: ownerRes.data
+            };
+
             // Determine Role
-            const isUserOwner = data.owner_id === user.id;
-            const isUserRenter = data.renter_id === user.id;
+            const isUserOwner = enrichedRental.owner_id === user.id;
+            const isUserRenter = enrichedRental.renter_id === user.id;
             setIsOwner(isUserOwner);
 
             if (!isUserOwner && !isUserRenter) {
@@ -76,25 +67,17 @@ export default function RentalDetailsPage({ params }) {
                 return;
             }
 
-            let enrichedRental = { ...data };
-
             // Securely Fetch Private Address (For Renter Only)
-            if (isUserRenter && (data.status === 'approved' || data.status === 'active')) {
+            if (isUserRenter && (enrichedRental.status === 'approved' || enrichedRental.status === 'active')) {
                 const { data: privateData } = await supabase
                     .from('item_private_details')
                     .select('storage_address, emergency_contact')
-                    .eq('item_id', data.item_id)
+                    .eq('item_id', enrichedRental.item_id)
                     .single();
 
                 if (privateData) {
                     enrichedRental.privateDetails = privateData;
                 }
-            }
-
-            // Check Payout Status (For Owner)
-            if (isUserOwner) {
-                // We could fetch payout specific logs here if needed, 
-                // but the 'paid_out' column on rental is already selected.
             }
 
             setRental(enrichedRental);
