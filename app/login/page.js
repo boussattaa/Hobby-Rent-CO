@@ -51,19 +51,7 @@ export default async function LoginPage(props) {
           </form>
         </div>
       </div>
-      <style jsx>{`
-        .auth-footer {
-          margin-top: 1.5rem;
-          text-align: center;
-          font-size: 0.9rem;
-          color: #666;
-        }
-        .auth-footer a {
-          color: var(--primary-color);
-          text-decoration: none;
-          font-weight: 600;
-        }
-      `}</style>
+
     </div>
   )
 }
