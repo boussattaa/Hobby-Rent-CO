@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import ListingCard from '@/components/ListingCard';
 import SearchSidebar from '@/components/SearchSidebar';
+import { geocodeLocation } from '@/utils/geocoding';
 
 function SearchContent() {
     const searchParams = useSearchParams();
