@@ -43,9 +43,7 @@ export default async function DashboardPage() {
         }));
     }
 
-    if (error) {
-        console.error("Error fetching admin rentals:", error);
-    }
+
 
     return (
         <DashboardClient
