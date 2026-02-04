@@ -62,26 +62,6 @@ export default async function SignupPage(props) {
                     </form>
                 </div>
             </div>
-            <style jsx>{`
-        .form-group-row {
-            display: flex;
-            gap: 1rem;
-        }
-        .form-group-row .form-group {
-            flex: 1;
-        }
-        .auth-footer {
-            margin-top: 1.5rem;
-            text-align: center;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        .auth-footer a {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 600;
-        }
-      `}</style>
         </div>
     )
 }
