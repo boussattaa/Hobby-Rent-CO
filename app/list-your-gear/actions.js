@@ -55,7 +55,7 @@ export async function createListing(formData) {
         category: formData.get('category'),
         subcategory: formData.get('subcategory'),
         price: parseFloat(formData.get('price')),
-        // weekend_price: formData.get('weekend_price') ? parseFloat(formData.get('weekend_price')) : null, // DISABLED: Schema missing
+        weekend_price: formData.get('weekend_price') ? parseFloat(formData.get('weekend_price')) : null,
         location: locationStr,
         lat: coords ? coords.lat : null,
         lng: coords ? coords.lng : null,
@@ -69,7 +69,6 @@ export async function createListing(formData) {
 
     // TEMPORARY FIX: Commented out to unblock listing while DB migration is fixed
     // Additional Images
-    /*
     const additionalImgs = JSON.parse(formData.get('additional_images') || '[]');
     if (additionalImgs.length > 0) itemData.additional_images = additionalImgs;
 
@@ -78,12 +77,11 @@ export async function createListing(formData) {
     if (make) itemData.make = make;
     if (model) itemData.model = model;
     if (formData.get('rules')) itemData.rules = formData.get('rules');
-    
+
     const featuresList = formData.get('features') ? formData.get('features').split(',').map(s => s.trim()).filter(Boolean) : [];
     if (featuresList.length > 0) itemData.features = featuresList;
 
     if (Object.keys(publicSpecs).length > 0) itemData.specs = publicSpecs;
-    */
 
     // Remove video_url if empty string to be safe (though it was likely in core schema before?)
     // Checking earlier migration: 20240523_add_video_url.sql exists. Assuming it might be missing too.
