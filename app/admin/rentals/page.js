@@ -1,6 +1,8 @@
 import { createClient } from '@/utils/supabase/server';
 import AdminRentalsClient from './AdminRentalsClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminRentalsPage() {
     const supabase = await createClient();
 
