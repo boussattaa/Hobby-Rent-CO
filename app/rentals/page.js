@@ -75,6 +75,10 @@ export default function RentalsPage() {
                                     </div>
 
                                     <div className="actions">
+                                        <Link href={`/rentals/${rental.id}`} className="btn btn-secondary full-width" style={{ marginBottom: '0.5rem' }}>
+                                            View Trip Details
+                                        </Link>
+
                                         {rental.status === 'approved' && (
                                             <Link href={`/rentals/${rental.id}/inspection`} className="btn btn-primary full-width">
                                                 Start Pickup Inspection

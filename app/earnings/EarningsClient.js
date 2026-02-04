@@ -89,7 +89,11 @@ export default function EarningsClient({ profile, rentals, totalEarnings, active
                                 <tbody>
                                     {rentals.map(rental => (
                                         <tr key={rental.id}>
-                                            <td>{rental.items?.name}</td>
+                                            <td>
+                                                <a href={`/rentals/${rental.id}`} style={{ fontWeight: 500, color: 'inherit', textDecoration: 'none' }}>
+                                                    {rental.items?.name} ↗
+                                                </a>
+                                            </td>
                                             <td>{new Date(rental.created_at).toLocaleDateString()}</td>
                                             <td style={{ fontWeight: 600 }}>${rental.total_price}</td>
                                             <td><span className={`status-badge ${rental.status}`}>{rental.status}</span></td>
