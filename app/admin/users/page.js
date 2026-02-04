@@ -11,8 +11,7 @@ export default async function AdminUsersPage() {
 
     const { data: users, error } = await supabase
         .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
 
     // Debug: show what we got
     if (error) {
