@@ -51,5 +51,5 @@ export async function signup(formData) {
     }
 
     revalidatePath('/', 'layout')
-    redirect(`/login?message=Check email to continue sign in process`)
+    redirect(`/signup/confirmation`)
 }
