@@ -106,7 +106,13 @@ export default function Navbar({ user }) {
             alt="HobbyRent Logo"
             width={512}
             height={273}
-            style={{ height: '48px', width: 'auto' }}
+            style={{
+              width: '50px',
+              height: '50px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              objectPosition: 'center'
+            }}
             priority
           />
         </Link>
@@ -285,16 +291,17 @@ export default function Navbar({ user }) {
 
         /* Use global selector to target the img tag inside Next/Image */
         .logo :global(img) {
-          width: auto !important;
-          height: 48px !important; /* Mobile height */
-          max-width: 120px !important; /* Safety cap */
-          object-fit: contain;
+          width: 45px !important;
+          height: 45px !important;
+          border-radius: 50% !important;
+          object-fit: cover !important;
+          object-position: center !important;
         }
 
         @media (min-width: 768px) {
           .logo :global(img) {
-            height: 80px !important; /* Desktop height */
-            max-width: 200px !important; /* Safety cap */
+            width: 70px !important;
+            height: 70px !important;
           }
         }
 
