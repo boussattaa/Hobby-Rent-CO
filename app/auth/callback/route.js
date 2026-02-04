@@ -23,20 +23,28 @@ export async function GET(request) {
                 const newProfile = {
                     id: data.user.id,
                     email: data.user.email,
-                    first_name: data.user.user_metadata?.first_name || null
+                    first_name: data.user.user_metadata?.first_name || null,
+                    last_name: data.user.user_metadata?.last_name || null,
+                    is_verified: false // explictly set defaults
                 };
 
-                await supabase.from('profiles').upsert(newProfile);
+                const { error: upsertError } = await supabase.from('profiles').upsert(newProfile);
 
-                // Send welcome email (non-blocking)
-                fetch(`${requestUrl.origin}/api/email/welcome`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: data.user.email,
-                        firstName: data.user.user_metadata?.first_name
-                    })
-                }).catch(err => console.error('Welcome email failed:', err));
+                if (upsertError) {
+                    console.error('Profile creation failed:', upsertError);
+                } else {
+                    console.log('Profile created successfully for:', data.user.email);
+
+                    // Send welcome email (non-blocking) within success block
+                    fetch(`${requestUrl.origin}/api/email/welcome`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: data.user.email,
+                            firstName: data.user.user_metadata?.first_name
+                        })
+                    }).catch(err => console.error('Welcome email failed:', err));
+                }
             }
 
             return NextResponse.redirect(`${requestUrl.origin}${next}`)

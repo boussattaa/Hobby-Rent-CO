@@ -31,13 +31,6 @@ export default async function LoginPage(props) {
               >
                 Log in
               </SubmitButton>
-              <SubmitButton
-                formAction={signup}
-                className="btn btn-secondary full-width"
-                pendingText="Signing up..."
-              >
-                Sign up
-              </SubmitButton>
             </div>
 
             <div className="oauth-divider">
@@ -48,12 +41,29 @@ export default async function LoginPage(props) {
               <OAuthButton />
             </div>
 
+            <p className="auth-footer">
+              Don't have an account? <Link href="/signup">Sign up</Link>
+            </p>
+
             {searchParams?.message && (
               <p className="message">{searchParams.message}</p>
             )}
           </form>
         </div>
       </div>
+      <style jsx>{`
+        .auth-footer {
+          margin-top: 1.5rem;
+          text-align: center;
+          font-size: 0.9rem;
+          color: #666;
+        }
+        .auth-footer a {
+          color: var(--primary-color);
+          text-decoration: none;
+          font-weight: 600;
+        }
+      `}</style>
     </div>
   )
 }
