@@ -5,11 +5,12 @@ import PublicProfileClient from './PublicProfileClient';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }) {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: profile } = await supabase
         .from('profiles')
         .select('first_name')
-        .eq('id', params.id)
+        .eq('id', id)
         .single();
 
     return {
@@ -50,13 +51,13 @@ export default async function PublicProfilePage({ params }) {
     // Get user's listings
     const { data: listings, error: listingsError } = await supabase
         .from('items')
-        .select('id, name, daily_rate, images, category')
+        .select('id, name, price, images, category')
         .eq('owner_id', id)
         .order('created_at', { ascending: false });
 
     console.log('Listings query result:', {
         count: listings?.length,
-        listingsError,
+        listingsError: JSON.stringify(listingsError, null, 2),
         ownerId: id
     });
 
