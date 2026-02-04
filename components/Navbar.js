@@ -235,10 +235,7 @@ export default function Navbar({ user }) {
                       <span className="item-icon">➕</span>
                       List Gear
                     </Link>
-                    <Link href="/earnings" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
-                      <span className="item-icon">💰</span>
-                      Earnings
-                    </Link>
+
                     <Link href="/account" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
                       <span className="item-icon">⚙️</span>
                       Account Settings
