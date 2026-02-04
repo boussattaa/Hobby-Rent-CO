@@ -59,7 +59,6 @@ export async function createListing(formData) {
         lng: coords ? coords.lng : null,
         description: formData.get('description'),
         image_url: formData.get('image_url') || '/images/dirt-hero.png',
-        additional_images: JSON.parse(formData.get('additional_images') || '[]'),
         video_url: formData.get('video_url'),
         // New SEO Fields
         year: year ? parseInt(year) : null,
@@ -68,6 +67,12 @@ export async function createListing(formData) {
         rules: formData.get('rules'),
         features: formData.get('features') ? formData.get('features').split(',').map(s => s.trim()).filter(Boolean) : [],
         specs: publicSpecs,
+    }
+
+    // Only add additional_images if they exist (prevents schema error if column is missing and list is empty)
+    const additionalImgs = JSON.parse(formData.get('additional_images') || '[]');
+    if (additionalImgs.length > 0) {
+        itemData.additional_images = additionalImgs;
     }
 
     console.log('Attempting to create listing:', itemData)
