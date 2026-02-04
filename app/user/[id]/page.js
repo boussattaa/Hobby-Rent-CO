@@ -19,16 +19,19 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function PublicProfilePage({ params }) {
+    const { id } = await params;
     const supabase = await createClient();
+
+    console.log('Looking for profile with ID:', id);
 
     // Get user profile
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, is_verified, avatar_url')
-        .eq('id', params.id)
+        .eq('id', id)
         .single();
 
-    console.log('Profile query result:', { profile, profileError, id: params.id });
+    console.log('Profile query result:', { profile, profileError, id });
 
     if (profileError || !profile) {
         console.error('Profile not found:', profileError);
@@ -45,7 +48,7 @@ export default async function PublicProfilePage({ params }) {
     const { data: listings } = await supabase
         .from('items')
         .select('id, name, daily_rate, images, category')
-        .eq('owner_id', params.id)
+        .eq('owner_id', id)
         .order('created_at', { ascending: false });
 
     const displayName = profile.first_name
