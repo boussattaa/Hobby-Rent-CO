@@ -136,3 +136,99 @@ export function messageNotificationHtml(senderName, itemName, messagePreview) {
     </html>
     `;
 }
+
+export function rentalReminderRenterHtml(renterName, itemName, startDate, address) {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; padding: 20px 0; }
+            .logo { font-size: 24px; font-weight: bold; color: #1a1a1a; text-decoration: none; }
+            .content { background: #f8fafc; padding: 30px; border-radius: 12px; }
+            .info-box { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0; }
+            .button { display: inline-block; background: #1a1a1a; color: white !important; padding: 12px 24px; border-radius: 25px; text-decoration: none; margin: 20px 0; }
+            .footer { text-align: center; padding: 20px; color: #64748b; font-size: 12px; }
+            .address { font-weight: bold; font-size: 1.1em; color: #1a1a1a; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">🏔️ HobbyRent</div>
+            </div>
+            <div class="content">
+                <h1>Get ready for your rental! 🎒</h1>
+                <p>Hi ${renterName},</p>
+                <p>Your rental for <strong>${itemName}</strong> starts tomorrow, <strong>${startDate}</strong>.</p>
+                
+                <div class="info-box">
+                    <h3>📍 Pickup Location</h3>
+                    <p class="address">${address}</p>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 5px;">This is the private address provided by the owner.</p>
+                </div>
+
+                <p>Please make sure to arrive on time and bring a valid ID.</p>
+                
+                <center>
+                    <a href="https://hobbyrent.com/trips" class="button">View Booking Details →</a>
+                </center>
+            </div>
+            <div class="footer">
+                <p>Need help? Reply to this email or message the owner.</p>
+                <p>© 2024 HobbyRent. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
+
+export function rentalReminderOwnerHtml(ownerName, itemName, startDate, renterName) {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; padding: 20px 0; }
+            .logo { font-size: 24px; font-weight: bold; color: #1a1a1a; text-decoration: none; }
+            .content { background: #f8fafc; padding: 30px; border-radius: 12px; }
+            .info-box { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0; }
+            .button { display: inline-block; background: #3b82f6; color: white !important; padding: 12px 24px; border-radius: 25px; text-decoration: none; margin: 20px 0; }
+            .footer { text-align: center; padding: 20px; color: #64748b; font-size: 12px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">🏔️ HobbyRent</div>
+            </div>
+            <div class="content">
+                <h1>Rental Reminder 🔔</h1>
+                <p>Hi ${ownerName},</p>
+                <p>This is a reminder that your item <strong>${itemName}</strong> is scheduled for pickup tomorrow, <strong>${startDate}</strong>.</p>
+                
+                <div class="info-box">
+                    <h3>👤 Renter</h3>
+                    <p><strong>${renterName || 'The renter'}</strong> will be picking up the item.</p>
+                </div>
+
+                <p>Please ensure the item is clean, charged/fueled, and ready for handover.</p>
+                
+                <center>
+                    <a href="https://hobbyrent.com/dashboard" class="button">Manage Rental →</a>
+                </center>
+            </div>
+            <div class="footer">
+                <p>Please message the renter if there are any last-minute updates.</p>
+                <p>© 2024 HobbyRent. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
