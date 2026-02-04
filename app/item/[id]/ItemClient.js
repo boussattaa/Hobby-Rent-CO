@@ -423,7 +423,7 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
       <ChatWindow
         currentUser={currentUser}
         receiverId={itemsOwnerId}
-        receiverName="Owner"
+        receiverName={item.profiles?.first_name || 'Owner'}
         receiverEmail={item.ownerEmail} // Pass the email we already fetched
         rentalId={null}
         isOpen={isChatOpen}
