@@ -107,8 +107,8 @@ export default function Navbar({ user }) {
             width={512}
             height={273}
             style={{
-              width: '50px',
-              height: '50px',
+              width: '60px',
+              height: '60px',
               borderRadius: '50%',
               objectFit: 'cover',
               objectPosition: 'center'
