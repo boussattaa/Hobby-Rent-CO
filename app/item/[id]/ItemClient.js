@@ -424,7 +424,7 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
         currentUser={currentUser}
         receiverId={itemsOwnerId}
         receiverName={item.profiles?.first_name || 'Owner'}
-        receiverEmail={item.ownerEmail} // Pass the email we already fetched
+        receiverEmail={item.profiles?.email || item.ownerEmail}
         rentalId={null}
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}

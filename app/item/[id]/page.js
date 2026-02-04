@@ -40,7 +40,7 @@ export default async function ItemPage({ params }) {
   if (item && item.owner_id) {
     const { data: ownerProfile } = await supabase
       .from('profiles')
-      .select('id, first_name, is_verified')
+      .select('id, first_name, is_verified, email')
       .eq('id', item.owner_id)
       .single();
 
