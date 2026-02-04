@@ -28,7 +28,10 @@ export default async function PublicProfilePage({ params }) {
         .eq('id', params.id)
         .single();
 
+    console.log('Profile query result:', { profile, profileError, id: params.id });
+
     if (profileError || !profile) {
+        console.error('Profile not found:', profileError);
         return (
             <div style={{ padding: '4rem', textAlign: 'center' }}>
                 <h1>User Not Found</h1>
