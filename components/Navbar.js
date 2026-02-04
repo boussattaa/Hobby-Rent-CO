@@ -217,9 +217,14 @@ export default function Navbar({ user }) {
 
                     <div className="dropdown-divider" />
 
+                    <Link href="/dashboard" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      <span className="item-icon">📊</span>
+                      Owner Dashboard
+                    </Link>
+
                     <Link href="/rentals" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
                       <span className="item-icon">🔑</span>
-                      My Rentals
+                      My Trips (Renter)
                     </Link>
 
                     <Link href="/my-listings" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
