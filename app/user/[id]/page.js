@@ -49,11 +49,17 @@ export default async function PublicProfilePage({ params }) {
     }
 
     // Get user's listings
-    const { data: listings, error: listingsError } = await supabase
+    const { data: listingsData, error: listingsError } = await supabase
         .from('items')
-        .select('id, name, price, images, category')
+        .select('id, name, price, image_url, category')
         .eq('owner_id', id)
         .order('created_at', { ascending: false });
+
+    // Map image_url to images array for compatibility
+    const listings = listingsData?.map(item => ({
+        ...item,
+        images: item.image_url ? [item.image_url] : []
+    })) || [];
 
     console.log('Listings query result:', {
         count: listings?.length,
