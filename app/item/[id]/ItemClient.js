@@ -265,31 +265,7 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                 <div className="feature-item">✅ Verified Owner</div>
               </div>
 
-              {/* Similar Listings Collage */}
-              {similarItems && similarItems.length > 0 && (
-                <div className="similar-section">
-                  <h3>You Might Also Like</h3>
-                  <div className="similar-collage">
-                    {similarItems.map(sim => (
-                      <Link href={`/item/${sim.id}`} key={sim.id} className="similar-card">
-                        <div className="similar-image-box">
-                          <Image
-                            src={sim.image_url || '/images/dirt-hero.png'}
-                            alt={sim.name}
-                            fill
-                            style={{ objectFit: 'cover' }}
-                            sizes="(max-width: 768px) 100vw, 33vw"
-                          />
-                        </div>
-                        <div className="similar-info">
-                          <span className="sim-name">{sim.name}</span>
-                          <span className="sim-price">${sim.price}/day</span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
+
 
               {/* Owner/Admin Controls */}
               {currentUser && (
@@ -417,6 +393,32 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
               )}
             </div>
           </div>
+
+          {/* Similar Listings Collage - Moved here for mobile ordering */}
+          {similarItems && similarItems.length > 0 && (
+            <div className="similar-section">
+              <h3>You Might Also Like</h3>
+              <div className="similar-collage">
+                {similarItems.map(sim => (
+                  <Link href={`/item/${sim.id}`} key={sim.id} className="similar-card">
+                    <div className="similar-image-box">
+                      <Image
+                        src={sim.image_url || '/images/dirt-hero.png'}
+                        alt={sim.name}
+                        fill
+                        style={{ objectFit: 'cover' }}
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                    </div>
+                    <div className="similar-info">
+                      <span className="sim-name">{sim.name}</span>
+                      <span className="sim-price">${sim.price}/day</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
