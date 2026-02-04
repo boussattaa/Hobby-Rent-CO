@@ -265,6 +265,25 @@ export default function ItemClient({ id, initialItem }) {
                 <div className="feature-item">✅ Verified Owner</div>
               </div>
 
+              {/* Owner Profile Card */}
+              {item.profiles && (
+                <div className="owner-card">
+                  <h4>Meet the Owner</h4>
+                  <Link href={`/user/${item.profiles.id}`} className="owner-info">
+                    <div className="owner-avatar">
+                      {(item.profiles.first_name?.[0] || 'O').toUpperCase()}
+                    </div>
+                    <div className="owner-details">
+                      <span className="owner-name">
+                        {item.profiles.first_name || 'Owner'}
+                        {item.profiles.is_verified && <span className="verified-tick">✓</span>}
+                      </span>
+                      <span className="view-profile">View Profile →</span>
+                    </div>
+                  </Link>
+                </div>
+              )}
+
               {/* Owner/Admin Controls */}
               {currentUser && (
                 <div className="admin-controls">
@@ -578,6 +597,63 @@ export default function ItemClient({ id, initialItem }) {
           border-radius: 8px;
           font-weight: 600;
           font-size: 0.85rem;
+        }
+
+        .owner-card {
+          margin-top: 2rem;
+          padding: 1.5rem;
+          background: #f8fafc;
+          border-radius: 12px;
+          border: 1px solid var(--border-color);
+        }
+        .owner-card h4 {
+          margin: 0 0 1rem 0;
+          font-size: 0.9rem;
+          text-transform: uppercase;
+          color: var(--text-secondary);
+        }
+        .owner-info {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          text-decoration: none;
+          color: inherit;
+          transition: opacity 0.2s;
+        }
+        .owner-info:hover { opacity: 0.8; }
+        .owner-avatar {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 1.25rem;
+          font-weight: 600;
+        }
+        .owner-details {
+          display: flex;
+          flex-direction: column;
+        }
+        .owner-name {
+          font-weight: 600;
+          font-size: 1.1rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        .verified-tick {
+          color: #16a34a;
+          background: #dcfce7;
+          padding: 0.1rem 0.4rem;
+          border-radius: 50%;
+          font-size: 0.8rem;
+        }
+        .view-profile {
+          font-size: 0.85rem;
+          color: var(--text-secondary);
         }
         
         .admin-controls {

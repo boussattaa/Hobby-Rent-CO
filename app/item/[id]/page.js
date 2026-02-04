@@ -32,7 +32,7 @@ export default async function ItemPage({ params }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: item } = await supabase.from('items').select('*').eq('id', id).single();
+  const { data: item } = await supabase.from('items').select('*, profiles:owner_id(id, first_name, is_verified)').eq('id', id).single();
 
   return <ItemClient id={id} initialItem={item} />;
 }
