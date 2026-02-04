@@ -67,7 +67,9 @@ export async function createListing(formData) {
     // Safely add new schema fields ONLY if they are populated
     // This prevents "column not found" errors if the DB migration hasn't run yet
 
+    // TEMPORARY FIX: Commented out to unblock listing while DB migration is fixed
     // Additional Images
+    /*
     const additionalImgs = JSON.parse(formData.get('additional_images') || '[]');
     if (additionalImgs.length > 0) itemData.additional_images = additionalImgs;
 
@@ -76,11 +78,12 @@ export async function createListing(formData) {
     if (make) itemData.make = make;
     if (model) itemData.model = model;
     if (formData.get('rules')) itemData.rules = formData.get('rules');
-
+    
     const featuresList = formData.get('features') ? formData.get('features').split(',').map(s => s.trim()).filter(Boolean) : [];
     if (featuresList.length > 0) itemData.features = featuresList;
 
     if (Object.keys(publicSpecs).length > 0) itemData.specs = publicSpecs;
+    */
 
     // Remove video_url if empty string to be safe (though it was likely in core schema before?)
     // Checking earlier migration: 20240523_add_video_url.sql exists. Assuming it might be missing too.
