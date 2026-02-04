@@ -16,6 +16,7 @@ export default function AdminRentalsClient({ rentals }) {
                         <tr>
                             <th>Item</th>
                             <th>Renter</th>
+                            <th>Owner</th>
                             <th>Dates</th>
                             <th>Total</th>
                             <th>Status</th>
@@ -30,9 +31,15 @@ export default function AdminRentalsClient({ rentals }) {
                                     <div style={{ fontSize: '0.8rem', color: '#64748b' }}>ID: {rental.item_id.split('-')[0]}...</div>
                                 </td>
                                 <td>
-                                    <div>{rental.profiles?.email}</div>
+                                    <div>{rental.renter?.email}</div>
                                     <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                                        {rental.profiles?.first_name} {rental.profiles?.last_name}
+                                        {rental.renter?.first_name} {rental.renter?.last_name}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>{rental.owner?.email}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                        {rental.owner?.first_name} {rental.owner?.last_name}
                                     </div>
                                 </td>
                                 <td>
@@ -47,10 +54,10 @@ export default function AdminRentalsClient({ rentals }) {
                                     ${rental.total_price}
                                 </td>
                                 <td>
-                                    <span className={`status-badge ${rental.status}`}>{rental.status}</span>
+                                    <span className={`status-badge ${rental.status}`}>{rental.status === 'awaiting_payment' ? 'Pending Pay' : rental.status}</span>
                                 </td>
                                 <td>
-                                    <Link href={`/rentals/${rental.id}/inspection`} className="btn-view">
+                                    <Link href={`/rentals/${rental.id}`} className="btn-view">
                                         View
                                     </Link>
                                 </td>

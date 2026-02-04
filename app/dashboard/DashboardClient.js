@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
+import { approveRental, rejectRental } from './actions';
+
 export default function DashboardClient({ rentals, user }) {
     const [activeTab, setActiveTab] = useState('overview');
 
@@ -173,7 +175,32 @@ function RentalRow({ rental }) {
             </div>
 
             <div className="rental-actions">
-                <span className={`status-badge ${rental.status}`}>{rental.status}</span>
+                {rental.status === 'pending' ? (
+                    <>
+                        <button
+                            onClick={async () => {
+                                if (confirm('Approve this rental?')) {
+                                    await approveRental(rental.id);
+                                }
+                            }}
+                            className="btn btn-primary btn-sm"
+                        >
+                            Approve
+                        </button>
+                        <button
+                            onClick={async () => {
+                                if (confirm('Reject this rental?')) {
+                                    await rejectRental(rental.id);
+                                }
+                            }}
+                            className="btn btn-secondary btn-sm reject"
+                        >
+                            Reject
+                        </button>
+                    </>
+                ) : (
+                    <span className={`status-badge ${rental.status}`}>{rental.status === 'awaiting_payment' ? 'Awaiting Payment' : rental.status}</span>
+                )}
                 <Link href={`/rentals/${rental.id}`} className="btn btn-secondary btn-sm">
                     Manage →
                 </Link>
@@ -207,6 +234,10 @@ function RentalRow({ rental }) {
                 .status-badge.completed { background: #f1f5f9; color: #64748b; }
                 .status-badge.pending { background: #fff7ed; color: #c2410c; }
                 .status-badge.cancelled { background: #fef2f2; color: #991b1b; }
+                .status-badge.awaiting_payment { background: #fffbeb; color: #b45309; }
+                
+                .btn-sm.reject { color: #dc2626; border-color: #fecaca; }
+                .btn-sm.reject:hover { background: #fef2f2; }
 
                 @media (max-width: 640px) {
                     .rental-card { flex-direction: column; align-items: flex-start; gap: 1rem; }

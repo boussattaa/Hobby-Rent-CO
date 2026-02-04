@@ -11,32 +11,48 @@ export async function POST(request) {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     try {
-        const { itemId, price, name, addProtection, startDate, endDate } = await request.json();
+        const { itemId, price, name, addProtection, startDate, endDate, rentalId } = await request.json();
         const supabase = await createClient();
 
-        // 1. Get User/Owner info
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("User not logged in");
+        let rental;
 
-        const { data: item } = await supabase.from('items').select('owner_id').eq('id', itemId).single();
-        if (!item) throw new Error("Item not found");
+        if (rentalId) {
+            // PAYING FOR EXISTING RENTAL
+            const { data: existingRental, error: fetchError } = await supabase
+                .from('rentals')
+                .select('*, items(name, price)')
+                .eq('id', rentalId)
+                .single();
 
-        // 2. Create Rental Record
-        const { data: rental, error: rentalError } = await supabase
-            .from('rentals')
-            .insert({
-                item_id: itemId,
-                renter_id: user.id,
-                owner_id: item.owner_id,
-                start_date: startDate || new Date().toISOString(),
-                end_date: endDate || new Date().toISOString(),
-                total_price: price + 15 + (addProtection ? 20 : 0),
-                status: 'approved' // Auto-approve for MVP/Demo so user can test inspection immediately
-            })
-            .select()
-            .single();
+            if (fetchError || !existingRental) throw new Error("Rental not found");
+            rental = existingRental;
+        } else {
+            // CREATE NEW RENTAL (Legacy / Instant Book)
+            // 1. Get User/Owner info
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("User not logged in");
 
-        if (rentalError) throw new Error("Failed to create rental: " + rentalError.message);
+            const { data: item } = await supabase.from('items').select('owner_id').eq('id', itemId).single();
+            if (!item) throw new Error("Item not found");
+
+            // 2. Create Rental Record
+            const { data: newRental, error: rentalError } = await supabase
+                .from('rentals')
+                .insert({
+                    item_id: itemId,
+                    renter_id: user.id,
+                    owner_id: item.owner_id,
+                    start_date: startDate || new Date().toISOString(),
+                    end_date: endDate || new Date().toISOString(),
+                    total_price: price + 15 + (addProtection ? 20 : 0),
+                    status: 'pending' // Default to pending now!
+                })
+                .select()
+                .single();
+
+            if (rentalError) throw new Error("Failed to create rental: " + rentalError.message);
+            rental = newRental;
+        }
 
         const line_items = [
             {

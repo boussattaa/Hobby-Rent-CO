@@ -263,8 +263,52 @@ export default function RentalDetailsPage({ params }) {
                             )}
 
                             {!isOwner && (
-                                <div className="payment-status success">
-                                    Payment Confirmed ✅
+                                <>
+                                    {/* SHOW PAY NOW IF AWAITING PAYMENT (Strict Flow) */}
+                                    {rental.status === 'awaiting_payment' && (
+                                        <div className="payment-alert">
+                                            <p className="mb-2 text-sm text-amber-800">Owner has approved! Please complete payment to confirm.</p>
+                                            <button
+                                                className="btn btn-primary full-width"
+                                                onClick={async () => {
+                                                    try {
+                                                        const res = await fetch('/api/checkout', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({
+                                                                rentalId: rental.id,
+                                                                // Pass dummy values just in case validation needs them, though API should handle
+                                                                itemId: rental.item_id,
+                                                                price: rental.total_price,
+                                                                name: rental.items?.name
+                                                            })
+                                                        });
+                                                        const data = await res.json();
+                                                        if (data.url) window.location.href = data.url;
+                                                        else alert('Payment initialization failed');
+                                                    } catch (e) {
+                                                        console.error(e);
+                                                        alert('Error starting payment');
+                                                    }
+                                                }}
+                                            >
+                                                💳 Pay Now (${rental.total_price})
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* ALREADY PAID */}
+                                    {(rental.status === 'approved' || rental.status === 'active' || rental.status === 'completed') && (
+                                        <div className="payment-status success">
+                                            Payment Confirmed ✅
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {isOwner && rental.status === 'awaiting_payment' && (
+                                <div className="payment-status pending-owner">
+                                    Waiting for Renter Payment ⏳
                                 </div>
                             )}
                         </div>
@@ -297,6 +341,13 @@ export default function RentalDetailsPage({ params }) {
                 .rental-details-page { padding: 6rem 0; min-height: 100vh; background: #f8fafc; }
                 .center-loading { padding: 6rem 0; text-align: center; }
                 
+                .payment-status.success { background: #dcfce7; color: #166534; padding: 1rem; border-radius: 8px; text-align: center; font-weight: 600; margin-top: 1rem; }
+                .payment-status.pending-owner { background: #fff7ed; color: #c2410c; padding: 1rem; border-radius: 8px; text-align: center; font-weight: 600; margin-top: 1rem; }
+                .payment-alert { background: #fffbeb; border: 1px solid #fcd34d; padding: 1rem; border-radius: 8px; margin-top: 1rem; }
+                .text-amber-800 { color: #92400e; }
+                .mb-2 { margin-bottom: 0.5rem; }
+                .text-sm { font-size: 0.875rem; }
+
                 .page-header { margin-bottom: 2rem; }
                 .breadcrumbs { margin-bottom: 1rem; }
                 .breadcrumbs a { color: #64748b; text-decoration: none; font-size: 0.9rem; }

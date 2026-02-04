@@ -11,7 +11,8 @@ export default async function AdminRentalsPage() {
         .select(`
             *,
             items (name, owner_id),
-            profiles:renter_id (email, first_name, last_name)
+            renter:renter_id (email, first_name, last_name),
+            owner:owner_id (email, first_name, last_name)
         `)
         .order('created_at', { ascending: false });
 
