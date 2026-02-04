@@ -32,7 +32,23 @@ export default async function ItemPage({ params }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: item } = await supabase.from('items').select('*, profiles:owner_id(id, first_name, is_verified)').eq('id', id).single();
+  // Fetch item first
+  const { data: item, error } = await supabase.from('items').select('*').eq('id', id).single();
 
-  return <ItemClient id={id} initialItem={item} />;
+  // If item exists, fetch owner profile separately
+  let itemWithOwner = item;
+  if (item && item.owner_id) {
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('id, first_name, is_verified')
+      .eq('id', item.owner_id)
+      .single();
+
+    if (ownerProfile) {
+      itemWithOwner = { ...item, profiles: ownerProfile };
+    }
+  }
+
+  return <ItemClient id={id} initialItem={itemWithOwner} />;
 }
+
