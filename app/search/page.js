@@ -194,9 +194,20 @@ function SearchContent() {
                         </div>
                     ) : (
                         <div className="no-results">
-                            <h3>No matches found</h3>
-                            <p>Try adjusting your search terms or filters.</p>
+                            <h3>No results yet!</h3>
+                            <p>
+                                {query
+                                    ? <span>Be the first to list a <strong>{query}</strong> and earn cash.</span>
+                                    : "Be the first to list an item and earn cash."
+                                }
+                            </p>
+                            <div className="cta-container">
+                                <Link href="/list-your-gear" className="btn btn-primary">
+                                    List Your Item
+                                </Link>
+                            </div>
                             <div className="categories-mini">
+                                <span style={{ fontSize: '0.9rem', color: '#666', marginRight: '0.5rem' }}>Or browse:</span>
                                 <Link href="/offroad" className="pill">Offroad</Link>
                                 <Link href="/water" className="pill">Watersports</Link>
                                 <Link href="/trailers" className="pill">Trailers</Link>
@@ -318,6 +329,10 @@ function SearchContent() {
             background: white;
             border-radius: 12px;
             border: 1px solid #eee;
+        }
+
+        .cta-container {
+            margin: 2rem 0;
         }
         
         .categories-mini {
