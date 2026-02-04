@@ -393,7 +393,7 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                   className="btn btn-secondary full-width"
                   style={{ marginTop: '0.75rem', textAlign: 'center', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px' }}
                 >
-                  💬 Message Owner
+                  💬 Message {item.profiles?.first_name || 'Owner'}
                 </button>
               </div>
 
