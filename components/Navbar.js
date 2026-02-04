@@ -102,11 +102,11 @@ export default function Navbar({ user }) {
       <div className="container navbar-content">
         <Link href="/" className="logo">
           <Image
-            src="/images/logo-badge.jpg"
+            src="/images/logo-badge-v2.png"
             alt="HobbyRent Logo"
-            width={60}
-            height={60}
-            style={{ objectFit: 'cover', borderRadius: '50%' }}
+            width={512}
+            height={512}
+            className="logo-img"
             priority
           />
         </Link>
@@ -276,12 +276,26 @@ export default function Navbar({ user }) {
           width: 100%;
         }
 
+        .logo-img {
+          height: 48px; /* h-12 mobile */
+          width: auto;
+          object-fit: contain;
+        }
+
+        @media (min-width: 768px) {
+          .logo-img {
+            height: 80px; /* h-20 desktop */
+          }
+        }
+
         .logo {
           font-size: 1.5rem;
           font-weight: 800;
           text-decoration: none;
           color: var(--text-primary);
           letter-spacing: -0.03em;
+          display: flex;
+          align-items: center;
         }
 
         .nav-links {
