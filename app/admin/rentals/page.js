@@ -10,7 +10,8 @@ export default async function AdminRentalsPage() {
         .from('rentals')
         .select(`
             *,
-            items (name)
+            items (name, owner_id),
+            profiles:renter_id (email, first_name, last_name)
         `)
         .order('created_at', { ascending: false });
 

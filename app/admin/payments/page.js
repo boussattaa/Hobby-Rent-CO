@@ -11,7 +11,7 @@ export default async function AdminPaymentsPage() {
         .from('rentals')
         .select(`
             *,
-            items (name, owner_id, daily_rate)
+            items (name, owner_id, price)
         `)
         .eq('status', 'completed')
         .eq('paid_out', false)
@@ -22,7 +22,7 @@ export default async function AdminPaymentsPage() {
         .from('rentals')
         .select(`
             *,
-            items (name, owner_id, daily_rate)
+            items (name, owner_id, price)
         `)
         .eq('paid_out', true)
         .order('end_date', { ascending: false })

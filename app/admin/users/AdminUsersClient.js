@@ -26,8 +26,8 @@ export default function AdminUsersClient({ users }) {
                             <tr key={user.id}>
                                 <td>
                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ fontWeight: 600 }}>{user.email || 'No Email'}</span>
-                                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{user.first_name} {user.last_name}</span>
+                                        <span style={{ fontWeight: 600 }}>{user.first_name || 'N/A'} {user.last_name || ''}</span>
+                                        <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{user.email || 'No Email'}</span>
                                     </div>
                                 </td>
                                 <td>
@@ -44,7 +44,7 @@ export default function AdminUsersClient({ users }) {
                                         <span className="badge user">User</span>
                                     )}
                                 </td>
-                                <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                                <td>{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</td>
                                 <td>
                                     <button
                                         onClick={async () => {
