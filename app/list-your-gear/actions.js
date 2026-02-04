@@ -55,7 +55,7 @@ export async function createListing(formData) {
         category: formData.get('category'),
         subcategory: formData.get('subcategory'),
         price: parseFloat(formData.get('price')),
-        weekend_price: formData.get('weekend_price') ? parseFloat(formData.get('weekend_price')) : null,
+        // weekend_price: formData.get('weekend_price') ? parseFloat(formData.get('weekend_price')) : null, // DISABLED: Schema missing
         location: locationStr,
         lat: coords ? coords.lat : null,
         lng: coords ? coords.lng : null,
