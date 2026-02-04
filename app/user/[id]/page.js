@@ -32,17 +32,11 @@ export default async function PublicProfilePage({ params }) {
         .eq('id', id)
         .single();
 
-    console.log('Profile query result:', { profile, profileError, id });
-
     if (profileError || !profile) {
-        console.error('Profile not found:', profileError);
         return (
             <div style={{ padding: '4rem', textAlign: 'center' }}>
                 <h1>User Not Found</h1>
                 <p>This profile doesn't exist or has been removed.</p>
-                <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '1rem' }}>
-                    Debug: Looking for ID: {id || 'undefined'}
-                </p>
                 <Link href="/">← Back to Home</Link>
             </div>
         );
@@ -60,12 +54,6 @@ export default async function PublicProfilePage({ params }) {
         ...item,
         images: item.image_url ? [item.image_url] : []
     })) || [];
-
-    console.log('Listings query result:', {
-        count: listings?.length,
-        listingsError: JSON.stringify(listingsError, null, 2),
-        ownerId: id
-    });
 
     const displayName = profile.first_name
         ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name.charAt(0) + '.' : ''}`

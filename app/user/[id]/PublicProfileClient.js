@@ -3,6 +3,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
+const categoryLabels = {
+    offroad: '🏍️ Offroad',
+    water: '🚤 Watersports',
+    trailers: '🚛 Trailers',
+    housing: '🔧 Tools',
+};
+
 export default function PublicProfileClient({ profile, listings, displayName }) {
     return (
         <div className="profile-page">
@@ -55,8 +62,8 @@ export default function PublicProfileClient({ profile, listings, displayName }) 
                                     )}
                                 </div>
                                 <h3>{item.name}</h3>
-                                <p className="price">${item.daily_rate}/day</p>
-                                <span className="category">{item.category}</span>
+                                <p className="price">${item.price || item.daily_rate}/day</p>
+                                <span className="category">{categoryLabels[item.category] || item.category}</span>
                             </Link>
                         ))}
                     </div>
