@@ -49,6 +49,19 @@ export default async function ItemPage({ params }) {
     }
   }
 
-  return <ItemClient id={id} initialItem={itemWithOwner} />;
+  // Fetch similar items (same category, different ID)
+  let similarItems = [];
+  if (item) {
+    const { data: similar } = await supabase
+      .from('items')
+      .select('id, name, price, image_url, location')
+      .eq('category', item.category)
+      .neq('id', item.id)
+      .limit(4);
+
+    similarItems = similar || [];
+  }
+
+  return <ItemClient id={id} initialItem={itemWithOwner} similarItems={similarItems} />;
 }
 

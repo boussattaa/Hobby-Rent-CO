@@ -27,7 +27,7 @@ const ITEMS_DB = {
   'h4': { name: 'Tile Saw', price: 35, image: '/images/housing-hero.png', location: 'Surrey, BC', description: 'Precision cutting for ceramic and stone tiles. Water cooled blade.' },
 };
 
-export default function ItemClient({ id, initialItem }) {
+export default function ItemClient({ id, initialItem, similarItems = [] }) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -265,22 +265,29 @@ export default function ItemClient({ id, initialItem }) {
                 <div className="feature-item">✅ Verified Owner</div>
               </div>
 
-              {/* Owner Profile Card */}
-              {item.profiles && (
-                <div className="owner-card">
-                  <h4>Meet the Owner</h4>
-                  <Link href={`/user/${item.profiles.id}`} className="owner-info">
-                    <div className="owner-avatar">
-                      {(item.profiles.first_name?.[0] || 'O').toUpperCase()}
-                    </div>
-                    <div className="owner-details">
-                      <span className="owner-name">
-                        {item.profiles.first_name || 'Owner'}
-                        {item.profiles.is_verified && <span className="verified-tick">✓</span>}
-                      </span>
-                      <span className="view-profile">View Profile →</span>
-                    </div>
-                  </Link>
+              {/* Similar Listings Collage */}
+              {similarItems && similarItems.length > 0 && (
+                <div className="similar-section">
+                  <h3>You Might Also Like</h3>
+                  <div className="similar-collage">
+                    {similarItems.map(sim => (
+                      <Link href={`/item/${sim.id}`} key={sim.id} className="similar-card">
+                        <div className="similar-image-box">
+                          <Image
+                            src={sim.image_url || '/images/dirt-hero.png'}
+                            alt={sim.name}
+                            fill
+                            style={{ objectFit: 'cover' }}
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                          />
+                        </div>
+                        <div className="similar-info">
+                          <span className="sim-name">{sim.name}</span>
+                          <span className="sim-price">${sim.price}/day</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -389,6 +396,25 @@ export default function ItemClient({ id, initialItem }) {
                   💬 Message Owner
                 </button>
               </div>
+
+              {/* Owner Profile Card (Moved to Sidebar) */}
+              {item.profiles && (
+                <div className="owner-card sidebar-card">
+                  <h4>Meet the Owner</h4>
+                  <Link href={`/user/${item.profiles.id}`} className="owner-info">
+                    <div className="owner-avatar">
+                      {(item.profiles.first_name?.[0] || 'O').toUpperCase()}
+                    </div>
+                    <div className="owner-details">
+                      <span className="owner-name">
+                        {item.profiles.first_name || 'Owner'}
+                        {item.profiles.is_verified && <span className="verified-tick">✓</span>}
+                      </span>
+                      <span className="view-profile">View Profile →</span>
+                    </div>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -743,6 +769,65 @@ export default function ItemClient({ id, initialItem }) {
             height: 44px;
             font-size: 1.5rem;
           }
+        }
+
+        /* Similar Listings Styles */
+        .similar-section {
+          margin-top: 3rem;
+          padding-top: 2rem;
+          border-top: 1px solid var(--border-color);
+        }
+        .similar-section h3 { font-size: 1.25rem; margin-bottom: 1.5rem; }
+        
+        .similar-collage {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 1rem;
+        }
+
+        .similar-card {
+          display: block;
+          text-decoration: none;
+          color: inherit;
+          background: #f8fafc;
+          border-radius: 12px;
+          overflow: hidden;
+          transition: transform 0.2s;
+          border: 1px solid transparent;
+        }
+        .similar-card:hover {
+          transform: translateY(-4px);
+          border-color: var(--border-color);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .similar-image-box {
+          position: relative;
+          height: 140px;
+          width: 100%;
+        }
+        .similar-info {
+          padding: 0.75rem;
+        }
+        .sim-name {
+          display: block;
+          font-weight: 600;
+          font-size: 0.95rem;
+          margin-bottom: 0.25rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .sim-price {
+          color: #10b981;
+          font-weight: 700;
+          font-size: 0.9rem;
+        }
+
+        .sidebar-card {
+           margin-top: 1.5rem;
+           background: white;
+           border: 1px solid var(--border-color);
         }
       `}</style>
     </div >
