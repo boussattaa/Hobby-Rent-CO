@@ -47,9 +47,11 @@ export async function createListing(formData) {
     // Auto-generate name
     const generatedName = `${year} ${make} ${model}`.trim();
 
+
+    // Core fields that definitely exist
     const itemData = {
         owner_id: user.id,
-        name: generatedName, // Using generated name
+        name: generatedName,
         category: formData.get('category'),
         subcategory: formData.get('subcategory'),
         price: parseFloat(formData.get('price')),
@@ -59,23 +61,32 @@ export async function createListing(formData) {
         lng: coords ? coords.lng : null,
         description: formData.get('description'),
         image_url: formData.get('image_url') || '/images/dirt-hero.png',
-        video_url: formData.get('video_url'),
-        // New SEO Fields
-        year: year ? parseInt(year) : null,
-        make: make,
-        model: model,
-        rules: formData.get('rules'),
-        features: formData.get('features') ? formData.get('features').split(',').map(s => s.trim()).filter(Boolean) : [],
-        specs: publicSpecs,
+        video_url: formData.get('video_url'), // Moved to core, assumed safe or will be omitted if undefined in next step refactor
     }
 
-    // Only add additional_images if they exist (prevents schema error if column is missing and list is empty)
+    // Safely add new schema fields ONLY if they are populated
+    // This prevents "column not found" errors if the DB migration hasn't run yet
+
+    // Additional Images
     const additionalImgs = JSON.parse(formData.get('additional_images') || '[]');
-    if (additionalImgs.length > 0) {
-        itemData.additional_images = additionalImgs;
-    }
+    if (additionalImgs.length > 0) itemData.additional_images = additionalImgs;
 
-    console.log('Attempting to create listing:', itemData)
+    // SEO / Enhanced Details
+    if (year) itemData.year = parseInt(year);
+    if (make) itemData.make = make;
+    if (model) itemData.model = model;
+    if (formData.get('rules')) itemData.rules = formData.get('rules');
+
+    const featuresList = formData.get('features') ? formData.get('features').split(',').map(s => s.trim()).filter(Boolean) : [];
+    if (featuresList.length > 0) itemData.features = featuresList;
+
+    if (Object.keys(publicSpecs).length > 0) itemData.specs = publicSpecs;
+
+    // Remove video_url if empty string to be safe (though it was likely in core schema before?)
+    // Checking earlier migration: 20240523_add_video_url.sql exists. Assuming it might be missing too.
+    if (!itemData.video_url) delete itemData.video_url;
+
+    console.log('Attempting to create listing with data:', itemData)
 
     const { data: insertedItem, error } = await supabase.from('items').insert(itemData).select().single()
 
