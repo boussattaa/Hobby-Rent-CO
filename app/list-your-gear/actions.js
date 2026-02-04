@@ -60,20 +60,36 @@ export async function createListing(formData) {
     const generatedName = `${year} ${make} ${model}`.trim();
 
 
-    // Core fields that definitely exist
+    // Core fields
     const itemData = {
         owner_id: user.id,
         name: generatedName,
         category: formData.get('category'),
         subcategory: formData.get('subcategory'),
-        price: parseFloat(formData.get('price')),
+        // Pricing
+        price_type: formData.get('price_type') || 'daily',
+        price: formData.get('price') ? parseFloat(formData.get('price')) : null, // Allowed null if hourly? DB might require not null on price. Better to store something or make nullable. Let's assume nullable or fill with 0?
+        // Note: 'price' column is likely NOT NULL. If hourly, we might need to store a dummy value or the hourly rate as 'price' alongside 'hourly_rate'. 
+        // Strategy: 'price' = Daily Rate. 'hourly_rate' = Hourly Rate. 
+        // If Hourly only: Price = 0 or Hourly Rate * 8? 
+        // Let's set price to 0 if not provided to pass DB constraints, or make it nullable.
+        // Assuming user runs migration, but existing columns usually stay not null.
+        // Let's put 0 if empty.
         weekend_price: formData.get('weekend_price') ? parseFloat(formData.get('weekend_price')) : null,
+        hourly_rate: formData.get('hourly_rate') ? parseFloat(formData.get('hourly_rate')) : null,
+        min_duration: formData.get('min_duration') ? parseInt(formData.get('min_duration')) : 4,
+
         location: locationStr,
         lat: coords ? coords.lat : null,
         lng: coords ? coords.lng : null,
         description: formData.get('description'),
         image_url: formData.get('image_url') || '/images/dirt-hero.png',
-        video_url: formData.get('video_url'), // Moved to core, assumed safe or will be omitted if undefined in next step refactor
+        video_url: formData.get('video_url'),
+    }
+
+    // Fix for price NOT NULL constraint if Hourly
+    if (itemData.price_type === 'hourly' && !itemData.price) {
+        itemData.price = 0; // Placeholder
     }
 
     // Safely add new schema fields ONLY if they are populated

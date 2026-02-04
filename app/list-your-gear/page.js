@@ -114,6 +114,64 @@ export default function ListYourGear() {
     );
   };
 
+  // Price Selection Component
+  const PriceSelection = () => {
+    const [priceType, setPriceType] = useState('daily');
+
+    return (
+      <div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1.5rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input type="radio" name="price_type" value="daily" checked={priceType === 'daily'} onChange={() => setPriceType('daily')} style={{ width: 20, height: 20 }} />
+              <span style={{ fontWeight: 600 }}>Daily Only</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input type="radio" name="price_type" value="hourly" checked={priceType === 'hourly'} onChange={() => setPriceType('hourly')} style={{ width: 20, height: 20 }} />
+              <span style={{ fontWeight: 600 }}>Hourly Only</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input type="radio" name="price_type" value="both" checked={priceType === 'both'} onChange={() => setPriceType('both')} style={{ width: 20, height: 20 }} />
+              <span style={{ fontWeight: 600 }}>Both (Hourly & Daily)</span>
+            </div>
+          </label>
+        </div>
+
+        {(priceType === 'daily' || priceType === 'both') && (
+          <div style={{ marginBottom: '1.5rem', paddingBottom: priceType === 'both' ? '1.5rem' : 0, borderBottom: priceType === 'both' ? '1px dashed #e2e8f0' : 'none' }}>
+            <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', textTransform: 'uppercase', color: '#64748b' }}>Daily Pricing</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div className="form-group">
+                <label>Daily Price ($)</label>
+                <input type="number" name="price" placeholder="150" required={priceType !== 'hourly'} />
+              </div>
+              <div className="form-group">
+                <label>Weekend Rate ($/night)</label>
+                <input type="number" name="weekend_price" placeholder="Optional" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(priceType === 'hourly' || priceType === 'both') && (
+          <div>
+            <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', textTransform: 'uppercase', color: '#64748b' }}>Hourly Pricing</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div className="form-group">
+                <label>Hourly Rate ($)</label>
+                <input type="number" name="hourly_rate" placeholder="50" step="0.01" required={priceType !== 'daily'} />
+              </div>
+              <div className="form-group">
+                <label>Min Duration (Hours)</label>
+                <input type="number" name="min_duration" defaultValue="4" min="1" max="24" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Sortable Item Component
   const SortablePhoto = ({ url, index, onRemove, onMakeMain }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: url });
@@ -329,14 +387,15 @@ export default function ListYourGear() {
                       const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), engine_cc: e.target.value };
                       document.getElementsByName('specs')[0].value = JSON.stringify(specs);
                     }} />
-                    <input type="text" placeholder="Seat Height" onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), seat_height: e.target.value };
+                    <input type="number" placeholder="Seat Capacity" onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), seat_capacity: e.target.value };
                       document.getElementsByName('specs')[0].value = JSON.stringify(specs);
                     }} />
                   </div>
                 </div>
               )}
 
+              {/* ... Water and Trailer sections remain same ... */}
               {selectedCategory === 'water' && (
                 <div className="form-group full">
                   <label>Watercraft Specs</label>
@@ -380,14 +439,11 @@ export default function ListYourGear() {
                 <textarea name="rules" rows="2" placeholder="e.g. Must have 3/4 ton truck, Age 25+, etc." />
               </div>
 
-              <div className="form-group">
-                <label>Daily Price ($)</label>
-                <input type="number" name="price" placeholder="150" required />
-              </div>
-
-              <div className="form-group">
-                <label>Weekend Rate ($/night)</label>
-                <input type="number" name="weekend_price" placeholder="Optional (e.g. 200)" />
+              <div className="form-group full">
+                <label>Pricing Model</label>
+                <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <PriceSelection />
+                </div>
               </div>
 
               {/* Private Owner Details Section */}

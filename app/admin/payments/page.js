@@ -17,6 +17,16 @@ export default async function AdminPaymentsPage() {
         .eq('paid_out', false)
         .order('end_date', { ascending: false });
 
+    // Fetch upcoming payouts (Active/Approved)
+    const { data: upcomingPayouts } = await supabase
+        .from('rentals')
+        .select(`
+            *,
+            items (name, owner_id, price)
+        `)
+        .in('status', ['approved', 'active'])
+        .order('end_date', { ascending: false });
+
     // Fetch paid out rentals for history
     const { data: paidPayouts } = await supabase
         .from('rentals')
@@ -35,6 +45,7 @@ export default async function AdminPaymentsPage() {
     return (
         <AdminPaymentsClient
             pendingPayouts={pendingPayouts || []}
+            upcomingPayouts={upcomingPayouts || []}
             paidPayouts={paidPayouts || []}
         />
     );

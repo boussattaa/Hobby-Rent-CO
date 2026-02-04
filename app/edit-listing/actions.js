@@ -15,14 +15,30 @@ export async function updateListing(formData) {
     }
 
     const itemId = formData.get('itemId');
-    const locationStr = formData.get('location');
+
+    // Location handling
+    const city = formData.get('city');
+    const state = formData.get('state');
+    const zip = formData.get('zip');
+    let locationStr = formData.get('location'); // Fallback
+
+    if (city && state && zip) {
+        locationStr = `${city}, ${state} ${zip}`;
+    } else if (zip) {
+        // If they only edited zip or something
+        locationStr = zip;
+    }
+
     const coords = await geocodeLocation(locationStr);
 
     const itemData = {
         name: `${formData.get('year')} ${formData.get('make')} ${formData.get('model')}`.trim(), // Auto-generate name on update too
         category: formData.get('category'),
         subcategory: formData.get('subcategory'),
-        price: formData.get('price'),
+        price: formData.get('price') ? parseFloat(formData.get('price')) : null,
+        price_type: formData.get('price_type') || 'daily',
+        hourly_rate: formData.get('hourly_rate') ? parseFloat(formData.get('hourly_rate')) : null,
+        min_duration: formData.get('min_duration') ? parseInt(formData.get('min_duration')) : 4,
         weekend_price: formData.get('weekend_price') ? parseFloat(formData.get('weekend_price')) : null,
         description: formData.get('description'),
         location: locationStr, // Zip code
@@ -47,6 +63,11 @@ export async function updateListing(formData) {
         } catch (e) {
             console.error("Failed to parse specs", e);
         }
+    }
+
+    // Fix for price NOT NULL constraint if Hourly
+    if (itemData.price_type === 'hourly' && (itemData.price === null || isNaN(itemData.price))) {
+        itemData.price = 0; // Placeholder
     }
 
     const { error } = await supabase
@@ -100,5 +121,6 @@ export async function updateListing(formData) {
     revalidatePath(`/item/${itemId}`);
     revalidatePath('/my-listings');
     revalidatePath('/offroad');
-    redirect('/my-listings');
+
+    return { success: true, itemId };
 }

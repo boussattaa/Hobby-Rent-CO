@@ -56,9 +56,15 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
     setIsChatOpen(true);
   };
 
-  // Date state management
+  // Date/Time state management
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
+
+  // Booking Mode State (Daily vs Hourly)
+  const [bookingMode, setBookingMode] = useState('daily');
+  const [existingRentals, setExistingRentals] = useState([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -81,22 +87,52 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
       if (data) {
         setItem({
           ...data,
-          price: Number(data.price),
+          price: Number(data.price || 0),
+          hourly_rate: Number(data.hourly_rate || 0),
           weekend_price: data.weekend_price ? Number(data.weekend_price) : null,
           ownerEmail: data.profiles?.email
         });
         setItemsOwnerId(data.owner_id);
 
-        // Fetch Availability
-        const { data: availData } = await supabase
-          .from('item_availability')
-          .select('date')
-          .eq('item_id', id);
+        // Set initial Booking Mode
+        if (data.price_type === 'hourly') setBookingMode('hourly');
+        else setBookingMode('daily');
 
-        if (availData) {
-          const dates = new Set(availData.map(r => r.date));
-          setBlockedDates(dates);
+        // Fetch Availability (Manual Blocks + Paid Rentals)
+        const [availRes, rentalsRes] = await Promise.all([
+          supabase
+            .from('item_availability')
+            .select('date')
+            .eq('item_id', id),
+          supabase
+            .from('rentals')
+            .select('start_date, end_date')
+            .eq('item_id', id)
+            .in('status', ['approved', 'active', 'completed'])
+        ]);
+
+        const blockedSet = new Set();
+
+        // 1. Add Manual Blocks
+        if (availRes.data) {
+          availRes.data.forEach(r => blockedSet.add(r.date));
         }
+
+        // 2. Add Rental Blocks (Approved/Paid only)
+        if (rentalsRes.data) {
+          rentalsRes.data.forEach(rental => {
+            let current = new Date(rental.start_date);
+            const end = new Date(rental.end_date);
+
+            // Iterate through dates (naive UTC/Date handling safe for YYYY-MM-DD in JS if consistent)
+            while (current <= end) {
+              blockedSet.add(current.toISOString().split('T')[0]);
+              current.setDate(current.getDate() + 1);
+            }
+          });
+        }
+
+        setBlockedDates(blockedSet);
       }
       if (error) console.error('Error fetching item:', error);
       setLoading(false);
@@ -126,6 +162,58 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
     }
 
     return mediaList;
+  };
+
+  // Helper to generate time options
+  const timeOptions = [];
+  for (let i = 6; i <= 22; i++) {
+    const hour = i < 10 ? `0${i}` : i;
+    timeOptions.push(`${hour}:00`);
+    timeOptions.push(`${hour}:30`);
+  }
+
+  // Cost and Link Calculation
+  const calculateTotal = () => {
+    if (bookingMode === 'hourly') {
+      if (!startDate || !startTime || !endTime) return ((item.hourly_rate || 0) * (item.min_duration || 4)) + 15;
+      const start = new Date(`${startDate}T${startTime}`);
+      let end = new Date(`${startDate}T${endTime}`);
+      let hours = (end - start) / (1000 * 60 * 60);
+      if (hours <= 0) hours = 0;
+      return (hours * (item.hourly_rate || 0)) + 15;
+    } else {
+      if (!startDate || !endDate) return (item.price || 0) + 15;
+      let s = new Date(startDate);
+      const e = new Date(endDate);
+      let diff = Math.ceil((e - s) / (1000 * 3600 * 24));
+      if (diff <= 0) diff = 1;
+
+      let est = 0;
+      for (let i = 0; i < diff; i++) {
+        let d = new Date(s);
+        d.setDate(s.getDate() + i);
+        let dow = d.getDay();
+        if (item.weekend_price && (dow === 5 || dow === 6)) {
+          est += item.weekend_price;
+        } else {
+          est += (item.price || 0);
+        }
+      }
+      return est + 15;
+    }
+  };
+
+  const getCheckoutLink = () => {
+    if (!startDate || availabilityError) return '#';
+    if (bookingMode === 'hourly') {
+      if (!startTime || !endTime) return '#';
+      const s = new Date(`${startDate}T${startTime}`).toISOString();
+      const e = new Date(`${startDate}T${endTime}`).toISOString();
+      return `/checkout?itemId=${id}&start=${s}&end=${e}&type=hourly`;
+    } else {
+      if (!endDate) return '#';
+      return `/checkout?itemId=${id}&start=${startDate}&end=${endDate}&type=daily`;
+    }
   };
 
   const mediaItems = getMedia();
@@ -244,13 +332,31 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
               <p className="location">📍 {item.location}</p>
             </div>
             <div className="price-tag">
-              <span className="currency">$</span>
-              <span className="amount">{item.price}</span>
-              <span className="per">/day</span>
-              {item.weekend_price && (
-                <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
-                  Weekend: ${item.weekend_price}
+              {item.price_type === 'both' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <div>
+                    <span className="currency">$</span>
+                    <span className="amount">{item.price}</span>
+                    <span className="per">/day</span>
+                  </div>
+                  <div style={{ fontSize: '1rem', color: '#64748b' }}>
+                    or <span style={{ fontWeight: 700, color: '#334155' }}>${item.hourly_rate}</span>/hr
+                  </div>
                 </div>
+              ) : item.price_type === 'hourly' ? (
+                <>
+                  <span className="currency">$</span>
+                  <span className="amount">{item.hourly_rate}</span>
+                  <span className="per">/hour</span>
+                  {item.min_duration && <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>Min. {item.min_duration} hrs</div>}
+                </>
+              ) : (
+                <>
+                  <span className="currency">$</span>
+                  <span className="amount">{item.price}</span>
+                  <span className="per">/day</span>
+                  {item.weekend_price && <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>Weekend: ${item.weekend_price}</div>}
+                </>
               )}
             </div>
           </div>
@@ -285,46 +391,104 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
 
             <div className="booking-column">
               <div className="booking-card">
-                <h3>Book this Item</h3>
-                <div className="date-picker-mock">
-                  <div className="date-field">
-                    <label>Start Date</label>
-                    <input
-                      type="date"
-                      min={today}
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
+                <h3>{bookingMode === 'hourly' ? 'Reserve Time Slot' : 'Book this Item'}</h3>
+
+                {item.price_type === 'both' && (
+                  <div className="booking-tabs" style={{ display: 'flex', background: '#e2e8f0', borderRadius: '8px', padding: '4px', marginBottom: '1.5rem' }}>
+                    <button
+                      onClick={() => { setBookingMode('daily'); setAvailabilityError(''); }}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 600, background: bookingMode === 'daily' ? 'white' : 'transparent', color: bookingMode === 'daily' ? 'black' : '#64748b', boxShadow: bookingMode === 'daily' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                      Daily (${item.price}/day)
+                    </button>
+                    <button
+                      onClick={() => { setBookingMode('hourly'); setAvailabilityError(''); }}
+                      style={{ flex: 1, padding: '0.5rem', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 600, background: bookingMode === 'hourly' ? 'white' : 'transparent', color: bookingMode === 'hourly' ? 'black' : '#64748b', boxShadow: bookingMode === 'hourly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                      Hourly (${item.hourly_rate}/hr)
+                    </button>
                   </div>
-                  <div className="date-field">
-                    <label>End Date</label>
+                )}
 
-                    <input
-                      type="date"
-                      min={startDate || today}
-                      value={endDate}
-                      onChange={(e) => {
-                        setEndDate(e.target.value);
-                        setAvailabilityError('');
-
-                        // Check for overlap
-                        if (startDate && e.target.value) {
-                          let curr = new Date(startDate);
-                          const end = new Date(e.target.value);
-                          // Simple loop check
-                          while (curr <= end) {
-                            if (blockedDates.has(curr.toISOString().split('T')[0])) {
-                              setAvailabilityError('Selected dates include unavailable days.');
-                              break;
+                {bookingMode === 'daily' && (
+                  <div className="date-picker-mock">
+                    <div className="date-field">
+                      <label>Start Date</label>
+                      <input
+                        type="date"
+                        min={today}
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="date-field">
+                      <label>End Date</label>
+                      <input
+                        type="date"
+                        min={startDate || today}
+                        value={endDate}
+                        onChange={(e) => {
+                          setEndDate(e.target.value);
+                          setAvailabilityError('');
+                          if (startDate && e.target.value) {
+                            let curr = new Date(startDate);
+                            const end = new Date(e.target.value);
+                            while (curr <= end) {
+                              if (blockedDates.has(curr.toISOString().split('T')[0])) {
+                                setAvailabilityError('Selected dates include unavailable days.');
+                                break;
+                              }
+                              curr.setDate(curr.getDate() + 1);
                             }
-                            curr.setDate(curr.getDate() + 1);
                           }
-                        }
-                      }}
-                      disabled={!startDate}
-                    />
+                        }}
+                        disabled={!startDate}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {bookingMode === 'hourly' && (
+                  <div className="time-picker-mock">
+                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                      <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: 4 }}>Date</label>
+                      <input
+                        type="date"
+                        min={today}
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '6px' }}
+                      />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                      <div className="date-field">
+                        <label>Start Time</label>
+                        <select
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '6px' }}
+                        >
+                          <option value="">Select</option>
+                          {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      <div className="date-field">
+                        <label>End Time</label>
+                        <select
+                          value={endTime}
+                          onChange={(e) => {
+                            setEndTime(e.target.value);
+                            if (startTime && e.target.value <= startTime) setAvailabilityError('End time must be after start time');
+                            else setAvailabilityError('');
+                          }}
+                          style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '6px' }}
+                        >
+                          <option value="">Select</option>
+                          {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {availabilityError && <p style={{ color: '#ef4444', fontSize: '0.9rem', marginBottom: '1rem', fontWeight: 'bold' }}>{availabilityError}</p>}
 
                 <div className="summary-row">
@@ -333,36 +497,17 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                 </div>
                 <div className="summary-row total">
                   <span>Total (est)</span>
-                  <span>${(() => {
-                    if (!startDate || !endDate) return item.price + 15;
-                    let s = new Date(startDate);
-                    const e = new Date(endDate);
-                    let diff = Math.ceil((e - s) / (1000 * 3600 * 24));
-                    if (diff <= 0) diff = 1;
-
-                    let est = 0;
-                    for (let i = 0; i < diff; i++) {
-                      let d = new Date(s);
-                      d.setDate(s.getDate() + i);
-                      let dow = d.getDay();
-                      if (item.weekend_price && (dow === 5 || dow === 6)) {
-                        est += item.weekend_price;
-                      } else {
-                        est += item.price;
-                      }
-                    }
-                    return est + 15;
-                  })()}</span>
+                  <span>${calculateTotal().toFixed(2)}</span>
                 </div>
 
                 <Link
-                  href={startDate && endDate && !availabilityError ? `/checkout?itemId=${id}&start=${startDate}&end=${endDate}` : '#'}
-                  className={`btn btn-primary full-width ${(!startDate || !endDate || availabilityError) ? 'disabled' : ''}`}
+                  href={getCheckoutLink()}
+                  className={`btn btn-primary full-width ${(!startDate || availabilityError || (item.price_type === 'daily' && !endDate) || (item.price_type === 'hourly' && (!startTime || !endTime))) ? 'disabled' : ''}`}
                   style={{
                     textAlign: 'center',
                     textDecoration: 'none',
-                    opacity: (!startDate || !endDate) ? 0.5 : 1,
-                    pointerEvents: (!startDate || !endDate) ? 'none' : 'auto'
+                    opacity: (!startDate || availabilityError || (item.price_type === 'daily' && !endDate) || (item.price_type === 'hourly' && (!startTime || !endTime))) ? 0.5 : 1,
+                    pointerEvents: (!startDate || availabilityError || (item.price_type === 'daily' && !endDate) || (item.price_type === 'hourly' && (!startTime || !endTime))) ? 'none' : 'auto'
                   }}
                 >
                   Request to Rent

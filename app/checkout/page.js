@@ -16,6 +16,10 @@ export default function CheckoutPage() {
     const itemId = searchParams.get('itemId');
     const startParam = searchParams.get('start');
     const endParam = searchParams.get('end');
+    // Detect type: either passed explicit 'type' or infer from format? 
+    // ItemClient sends type=hourly.
+    const rentalType = searchParams.get('type') || 'daily';
+
     const supabase = createClient();
 
     const [item, setItem] = useState(ITEMS_DB[itemId] || null);
@@ -29,7 +33,7 @@ export default function CheckoutPage() {
         const fetchItem = async () => {
             const { data } = await supabase
                 .from('items')
-                .select('name, price')
+                .select('name, price, hourly_rate, price_type')
                 .eq('id', itemId)
                 .single();
 
@@ -48,34 +52,49 @@ export default function CheckoutPage() {
     }
 
     const itemPrice = item ? Number(item.price) : 0;
+    const itemHourlyRate = item ? Number(item.hourly_rate || 0) : 0;
     const itemName = item ? item.name : "Unknown Item";
     const serviceFee = 15;
 
     // Calculate duration
-    let days = 1;
-    let dateDisplay = "Select dates";
+    let durationDisplay = "";
+    let dateRangeDisplay = "";
+    let calculatedRentalPrice = 0;
 
     if (startParam && endParam) {
-        const start = new Date(startParam);
-        const end = new Date(endParam);
-        const diffTime = Math.abs(end - start);
-        days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (days === 0) days = 1; // Min 1 day
+        if (rentalType === 'hourly') {
+            const start = new Date(startParam);
+            const end = new Date(endParam);
+            const diffMs = end - start;
+            const hours = diffMs / (1000 * 60 * 60);
 
-        // Format dates safely
-        const options = { month: 'short', day: 'numeric' };
-        dateDisplay = `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
-        // Fix JS date off-by-one due to timezone by verifying string parsing? 
-        // Actually, input type="date" gives YYYY-MM-DD. new Date(str) uses UTC. 
-        // Displaying with locale might shift it. 
-        // Better to use simple string parsing for display if we want to be exact, but localestring is fine for MVP.
+            // Round to 2 decimals for display if needed, but price calc should use exact or rounded hours?
+            // Usually we treat partial hours? Let's assume standard float hours.
+            const hoursDisplay = hours > 0 ? hours.toFixed(1) : 0;
+
+            durationDisplay = `${hoursDisplay} Hours`;
+            dateRangeDisplay = `${start.toLocaleDateString()} ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+            calculatedRentalPrice = hours * itemHourlyRate;
+        } else {
+            // Daily
+            const start = new Date(startParam);
+            const end = new Date(endParam);
+            const diffTime = Math.abs(end - start); // Naive daily diff
+            let days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (days === 0) days = 1;
+
+            durationDisplay = `${days} Day${days > 1 ? 's' : ''}`;
+            const options = { month: 'short', day: 'numeric' };
+            dateRangeDisplay = `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`;
+
+            calculatedRentalPrice = itemPrice * days;
+        }
     }
 
-    const rentalTotal = itemPrice * days;
+    const rentalTotal = Math.round(calculatedRentalPrice * 100) / 100; // Round to 2 decimals
     const protectionFee = 20;
     const total = rentalTotal + serviceFee + (addProtection ? protectionFee : 0);
-
-
 
     const handleCheckout = async () => {
         setLoading(true);
@@ -91,10 +110,11 @@ export default function CheckoutPage() {
                 body: JSON.stringify({
                     itemId,
                     price: rentalTotal,
-                    name: `${itemName} (${days} days)`,
+                    name: `${itemName} (${durationDisplay})`,
                     addProtection,
                     startDate: startParam,
-                    endDate: endParam
+                    endDate: endParam,
+                    type: rentalType
                 }),
             });
 
@@ -132,18 +152,18 @@ export default function CheckoutPage() {
                         </div>
                         <div className="summary-item">
                             <span>Dates</span>
-                            <span>{dateDisplay}</span>
+                            <span>{dateRangeDisplay}</span>
                         </div>
                         <div className="summary-item">
                             <span>Duration</span>
-                            <span>{days} Day{days > 1 ? 's' : ''}</span>
+                            <span>{durationDisplay}</span>
                         </div>
 
                         <hr />
 
                         <div className="summary-row">
-                            <span>Rental Price (${itemPrice}/day)</span>
-                            <span>${rentalTotal}</span>
+                            <span>Rate ({rentalType === 'hourly' ? `$${itemHourlyRate}/hr` : `$${itemPrice}/day`})</span>
+                            <span>${rentalTotal.toFixed(2)}</span>
                         </div>
                         <div className="summary-row">
                             <span>Service Fee</span>

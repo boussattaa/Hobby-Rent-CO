@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function AdminPaymentsClient({ pendingPayouts, paidPayouts }) {
+export default function AdminPaymentsClient({ pendingPayouts, upcomingPayouts, paidPayouts }) {
     const [processing, setProcessing] = useState({});
     const [payouts, setPayouts] = useState(pendingPayouts);
 
@@ -48,12 +48,60 @@ export default function AdminPaymentsClient({ pendingPayouts, paidPayouts }) {
                 <span className="count-badge">{payouts.length} Pending</span>
             </div>
 
+            {/* Upcoming Payouts Section (Approved/Active) */}
+            <section className="section">
+                <h2>Upcoming Payouts (Active Rentals)</h2>
+                {upcomingPayouts.length === 0 ? (
+                    <div className="empty-state">
+                        <p>No active rentals awaiting completion.</p>
+                    </div>
+                ) : (
+                    <div className="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Rental Dates</th>
+                                    <th>Total Amount</th>
+                                    <th>Estimated Payout</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {upcomingPayouts.map(rental => {
+                                    const ownerPayout = Math.round(rental.total_price * 0.85); // 85% to owner
+                                    return (
+                                        <tr key={rental.id}>
+                                            <td>
+                                                <strong>{rental.items?.name || 'Unknown Item'}</strong>
+                                            </td>
+                                            <td>
+                                                {new Date(rental.start_date).toLocaleDateString()} - {new Date(rental.end_date).toLocaleDateString()}
+                                            </td>
+                                            <td>{formatCurrency(rental.total_price)}</td>
+                                            <td>
+                                                <span className="payout-amount" style={{ color: '#3b82f6' }}>{formatCurrency(ownerPayout)}</span>
+                                            </td>
+                                            <td>
+                                                <span className={`badge ${rental.status}`} style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.75rem', borderRadius: '50px', background: '#dbeafe', color: '#2563eb' }}>
+                                                    {rental.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
+
             {/* Pending Payouts Section */}
             <section className="section">
-                <h2>Pending Payouts</h2>
+                <h2>Pending Payouts (Ready to Release)</h2>
                 {payouts.length === 0 ? (
                     <div className="empty-state">
-                        <p>No pending payouts. All completed rentals have been paid out!</p>
+                        <p>No completed rentals waiting for payout.</p>
                     </div>
                 ) : (
                     <div className="table-container">

@@ -36,17 +36,39 @@ export async function POST(request) {
             if (!item) throw new Error("Item not found");
 
             // 2. Create Rental Record
+            // Determine timestamps vs dates
+            const isHourly = startDate && startDate.includes('T');
+            const newRentalData = {
+                item_id: itemId,
+                renter_id: user.id,
+                owner_id: item.owner_id,
+                total_price: price + 15 + (addProtection ? 20 : 0),
+                status: 'pending' // Default to pending
+            };
+
+            if (isHourly) {
+                // Passed as ISO strings
+                newRentalData.start_time = startDate;
+                newRentalData.end_time = endDate;
+                // Derive dates for legacy/daily blocking logic
+                newRentalData.start_date = startDate.split('T')[0];
+                newRentalData.end_date = endDate.split('T')[0];
+            } else {
+                // Daily (legacy)
+                newRentalData.start_date = startDate || new Date().toISOString();
+                newRentalData.end_date = endDate || new Date().toISOString();
+                // We could backfill start_time/end_time here too?
+                // Optional: set start_time to 00:00 and end_time to 23:59?
+                // For now, leave null for Daily to distinguishing them, or fill consistent with migration?
+                // Migration backfilled them. Let's fill them for consistency.
+                // start_date is just YYYY-MM-DD.
+                newRentalData.start_time = `${newRentalData.start_date}T00:00:00Z`; // Naive UTC assumption or just 00:00
+                newRentalData.end_time = `${newRentalData.end_date}T23:59:59Z`;
+            }
+
             const { data: newRental, error: rentalError } = await supabase
                 .from('rentals')
-                .insert({
-                    item_id: itemId,
-                    renter_id: user.id,
-                    owner_id: item.owner_id,
-                    start_date: startDate || new Date().toISOString(),
-                    end_date: endDate || new Date().toISOString(),
-                    total_price: price + 15 + (addProtection ? 20 : 0),
-                    status: 'pending' // Default to pending now!
-                })
+                .insert(newRentalData)
                 .select()
                 .single();
 

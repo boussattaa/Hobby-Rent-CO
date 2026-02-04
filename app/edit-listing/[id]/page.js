@@ -40,17 +40,60 @@ export default function EditListingPage() {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [errorMsg, setErrorMsg] = useState(null);
+
+    // Helper to parse location string
+    const parseLocation = (loc) => {
+        if (!loc) return { city: '', state: '', zip: '' };
+
+        // Strategy: Split by last comma to separate City from State/Zip
+        const lastCommaIndex = loc.lastIndexOf(',');
+        if (lastCommaIndex !== -1) {
+            const cityPart = loc.substring(0, lastCommaIndex).trim();
+            const remainder = loc.substring(lastCommaIndex + 1).trim();
+
+            // Extract Zip (last 5 digits)
+            const zipMatch = remainder.match(/(\d{5})$/);
+            if (zipMatch) {
+                const zip = zipMatch[1];
+                const state = remainder.replace(zip, '').trim();
+                return { city: cityPart, state: state.substring(0, 2).toUpperCase(), zip };
+            }
+        }
+
+        // Fallback: match 5 digit zip only
+        if (loc.match(/^\d{5}$/)) return { city: '', state: '', zip: loc };
+
+        // If really weird format, put it all in city so they see it
+        return { city: loc, state: '', zip: '' };
+    };
+
     const [formData, setFormData] = useState({
         name: '',
         price: '',
         weekend_price: '',
+        hourly_rate: '',
+        min_duration: 4,
+        price_type: 'daily',
         location: '',
+        city: '',
+        state: '',
+        zip: '',
         description: '',
         category: 'offroad',
         subcategory: '',
-        subcategory: '',
         image_url: '',
-        video_url: ''
+        video_url: '',
+        year: '',
+        make: '',
+        model: '',
+        rules: '',
+        specs: {},
+        vin: '',
+        license_plate: '',
+        insurance_policy: '',
+        maintenance_notes: '',
+        storage_address: '',
+        emergency_contact: ''
     });
 
     useEffect(() => {
@@ -77,9 +120,15 @@ export default function EditListingPage() {
             if (data) {
                 setFormData({
                     name: data.name,
-                    price: data.price,
+                    price: data.price || '',
                     weekend_price: data.weekend_price || '',
+                    hourly_rate: data.hourly_rate || '',
+                    min_duration: data.min_duration || 4,
+                    price_type: data.price_type || 'daily',
                     location: data.location,
+                    city: parseLocation(data.location).city,
+                    state: parseLocation(data.location).state,
+                    zip: parseLocation(data.location).zip,
                     description: data.description || '',
                     category: data.category || 'offroad',
                     subcategory: data.subcategory || '',
@@ -172,8 +221,17 @@ export default function EditListingPage() {
             }
         });
 
-        await updateListing(data);
-        setUploading(false);
+        const result = await updateListing(data);
+
+        if (result?.success) {
+            router.push(`/item/${result.itemId}`);
+        } else if (result?.message) {
+            setErrorMsg(result.message);
+            setUploading(false);
+            window.scrollTo(0, 0);
+        } else {
+            setUploading(false);
+        }
     };
 
     if (loading) return <div className="container" style={{ padding: '4rem' }}>Loading...</div>;
@@ -232,8 +290,8 @@ export default function EditListingPage() {
                                         <input type="text" placeholder="Engine Size (cc)" value={formData.specs?.engine_cc || ''} onChange={(e) => {
                                             setFormData(prev => ({ ...prev, specs: { ...prev.specs, engine_cc: e.target.value } }));
                                         }} />
-                                        <input type="text" placeholder="Seat Height" value={formData.specs?.seat_height || ''} onChange={(e) => {
-                                            setFormData(prev => ({ ...prev, specs: { ...prev.specs, seat_height: e.target.value } }));
+                                        <input type="number" placeholder="Seat Capacity" value={formData.specs?.seat_capacity || ''} onChange={(e) => {
+                                            setFormData(prev => ({ ...prev, specs: { ...prev.specs, seat_capacity: e.target.value } }));
                                         }} />
                                     </div>
                                 </div>
@@ -275,14 +333,107 @@ export default function EditListingPage() {
                                 <textarea name="rules" value={formData.rules} onChange={handleChange} rows="2" placeholder="e.g. Must have 3/4 ton truck, Age 25+, etc." />
                             </div>
 
-                            <div className="form-group">
-                                <label>Price ($/day)</label>
-                                <input type="number" name="price" value={formData.price} onChange={handleChange} required />
-                            </div>
+                            <div className="form-group full">
+                                <label>Pricing Model</label>
+                                <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1.5rem', marginBottom: '0.5rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                                <input
+                                                    type="radio"
+                                                    name="price_type"
+                                                    value="daily"
+                                                    checked={formData.price_type === 'daily'}
+                                                    onChange={handleChange}
+                                                    style={{ width: 20, height: 20 }}
+                                                />
+                                                <span style={{ fontWeight: 600 }}>Daily Only</span>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                                <input
+                                                    type="radio"
+                                                    name="price_type"
+                                                    value="hourly"
+                                                    checked={formData.price_type === 'hourly'}
+                                                    onChange={handleChange}
+                                                    style={{ width: 20, height: 20 }}
+                                                />
+                                                <span style={{ fontWeight: 600 }}>Hourly Only</span>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                                <input
+                                                    type="radio"
+                                                    name="price_type"
+                                                    value="both"
+                                                    checked={formData.price_type === 'both'}
+                                                    onChange={handleChange}
+                                                    style={{ width: 20, height: 20 }}
+                                                />
+                                                <span style={{ fontWeight: 600 }}>Both (Hourly & Daily)</span>
+                                            </div>
+                                        </label>
+                                    </div>
 
-                            <div className="form-group">
-                                <label>Weekend Rate ($/night)</label>
-                                <input type="number" name="weekend_price" value={formData.weekend_price} onChange={handleChange} placeholder="Optional" />
+                                    {(formData.price_type === 'daily' || formData.price_type === 'both') && (
+                                        <div style={{ marginBottom: '1.5rem', paddingBottom: formData.price_type === 'both' ? '1.5rem' : 0, borderBottom: formData.price_type === 'both' ? '1px dashed #e2e8f0' : 'none' }}>
+                                            <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', textTransform: 'uppercase', color: '#64748b' }}>Daily Pricing</h4>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                                <div className="form-group">
+                                                    <label>Daily Price ($)</label>
+                                                    <input
+                                                        type="number"
+                                                        name="price"
+                                                        value={formData.price}
+                                                        onChange={handleChange}
+                                                        placeholder="150"
+                                                        required={formData.price_type !== 'hourly'}
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>Weekend Rate ($/night)</label>
+                                                    <input
+                                                        type="number"
+                                                        name="weekend_price"
+                                                        value={formData.weekend_price}
+                                                        onChange={handleChange}
+                                                        placeholder="Optional"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {(formData.price_type === 'hourly' || formData.price_type === 'both') && (
+                                        <div>
+                                            <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', textTransform: 'uppercase', color: '#64748b' }}>Hourly Pricing</h4>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                                <div className="form-group">
+                                                    <label>Hourly Rate ($)</label>
+                                                    <input
+                                                        type="number"
+                                                        name="hourly_rate"
+                                                        value={formData.hourly_rate}
+                                                        onChange={handleChange}
+                                                        placeholder="50"
+                                                        step="0.01"
+                                                        required={formData.price_type !== 'daily'}
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label>Min Duration (Hours)</label>
+                                                    <input
+                                                        type="number"
+                                                        name="min_duration"
+                                                        value={formData.min_duration}
+                                                        onChange={handleChange}
+                                                        min="1"
+                                                        max="24"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Private Owner Details Section */}
@@ -309,9 +460,45 @@ export default function EditListingPage() {
                                 </div>
                             </div>
 
-                            <div className="form-group">
-                                <label>Zip Code</label>
-                                <input type="text" name="location" value={formData.location} onChange={handleChange} required pattern="[0-9]*" />
+                            <div className="form-group full">
+                                <label>Location (Public)</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
+                                    <input
+                                        type="text"
+                                        name="city"
+                                        value={formData.city}
+                                        onChange={handleChange}
+                                        placeholder="City"
+                                        required
+                                        autoComplete="address-level2"
+                                    />
+                                    <select name="state" value={formData.state} onChange={handleChange} required autoComplete="address-level1" style={{ fontSize: '1rem' }}>
+                                        <option value="">State</option>
+                                        <option value="AL">AL</option><option value="AK">AK</option><option value="AZ">AZ</option><option value="AR">AR</option>
+                                        <option value="CA">CA</option><option value="CO">CO</option><option value="CT">CT</option><option value="DE">DE</option>
+                                        <option value="FL">FL</option><option value="GA">GA</option><option value="HI">HI</option><option value="ID">ID</option>
+                                        <option value="IL">IL</option><option value="IN">IN</option><option value="IA">IA</option><option value="KS">KS</option>
+                                        <option value="KY">KY</option><option value="LA">LA</option><option value="ME">ME</option><option value="MD">MD</option>
+                                        <option value="MA">MA</option><option value="MI">MI</option><option value="MN">MN</option><option value="MS">MS</option>
+                                        <option value="MO">MO</option><option value="MT">MT</option><option value="NE">NE</option><option value="NV">NV</option>
+                                        <option value="NH">NH</option><option value="NJ">NJ</option><option value="NM">NM</option><option value="NY">NY</option>
+                                        <option value="NC">NC</option><option value="ND">ND</option><option value="OH">OH</option><option value="OK">OK</option>
+                                        <option value="OR">OR</option><option value="PA">PA</option><option value="RI">RI</option><option value="SC">SC</option>
+                                        <option value="SD">SD</option><option value="TN">TN</option><option value="TX">TX</option><option value="UT">UT</option>
+                                        <option value="VT">VT</option><option value="VA">VA</option><option value="WA">WA</option><option value="WV">WV</option>
+                                        <option value="WI">WI</option><option value="WY">WY</option>
+                                    </select>
+                                    <input
+                                        type="text"
+                                        name="zip"
+                                        value={formData.zip}
+                                        onChange={handleChange}
+                                        placeholder="Zip"
+                                        required
+                                        pattern="[0-9]*"
+                                        autoComplete="postal-code"
+                                    />
+                                </div>
                             </div>
 
                             <div className="form-group full">
