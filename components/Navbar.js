@@ -102,7 +102,7 @@ export default function Navbar({ user }) {
       <div className="container navbar-content">
         <Link href="/" className="logo">
           <Image
-            src="/images/logo-new.jpg"
+            src="/images/logo-badge.jpg"
             alt="HobbyRent Logo"
             width={60}
             height={60}

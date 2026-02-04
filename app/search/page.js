@@ -63,8 +63,27 @@ function SearchContent() {
             if (maxPrice) {
                 queryBuilder = queryBuilder.lte('price', maxPrice);
             }
+
+            // Location Filter with Geocoding
             if (location) {
-                queryBuilder = queryBuilder.ilike('location', `%${location}%`);
+                console.log('Geocoding search location:', location);
+                const coords = await geocodeLocation(location);
+
+                if (coords) {
+                    // Approx 50 mile radius (0.7 degrees rough approximation)
+                    // This creates a bounding box
+                    const r = 0.7;
+                    queryBuilder = queryBuilder
+                        .gte('lat', coords.lat - r)
+                        .lte('lat', coords.lat + r)
+                        .gte('lng', coords.lng - r)
+                        .lte('lng', coords.lng + r);
+                    console.log('Applying coordinate filter:', coords);
+                } else {
+                    // Fallback to text match if geocoding fails
+                    queryBuilder = queryBuilder.ilike('location', `%${location}%`);
+                    console.log('Geocoding failed, falling back to text match');
+                }
             }
 
             const { data, error } = await queryBuilder;
