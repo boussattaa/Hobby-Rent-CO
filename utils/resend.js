@@ -1,10 +1,39 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors when API key isn't set
+let resendInstance = null;
+
+export function getResend() {
+    if (!resendInstance && process.env.RESEND_API_KEY) {
+        resendInstance = new Resend(process.env.RESEND_API_KEY);
+    }
+    return resendInstance;
+}
+
+// Legacy export for backwards compatibility
+export const resend = {
+    emails: {
+        send: async (...args) => {
+            const client = getResend();
+            if (!client) {
+                console.warn('Resend API key not configured, skipping email');
+                return { data: null, error: { message: 'API key not configured' } };
+            }
+            return client.emails.send(...args);
+        }
+    }
+};
 
 export async function sendEmail({ to, subject, html }) {
+    const client = getResend();
+
+    if (!client) {
+        console.warn('Resend API key not configured, skipping email');
+        return { success: false, error: { message: 'API key not configured' } };
+    }
+
     try {
-        const { data, error } = await resend.emails.send({
+        const { data, error } = await client.emails.send({
             from: 'HobbyRent <noreply@hobbyrent.com>',
             to,
             subject,
