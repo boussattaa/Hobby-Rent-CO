@@ -27,7 +27,7 @@ export default async function PublicProfilePage({ params }) {
     // Get user profile
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, is_verified, avatar_url')
+        .select('id, first_name, last_name, is_verified')
         .eq('id', id)
         .single();
 
@@ -39,6 +39,9 @@ export default async function PublicProfilePage({ params }) {
             <div style={{ padding: '4rem', textAlign: 'center' }}>
                 <h1>User Not Found</h1>
                 <p>This profile doesn't exist or has been removed.</p>
+                <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '1rem' }}>
+                    Debug: Looking for ID: {id || 'undefined'}
+                </p>
                 <Link href="/">← Back to Home</Link>
             </div>
         );
