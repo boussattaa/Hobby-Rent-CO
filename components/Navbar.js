@@ -102,12 +102,11 @@ export default function Navbar({ user }) {
       <div className="container navbar-content">
         <Link href="/" className="logo">
           <Image
-            src="/images/logo-badge-v2.png"
+            src="/images/logo-banner.png"
             alt="HobbyRent Logo"
-            width={0}
-            height={0}
-            sizes="100vw"
-            className="logo-img"
+            width={512}
+            height={273}
+            style={{ height: '48px', width: 'auto' }}
             priority
           />
         </Link>
@@ -281,16 +280,21 @@ export default function Navbar({ user }) {
           text-decoration: none;
           display: flex;
           align-items: center;
+          /* Remove fixed height on container to let image drive it */
         }
 
-        .logo-img {
-          width: auto;
-          height: 48px; /* Mobile height */
+        /* Use global selector to target the img tag inside Next/Image */
+        .logo :global(img) {
+          width: auto !important;
+          height: 48px !important; /* Mobile height */
+          max-width: 120px !important; /* Safety cap */
+          object-fit: contain;
         }
 
         @media (min-width: 768px) {
-          .logo-img {
-            height: 80px; /* Desktop height */
+          .logo :global(img) {
+            height: 80px !important; /* Desktop height */
+            max-width: 200px !important; /* Safety cap */
           }
         }
 
