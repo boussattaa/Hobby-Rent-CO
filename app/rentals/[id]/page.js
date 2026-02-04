@@ -5,6 +5,7 @@ import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import ChatWindow from '@/components/ChatWindow';
+import ReviewModal from '@/components/ReviewModal';
 
 export default function RentalDetailsPage({ params }) {
     // Unwrap params using React.use() - Next.js 15+ requirement
@@ -16,6 +17,8 @@ export default function RentalDetailsPage({ params }) {
     const [currentUser, setCurrentUser] = useState(null);
     const [isOwner, setIsOwner] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
+    const [hasReviewed, setHasReviewed] = useState(false);
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -69,15 +72,33 @@ export default function RentalDetailsPage({ params }) {
 
             // Securely Fetch Private Address (For Renter Only)
             if (isUserRenter && (enrichedRental.status === 'approved' || enrichedRental.status === 'active')) {
-                const { data: privateData } = await supabase
+                console.log("Attempting to fetch private details for item:", enrichedRental.item_id);
+                const { data: privateData, error: privateError } = await supabase
                     .from('item_private_details')
                     .select('storage_address, emergency_contact')
                     .eq('item_id', enrichedRental.item_id)
                     .single();
 
+                if (privateError) {
+                    console.error("Error fetching private details:", privateError);
+                } else {
+                    console.log("Private details found:", privateData);
+                }
+
                 if (privateData) {
                     enrichedRental.privateDetails = privateData;
                 }
+            }
+
+            // Check if already reviewed (for Renter)
+            if (isUserRenter && enrichedRental.status === 'completed') {
+                const { data: review } = await supabase
+                    .from('reviews')
+                    .select('id')
+                    .eq('rental_id', id)
+                    .single();
+
+                if (review) setHasReviewed(true);
             }
 
             setRental(enrichedRental);
@@ -179,6 +200,16 @@ export default function RentalDetailsPage({ params }) {
                                         Start Pickup Inspection
                                     </Link>
                                 )}
+                                {rental.status === 'completed' && !hasReviewed && (
+                                    <button className="btn btn-primary full-width" style={{ background: '#f59e0b', borderColor: '#f59e0b' }} onClick={() => setIsReviewOpen(true)}>
+                                        ★ Leave a Review
+                                    </button>
+                                )}
+                                {rental.status === 'completed' && hasReviewed && (
+                                    <div className="btn full-width" style={{ background: '#f1f5f9', color: '#64748b', cursor: 'default', textAlign: 'center', fontWeight: 600 }}>
+                                        ✓ Reviewed
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -240,6 +271,18 @@ export default function RentalDetailsPage({ params }) {
                     </div>
                 </div>
             </div>
+
+            <ReviewModal
+                isOpen={isReviewOpen}
+                onClose={() => setIsReviewOpen(false)}
+                rentalId={rental.id}
+                itemId={rental.item_id}
+                onSubmitted={() => {
+                    // Optimistically hide the button or refresh
+                    setHasReviewed(true);
+                    alert("Review submitted! Thank you.");
+                }}
+            />
 
             <ChatWindow
                 currentUser={currentUser}
@@ -313,6 +356,6 @@ export default function RentalDetailsPage({ params }) {
                     .dashboard-grid { grid-template-columns: 1fr; }
                 }
             `}</style>
-        </div>
+        </div >
     );
 }

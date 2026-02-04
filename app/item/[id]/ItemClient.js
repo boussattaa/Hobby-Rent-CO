@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import DeleteButton from '@/components/DeleteButton';
 import ChatWindow from '@/components/ChatWindow';
+import ReviewList from '@/components/ReviewList';
 
 // Mock database (legacy/demo items)
 const ITEMS_DB = {
@@ -264,6 +265,8 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                 <div className="feature-item">⭐ 4.9 Star Equipment</div>
                 <div className="feature-item">✅ Verified Owner</div>
               </div>
+
+              <ReviewList itemId={item.id} />
 
 
 
