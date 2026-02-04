@@ -48,11 +48,17 @@ export default async function PublicProfilePage({ params }) {
     }
 
     // Get user's listings
-    const { data: listings } = await supabase
+    const { data: listings, error: listingsError } = await supabase
         .from('items')
         .select('id, name, daily_rate, images, category')
         .eq('owner_id', id)
         .order('created_at', { ascending: false });
+
+    console.log('Listings query result:', {
+        count: listings?.length,
+        listingsError,
+        ownerId: id
+    });
 
     const displayName = profile.first_name
         ? `${profile.first_name}${profile.last_name ? ' ' + profile.last_name.charAt(0) + '.' : ''}`
