@@ -28,7 +28,19 @@ export async function createListing(formData) {
         redirect('/verify')
     }
 
-    const locationStr = formData.get('location'); // Now likely a zip code
+    const city = formData.get('city');
+    const state = formData.get('state');
+    const zip = formData.get('zip');
+    let locationStr = formData.get('location'); // Old field backup
+
+    if (city && state && zip) {
+        locationStr = `${city}, ${state} ${zip}`;
+    } else if (zip) {
+        locationStr = zip;
+    }
+
+    // Fallback if user uses old form cache or something
+    if (!locationStr && !zip) locationStr = "Unknown Location";
     const coords = await geocodeLocation(locationStr);
 
     const publicSpecs = {};

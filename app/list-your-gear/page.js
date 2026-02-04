@@ -409,14 +409,54 @@ export default function ListYourGear() {
                   </div>
                   <div className="form-group">
                     <label style={{ fontSize: '0.9rem' }}>Storage Address</label>
-                    <input type="text" name="storage_address" placeholder="If different from pickup" />
+                    <input
+                      type="text"
+                      name="storage_address"
+                      placeholder="Street Address (e.g. 123 Trail Lane)"
+                      autoComplete="street-address"
+                    />
+                    <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                      🔒 This address is hidden from the public. It will only be revealed to renters after you approve their booking.
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Zip Code</label>
-                <input type="text" name="location" placeholder="e.g. 83646" required pattern="[0-9]*" />
+              <div className="form-group full">
+                <label>Location (Public)</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1rem' }}>
+                  <input
+                    type="text"
+                    name="city"
+                    placeholder="City"
+                    required
+                    autoComplete="address-level2"
+                  />
+                  <select name="state" required autoComplete="address-level1" style={{ fontSize: '1rem' }}>
+                    <option value="">State</option>
+                    <option value="AL">AL</option><option value="AK">AK</option><option value="AZ">AZ</option><option value="AR">AR</option>
+                    <option value="CA">CA</option><option value="CO">CO</option><option value="CT">CT</option><option value="DE">DE</option>
+                    <option value="FL">FL</option><option value="GA">GA</option><option value="HI">HI</option><option value="ID">ID</option>
+                    <option value="IL">IL</option><option value="IN">IN</option><option value="IA">IA</option><option value="KS">KS</option>
+                    <option value="KY">KY</option><option value="LA">LA</option><option value="ME">ME</option><option value="MD">MD</option>
+                    <option value="MA">MA</option><option value="MI">MI</option><option value="MN">MN</option><option value="MS">MS</option>
+                    <option value="MO">MO</option><option value="MT">MT</option><option value="NE">NE</option><option value="NV">NV</option>
+                    <option value="NH">NH</option><option value="NJ">NJ</option><option value="NM">NM</option><option value="NY">NY</option>
+                    <option value="NC">NC</option><option value="ND">ND</option><option value="OH">OH</option><option value="OK">OK</option>
+                    <option value="OR">OR</option><option value="PA">PA</option><option value="RI">RI</option><option value="SC">SC</option>
+                    <option value="SD">SD</option><option value="TN">TN</option><option value="TX">TX</option><option value="UT">UT</option>
+                    <option value="VT">VT</option><option value="VA">VA</option><option value="WA">WA</option><option value="WV">WV</option>
+                    <option value="WI">WI</option><option value="WY">WY</option>
+                  </select>
+                  <input
+                    type="text"
+                    name="zip"
+                    placeholder="Zip"
+                    required
+                    pattern="[0-9]*"
+                    autoComplete="postal-code"
+                  />
+                </div>
               </div>
 
               <div className="form-group full">
