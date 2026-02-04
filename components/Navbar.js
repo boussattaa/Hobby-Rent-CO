@@ -104,8 +104,9 @@ export default function Navbar({ user }) {
           <Image
             src="/images/logo-badge-v2.png"
             alt="HobbyRent Logo"
-            width={512}
-            height={512}
+            width={0}
+            height={0}
+            sizes="100vw"
             className="logo-img"
             priority
           />
@@ -276,26 +277,21 @@ export default function Navbar({ user }) {
           width: 100%;
         }
 
+        .logo {
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+        }
+
         .logo-img {
-          height: 48px; /* h-12 mobile */
           width: auto;
-          object-fit: contain;
+          height: 48px; /* Mobile height */
         }
 
         @media (min-width: 768px) {
           .logo-img {
-            height: 80px; /* h-20 desktop */
+            height: 80px; /* Desktop height */
           }
-        }
-
-        .logo {
-          font-size: 1.5rem;
-          font-weight: 800;
-          text-decoration: none;
-          color: var(--text-primary);
-          letter-spacing: -0.03em;
-          display: flex;
-          align-items: center;
         }
 
         .nav-links {
