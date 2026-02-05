@@ -45,7 +45,7 @@ export async function updateListing(formData) {
         lat: coords ? coords.lat : null,
         lng: coords ? coords.lng : null,
         image_url: formData.get('image_url'),
-        video_url: formData.get('video_url'),
+        video_url: formData.get('video_url') || null, // Optional - users can add walkaround video
         // New SEO Fields
         year: formData.get('year') ? parseInt(formData.get('year')) : null,
         make: formData.get('make'),

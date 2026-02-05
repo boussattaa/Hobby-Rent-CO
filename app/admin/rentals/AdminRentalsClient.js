@@ -1,8 +1,60 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 
-export default function AdminRentalsClient({ rentals }) {
+export default function AdminRentalsClient({ rentals: initialRentals }) {
+    const [rentals, setRentals] = useState(initialRentals);
+
+    const handleDelete = async (rentalId) => {
+        if (!confirm('Are you sure you want to delete this rental? This cannot be undone.')) return;
+
+        try {
+            const res = await fetch('/api/admin/delete-rental', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rentalId })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setRentals(prev => prev.filter(r => r.id !== rentalId));
+            } else {
+                alert(`Delete failed: ${data.error}`);
+            }
+        } catch (err) {
+            alert(`Error deleting: ${err.message}`);
+        }
+    };
+
+    const handleRefund = async (rental) => {
+        const confirmMsg = `Refund $${rental.total_price} to ${rental.renter?.email}?\n\nThis will cancel the rental and refund the full amount via Stripe.`;
+        if (!confirm(confirmMsg)) return;
+
+        try {
+            const res = await fetch('/api/admin/refund', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rentalId: rental.id })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert(`Refund successful! $${data.amountRefunded} refunded.\nRefund ID: ${data.refundId}`);
+                // Update local state to show cancelled
+                setRentals(prev => prev.map(r =>
+                    r.id === rental.id ? { ...r, status: 'cancelled', refunded: true } : r
+                ));
+            } else {
+                alert(`Refund failed: ${data.error}`);
+            }
+        } catch (err) {
+            alert(`Error processing refund: ${err.message}`);
+        }
+    };
+
     return (
         <div className="admin-rentals-page">
             <div className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -27,8 +79,8 @@ export default function AdminRentalsClient({ rentals }) {
                         {rentals?.map(rental => (
                             <tr key={rental.id}>
                                 <td>
-                                    <div style={{ fontWeight: 600 }}>{rental.items?.name || 'Unknown Item'}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>ID: {rental.item_id.split('-')[0]}...</div>
+                                    <div style={{ fontWeight: 600 }}>{rental.items?.name || rental.item_name || 'Deleted Item'}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>ID: {rental.item_id ? rental.item_id.split('-')[0] : 'N/A'}...</div>
                                 </td>
                                 <td>
                                     <div>{rental.renter?.email}</div>
@@ -57,9 +109,29 @@ export default function AdminRentalsClient({ rentals }) {
                                     <span className={`status-badge ${rental.status}`}>{rental.status === 'awaiting_payment' ? 'Pending Pay' : rental.status}</span>
                                 </td>
                                 <td>
-                                    <Link href={`/rentals/${rental.id}`} className="btn-view">
-                                        View
-                                    </Link>
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <Link href={`/rentals/${rental.id}`} className="btn-view">
+                                            View
+                                        </Link>
+                                        {rental.refunded ? (
+                                            <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>✓ Refunded</span>
+                                        ) : rental.status !== 'cancelled' && (
+                                            <button
+                                                onClick={() => handleRefund(rental)}
+                                                className="btn-refund"
+                                                title="Issue Refund"
+                                            >
+                                                💸 Refund
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => handleDelete(rental.id)}
+                                            className="btn-delete"
+                                            title="Delete Rental"
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -91,6 +163,7 @@ export default function AdminRentalsClient({ rentals }) {
             .status-badge.approved { background: #dcfce7; color: #16a34a; }
             .status-badge.active { background: #dbeafe; color: #2563eb; }
             .status-badge.completed { background: #f3f4f6; color: #4b5563; }
+            .status-badge.cancelled { background: #fef3c7; color: #d97706; }
 
             .btn-view {
                 text-decoration: none;
@@ -105,6 +178,33 @@ export default function AdminRentalsClient({ rentals }) {
                 background: #f8fafc;
                 border-color: #cbd5e1;
             }
+
+            .btn-delete {
+                background: transparent;
+                border: 1px solid #ef4444;
+                color: #ef4444;
+                padding: 0.25rem 0.5rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.8rem;
+            }
+            .btn-delete:hover {
+                background: #fef2f2;
+            }
+
+            .btn-refund {
+                background: #dbeafe;
+                border: 1px solid #3b82f6;
+                color: #1d4ed8;
+                padding: 0.25rem 0.5rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.75rem;
+                font-weight: 600;
+            }
+            .btn-refund:hover {
+                background: #bfdbfe;
+            }
             
             .count-badge {
                 background: var(--text-primary);
@@ -118,3 +218,4 @@ export default function AdminRentalsClient({ rentals }) {
         </div>
     );
 }
+

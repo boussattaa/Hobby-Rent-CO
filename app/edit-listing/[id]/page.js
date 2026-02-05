@@ -210,6 +210,7 @@ export default function EditListingPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setUploading(true);
+        setErrorMsg(null); // Clear any previous error
 
         const data = new FormData();
         data.append('itemId', params.id);
@@ -221,16 +222,29 @@ export default function EditListingPage() {
             }
         });
 
-        const result = await updateListing(data);
+        console.log('Submitting form data...');
 
-        if (result?.success) {
-            router.push(`/item/${result.itemId}`);
-        } else if (result?.message) {
-            setErrorMsg(result.message);
+        try {
+            const result = await updateListing(data);
+            console.log('updateListing result:', result);
+
+            if (result?.success) {
+                console.log('Success! Redirecting to:', `/item/${result.itemId}`);
+                router.push(`/item/${result.itemId}`);
+            } else if (result?.message) {
+                console.error('Error message from server:', result.message);
+                setErrorMsg(result.message);
+                setUploading(false);
+                window.scrollTo(0, 0);
+            } else {
+                console.log('No success or error message returned:', result);
+                setUploading(false);
+            }
+        } catch (err) {
+            console.error('Exception in handleSubmit:', err);
+            setErrorMsg('An unexpected error occurred: ' + err.message);
             setUploading(false);
             window.scrollTo(0, 0);
-        } else {
-            setUploading(false);
         }
     };
 
@@ -244,6 +258,19 @@ export default function EditListingPage() {
                         <h1>Edit Listing</h1>
                         <p>Update your equipment details.</p>
                     </div>
+
+                    {errorMsg && (
+                        <div style={{
+                            background: '#fef2f2',
+                            border: '1px solid #fecaca',
+                            color: '#dc2626',
+                            padding: '1rem',
+                            borderRadius: '8px',
+                            marginBottom: '1.5rem'
+                        }}>
+                            <strong>Error:</strong> {errorMsg}
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit}>
                         <div className="form-grid">
@@ -510,11 +537,39 @@ export default function EditListingPage() {
                                 <label>Photos</label>
                                 <div className="upload-box">
                                     {formData.image_url ? (
-                                        <img src={formData.image_url} alt="Preview" style={{ width: '100%', borderRadius: '8px', maxHeight: '300px', objectFit: 'cover' }} />
+                                        <div style={{ position: 'relative' }}>
+                                            <img src={formData.image_url} alt="Preview" style={{ width: '100%', borderRadius: '8px', maxHeight: '300px', objectFit: 'cover' }} />
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation(); // Prevent file input click
+                                                    setFormData({ ...formData, image_url: '' });
+                                                }}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: '10px',
+                                                    right: '10px',
+                                                    background: 'rgba(239, 68, 68, 0.9)',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '50%',
+                                                    width: '32px',
+                                                    height: '32px',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    zIndex: 20 // Above file input
+                                                }}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
                                     ) : (
                                         <span>Click to upload new image</span>
                                     )}
-                                    <input type="file" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
+                                    <input type="file" onChange={handleImageUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 10 }} />
                                 </div>
                             </div>
 
@@ -522,11 +577,39 @@ export default function EditListingPage() {
                                 <label>Walkaround Video</label>
                                 <div className="upload-box">
                                     {formData.video_url ? (
-                                        <video src={formData.video_url} controls style={{ width: '100%', borderRadius: '8px', maxHeight: '300px' }} />
+                                        <div style={{ position: 'relative' }}>
+                                            <video src={formData.video_url} controls style={{ width: '100%', borderRadius: '8px', maxHeight: '300px' }} />
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setFormData({ ...formData, video_url: '' });
+                                                }}
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: '10px',
+                                                    right: '10px',
+                                                    background: 'rgba(239, 68, 68, 0.9)',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '50%',
+                                                    width: '32px',
+                                                    height: '32px',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    zIndex: 20
+                                                }}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
                                     ) : (
                                         <span>Click to upload video</span>
                                     )}
-                                    <input type="file" accept="video/*" onChange={handleVideoUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
+                                    <input type="file" accept="video/*" onChange={handleVideoUpload} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 10 }} />
                                 </div>
                             </div>
                         </div>

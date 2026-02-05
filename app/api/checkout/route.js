@@ -32,7 +32,7 @@ export async function POST(request) {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("User not logged in");
 
-            const { data: item } = await supabase.from('items').select('owner_id').eq('id', itemId).single();
+            const { data: item } = await supabase.from('items').select('owner_id, name').eq('id', itemId).single();
             if (!item) throw new Error("Item not found");
 
             // 2. Create Rental Record
@@ -40,6 +40,7 @@ export async function POST(request) {
             const isHourly = startDate && startDate.includes('T');
             const newRentalData = {
                 item_id: itemId,
+                item_name: item.name, // Preserve item name for historical records
                 renter_id: user.id,
                 owner_id: item.owner_id,
                 total_price: price + 15 + (addProtection ? 20 : 0),

@@ -448,6 +448,20 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
 
                 {bookingMode === 'hourly' && (
                   <div className="time-picker-mock">
+                    {/* Minimum Duration Notice */}
+                    <div style={{
+                      background: '#fef3c7',
+                      border: '1px solid #fcd34d',
+                      borderRadius: '8px',
+                      padding: '0.75rem',
+                      marginBottom: '1rem',
+                      fontSize: '0.9rem',
+                      color: '#92400e',
+                      textAlign: 'center'
+                    }}>
+                      ⏱️ <strong>{item.min_duration || 4} hour minimum</strong> required
+                    </div>
+
                     <div className="form-group" style={{ marginBottom: '1rem' }}>
                       <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: 4 }}>Date</label>
                       <input
@@ -463,11 +477,33 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                         <label>Start Time</label>
                         <select
                           value={startTime}
-                          onChange={(e) => setStartTime(e.target.value)}
+                          onChange={(e) => {
+                            const newStartTime = e.target.value;
+                            setStartTime(newStartTime);
+
+                            // Auto-calculate minimum end time
+                            if (newStartTime) {
+                              const minDuration = item.min_duration || 4;
+                              const [startHour, startMin] = newStartTime.split(':').map(Number);
+                              let endHour = startHour + minDuration;
+
+                              // Cap at 22:00 (10 PM)
+                              if (endHour > 22) endHour = 22;
+
+                              const newEndTime = `${endHour < 10 ? '0' : ''}${endHour}:${startMin === 0 ? '00' : '30'}`;
+                              setEndTime(newEndTime);
+                              setAvailabilityError('');
+                            }
+                          }}
                           style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '6px' }}
                         >
                           <option value="">Select</option>
-                          {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                          {timeOptions.filter(t => {
+                            // Filter out times that wouldn't allow minimum duration
+                            const [hour] = t.split(':').map(Number);
+                            const minDuration = item.min_duration || 4;
+                            return hour + minDuration <= 22; // Must end by 10 PM
+                          }).map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </div>
                       <div className="date-field">
@@ -475,14 +511,41 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                         <select
                           value={endTime}
                           onChange={(e) => {
-                            setEndTime(e.target.value);
-                            if (startTime && e.target.value <= startTime) setAvailabilityError('End time must be after start time');
-                            else setAvailabilityError('');
+                            const newEndTime = e.target.value;
+                            setEndTime(newEndTime);
+
+                            // Validate minimum duration
+                            if (startTime && newEndTime) {
+                              const [startH, startM] = startTime.split(':').map(Number);
+                              const [endH, endM] = newEndTime.split(':').map(Number);
+                              const startMinutes = startH * 60 + startM;
+                              const endMinutes = endH * 60 + endM;
+                              const durationHours = (endMinutes - startMinutes) / 60;
+                              const minDuration = item.min_duration || 4;
+
+                              if (durationHours < minDuration) {
+                                setAvailabilityError(`Minimum booking is ${minDuration} hours`);
+                              } else if (endMinutes <= startMinutes) {
+                                setAvailabilityError('End time must be after start time');
+                              } else {
+                                setAvailabilityError('');
+                              }
+                            }
                           }}
                           style={{ width: '100%', padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '6px' }}
                         >
                           <option value="">Select</option>
-                          {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                          {timeOptions.filter(t => {
+                            if (!startTime) return true;
+                            // Only show times that are after start time
+                            const [startH, startM] = startTime.split(':').map(Number);
+                            const [optH, optM] = t.split(':').map(Number);
+                            const startMinutes = startH * 60 + startM;
+                            const optMinutes = optH * 60 + optM;
+                            const minDuration = item.min_duration || 4;
+                            // Must be at least min_duration hours after start
+                            return optMinutes >= startMinutes + (minDuration * 60);
+                          }).map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
                       </div>
                     </div>

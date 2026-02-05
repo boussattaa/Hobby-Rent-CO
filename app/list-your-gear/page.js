@@ -210,6 +210,23 @@ export default function ListYourGear() {
   const [videoUrl, setVideoUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('offroad');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
+
+  // Define which subcategories have engines/motors
+  const NON_MOTORIZED_ITEMS = [
+    'Kayaks (Single & Tandem)',
+    'Stand-Up Paddleboards (SUP)',
+    'Canoes',
+    'Pedal Boats',
+    'Wakeboards',
+    'Water Skis',
+    'Towable Tubes',
+    'Floating Mats/Lilies'
+  ];
+
+  // Items that don't need Year field (non-motorized water + most tools)
+  const isNonMotorized = NON_MOTORIZED_ITEMS.includes(selectedSubcategory);
+  const skipYearField = isNonMotorized || selectedCategory === 'housing';
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -345,7 +362,10 @@ export default function ListYourGear() {
                 <select
                   name="category"
                   value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    setSelectedSubcategory(''); // Reset subcategory when category changes
+                  }}
                 >
                   <option value="offroad">Offroad</option>
                   <option value="water">Watersports</option>
@@ -356,7 +376,12 @@ export default function ListYourGear() {
 
               <div className="form-group">
                 <label>Subcategory</label>
-                <select name="subcategory" required>
+                <select
+                  name="subcategory"
+                  required
+                  value={selectedSubcategory}
+                  onChange={(e) => setSelectedSubcategory(e.target.value)}
+                >
                   <option value="">Select a type...</option>
                   {CATEGORY_DATA[selectedCategory]?.map((group) => (
                     <optgroup key={group.group} label={group.group}>
@@ -370,10 +395,12 @@ export default function ListYourGear() {
 
 
               <div className="form-group full">
-                <label>Year, Make, & Model (Required)</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                  <input type="number" name="year" placeholder="Year" required />
-                  <input type="text" name="make" placeholder="Make" required />
+                <label>{skipYearField ? 'Brand & Model' : 'Year, Make, & Model (Required)'}</label>
+                <div style={{ display: 'grid', gridTemplateColumns: skipYearField ? '1fr 1fr' : '1fr 1fr 1fr', gap: '1rem' }}>
+                  {!skipYearField && (
+                    <input type="number" name="year" placeholder="Year" required />
+                  )}
+                  <input type="text" name="make" placeholder={skipYearField ? 'Brand (e.g. DeWalt, Honda)' : 'Make'} required />
                   <input type="text" name="model" placeholder="Model" required />
                 </div>
               </div>
@@ -398,20 +425,40 @@ export default function ListYourGear() {
               {/* ... Water and Trailer sections remain same ... */}
               {selectedCategory === 'water' && (
                 <div className="form-group full">
-                  <label>Watercraft Specs</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                    <input type="number" placeholder="Passenger Capacity" onChange={(e) => {
+                  <label>{isNonMotorized ? 'Equipment Specs' : 'Watercraft Specs'}</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: isNonMotorized ? '1fr 1fr' : '1fr 1fr 1fr', gap: '1rem' }}>
+                    <input type="number" placeholder="Capacity (people)" onChange={(e) => {
                       const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), capacity: e.target.value };
                       document.getElementsByName('specs')[0].value = JSON.stringify(specs);
                     }} />
-                    <input type="text" placeholder="Horsepower" onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), horsepower: e.target.value };
-                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                    }} />
-                    <input type="text" placeholder="Ball Hitch Size (if trailer incl.)" onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), hitch_size: e.target.value };
-                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                    }} />
+
+                    {isNonMotorized ? (
+                      <>
+                        <input type="text" placeholder="Length (ft)" onChange={(e) => {
+                          const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), length: e.target.value };
+                          document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                        }} />
+                        <input type="text" placeholder="Weight (lbs)" onChange={(e) => {
+                          const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), weight: e.target.value };
+                          document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                        }} />
+                        <input type="text" placeholder="Material (e.g. Plastic, Inflatable)" onChange={(e) => {
+                          const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), material: e.target.value };
+                          document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                        }} />
+                      </>
+                    ) : (
+                      <>
+                        <input type="text" placeholder="Horsepower" onChange={(e) => {
+                          const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), horsepower: e.target.value };
+                          document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                        }} />
+                        <input type="text" placeholder="Ball Hitch Size (if trailer incl.)" onChange={(e) => {
+                          const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), hitch_size: e.target.value };
+                          document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                        }} />
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -426,6 +473,33 @@ export default function ListYourGear() {
                     }} />
                     <input type="text" placeholder="Ball Hitch Size (e.g. 2 inch)" onChange={(e) => {
                       const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), hitch_size: e.target.value };
+                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                    }} />
+                  </div>
+                </div>
+              )}
+
+              {selectedCategory === 'housing' && (
+                <div className="form-group full">
+                  <label>Tool/Equipment Specs</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                    <select onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), power_source: e.target.value };
+                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                    }}>
+                      <option value="">Power Source</option>
+                      <option value="Gas">Gas</option>
+                      <option value="Electric (Corded)">Electric (Corded)</option>
+                      <option value="Electric (Battery)">Electric (Battery)</option>
+                      <option value="Diesel">Diesel</option>
+                      <option value="Manual">Manual/Hand-Powered</option>
+                    </select>
+                    <input type="text" placeholder="Weight (lbs)" onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), weight: e.target.value };
+                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
+                    }} />
+                    <input type="text" placeholder="Power Requirements (e.g. 120V, 240V)" onChange={(e) => {
+                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), power_requirements: e.target.value };
                       document.getElementsByName('specs')[0].value = JSON.stringify(specs);
                     }} />
                   </div>

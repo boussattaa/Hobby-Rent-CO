@@ -71,18 +71,16 @@ export default function RentalDetailsPage({ params }) {
             }
 
             // Securely Fetch Private Address (For Renter Only)
-            if (isUserRenter && (enrichedRental.status === 'approved' || enrichedRental.status === 'active')) {
-                console.log("Attempting to fetch private details for item:", enrichedRental.item_id);
+            if (isUserRenter && enrichedRental.item_id && (enrichedRental.status === 'approved' || enrichedRental.status === 'active')) {
                 const { data: privateData, error: privateError } = await supabase
                     .from('item_private_details')
                     .select('storage_address, emergency_contact')
                     .eq('item_id', enrichedRental.item_id)
                     .single();
 
-                if (privateError) {
+                // Only log actual errors, not "no rows found" (PGRST116)
+                if (privateError && privateError.code !== 'PGRST116') {
                     console.error("Error fetching private details:", privateError);
-                } else {
-                    console.log("Private details found:", privateData);
                 }
 
                 if (privateData) {

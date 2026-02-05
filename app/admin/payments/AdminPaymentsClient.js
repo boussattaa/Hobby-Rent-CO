@@ -5,6 +5,8 @@ import { useState } from 'react';
 export default function AdminPaymentsClient({ pendingPayouts, upcomingPayouts, paidPayouts }) {
     const [processing, setProcessing] = useState({});
     const [payouts, setPayouts] = useState(pendingPayouts);
+    const [upcoming, setUpcoming] = useState(upcomingPayouts);
+    const [history, setHistory] = useState(paidPayouts);
 
     const handlePayout = async (rental) => {
         if (processing[rental.id]) return;
@@ -34,12 +36,55 @@ export default function AdminPaymentsClient({ pendingPayouts, upcomingPayouts, p
         }
     };
 
+    const handleDelete = async (rentalId, type) => {
+        if (!confirm('Are you sure you want to delete this Record? This cannot be undone.')) return;
+
+        try {
+            const res = await fetch('/api/admin/delete-rental', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rentalId })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                if (type === 'upcoming') setUpcoming(prev => prev.filter(r => r.id !== rentalId));
+                if (type === 'pending') setPayouts(prev => prev.filter(r => r.id !== rentalId));
+                if (type === 'history') setHistory(prev => prev.filter(r => r.id !== rentalId));
+            } else {
+                alert(`Delete failed: ${data.error}`);
+            }
+        } catch (err) {
+            alert(`Error deleting: ${err.message}`);
+        }
+    };
+
     const formatCurrency = (cents) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD'
         }).format(cents / 100);
     };
+
+    const DeleteButton = ({ id, type }) => (
+        <button
+            onClick={() => handleDelete(id, type)}
+            style={{
+                background: 'transparent',
+                border: '1px solid #ef4444',
+                color: '#ef4444',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                marginLeft: '10px',
+                fontSize: '0.8rem'
+            }}
+            title="Delete Record"
+        >
+            🗑️
+        </button>
+    );
 
     return (
         <div className="admin-payments-page">
@@ -51,7 +96,7 @@ export default function AdminPaymentsClient({ pendingPayouts, upcomingPayouts, p
             {/* Upcoming Payouts Section (Approved/Active) */}
             <section className="section">
                 <h2>Upcoming Payouts (Active Rentals)</h2>
-                {upcomingPayouts.length === 0 ? (
+                {upcoming.length === 0 ? (
                     <div className="empty-state">
                         <p>No active rentals awaiting completion.</p>
                     </div>
@@ -65,15 +110,16 @@ export default function AdminPaymentsClient({ pendingPayouts, upcomingPayouts, p
                                     <th>Total Amount</th>
                                     <th>Estimated Payout</th>
                                     <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {upcomingPayouts.map(rental => {
+                                {upcoming.map(rental => {
                                     const ownerPayout = Math.round(rental.total_price * 0.85); // 85% to owner
                                     return (
                                         <tr key={rental.id}>
                                             <td>
-                                                <strong>{rental.items?.name || 'Unknown Item'}</strong>
+                                                <strong>{rental.items?.name || rental.item_name || 'Deleted Item'}</strong>
                                             </td>
                                             <td>
                                                 {new Date(rental.start_date).toLocaleDateString()} - {new Date(rental.end_date).toLocaleDateString()}
@@ -86,6 +132,9 @@ export default function AdminPaymentsClient({ pendingPayouts, upcomingPayouts, p
                                                 <span className={`badge ${rental.status}`} style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 700, padding: '0.25rem 0.75rem', borderRadius: '50px', background: '#dbeafe', color: '#2563eb' }}>
                                                     {rental.status}
                                                 </span>
+                                            </td>
+                                            <td>
+                                                <DeleteButton id={rental.id} type="upcoming" />
                                             </td>
                                         </tr>
                                     );
@@ -121,7 +170,7 @@ export default function AdminPaymentsClient({ pendingPayouts, upcomingPayouts, p
                                     return (
                                         <tr key={rental.id}>
                                             <td>
-                                                <strong>{rental.items?.name || 'Unknown Item'}</strong>
+                                                <strong>{rental.items?.name || rental.item_name || 'Deleted Item'}</strong>
                                             </td>
                                             <td>
                                                 {new Date(rental.start_date).toLocaleDateString()} - {new Date(rental.end_date).toLocaleDateString()}
@@ -139,6 +188,7 @@ export default function AdminPaymentsClient({ pendingPayouts, upcomingPayouts, p
                                                 >
                                                     {processing[rental.id] ? 'Processing...' : '💸 Send Payout'}
                                                 </button>
+                                                <DeleteButton id={rental.id} type="pending" />
                                             </td>
                                         </tr>
                                     );
@@ -152,7 +202,7 @@ export default function AdminPaymentsClient({ pendingPayouts, upcomingPayouts, p
             {/* Payout History Section */}
             <section className="section">
                 <h2>Payout History</h2>
-                {paidPayouts.length === 0 ? (
+                {history.length === 0 ? (
                     <div className="empty-state">
                         <p>No payout history yet.</p>
                     </div>
@@ -165,19 +215,23 @@ export default function AdminPaymentsClient({ pendingPayouts, upcomingPayouts, p
                                     <th>Rental Dates</th>
                                     <th>Amount Paid</th>
                                     <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {paidPayouts.map(rental => {
+                                {history.map(rental => {
                                     const ownerPayout = Math.round(rental.total_price * 0.85);
                                     return (
                                         <tr key={rental.id}>
-                                            <td>{rental.items?.name || 'Unknown Item'}</td>
+                                            <td>{rental.items?.name || rental.item_name || 'Deleted Item'}</td>
                                             <td>
                                                 {new Date(rental.start_date).toLocaleDateString()} - {new Date(rental.end_date).toLocaleDateString()}
                                             </td>
                                             <td>{formatCurrency(ownerPayout)}</td>
                                             <td><span className="badge paid">✓ Paid</span></td>
+                                            <td>
+                                                <DeleteButton id={rental.id} type="history" />
+                                            </td>
                                         </tr>
                                     );
                                 })}

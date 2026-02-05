@@ -23,10 +23,13 @@ export async function POST(request) {
             return NextResponse.json({ error: 'No rental ID in metadata' }, { status: 400 });
         }
 
-        // 2. Update Rental Status
+        // 2. Update Rental Status and save payment intent for refunds
         const { error } = await supabase
             .from('rentals')
-            .update({ status: 'approved' })
+            .update({
+                status: 'approved',
+                stripe_payment_intent_id: session.payment_intent // Save for refunds
+            })
             .eq('id', rentalId);
 
         if (error) throw error;
