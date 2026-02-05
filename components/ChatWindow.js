@@ -67,10 +67,18 @@ export default function ChatWindow({ currentUser, receiverId, receiverName, rece
         e.preventDefault();
         if (!newMessage.trim() || !currentUser) return;
 
+        // Logic to determine rental_id: Prop > Last Message Context > Null
+        let effectiveRentalId = rentalId;
+        if (!effectiveRentalId && messages.length > 0) {
+            // Find the last message that had a rental_id
+            const lastContextMsg = [...messages].reverse().find(m => m.rental_id);
+            if (lastContextMsg) effectiveRentalId = lastContextMsg.rental_id;
+        }
+
         const msg = {
             sender_id: currentUser.id,
             receiver_id: receiverId,
-            rental_id: rentalId || null,
+            rental_id: effectiveRentalId || null,
             content: newMessage.trim(),
         };
 
