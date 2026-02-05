@@ -22,88 +22,104 @@ export default function InboxClient({ currentUser, messages: initialMessages }) 
                 table: 'messages',
                 filter: `receiver_id=eq.${currentUser.id}`
             }, async (payload) => {
-                // Fetch full message with sender details
-                const { data, error } = await supabase
+                // Fetch full message
+                const { data: message, error } = await supabase
                     .from('messages')
-                    .select('*, sender:sender_id(email), receiver:receiver_id(email)')
+                    .select('*')
                     .eq('id', payload.new.id)
                     .single();
 
-                if (data) {
-                    setMessages(prev => [data, ...prev]);
+                if (message) {
+                    // Fetch sender/receiver manually
+                    const { data: sender } = await supabase.from('profiles').select('email, first_name').eq('id', message.sender_id).single();
+                    const { data: receiver } = await supabase.from('profiles').select('email, first_name').eq('id', message.receiver_id).single();
+
+                    const enrichedMessage = {
+                        ...message,
+                        sender: sender || { email: 'Unknown' },
+                        receiver: receiver || { email: 'Unknown' }
+                    };
+
+                    setMessages(prev => [enrichedMessage, ...prev]);
                 }
             })
-            .subscribe();
 
-        return () => {
-            supabase.removeChannel(channel);
+
+        if (data) {
+            setMessages(prev => [data, ...prev]);
+        }
+    })
+        .subscribe();
+
+    return () => {
+        supabase.removeChannel(channel);
+    };
+}, [currentUser.id, supabase]);
+
+// Group messages by the "other" person
+const conversations = {};
+messages.forEach(msg => {
+    const otherId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
+    const otherEmail = msg.sender_id === currentUser.id ? msg.receiver?.email : msg.sender?.email;
+
+    if (!conversations[otherId]) {
+        conversations[otherId] = {
+            userId: otherId,
+            email: otherEmail || 'Unknown User',
+            lastMessage: msg,
+            unreadCount: 0
         };
-    }, [currentUser.id, supabase]);
+    }
+    // Since messages are ordered by date desc, the first one we see is the latest
+    // (if the query was ordered correct, which it was)
 
-    // Group messages by the "other" person
-    const conversations = {};
-    messages.forEach(msg => {
-        const otherId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
-        const otherEmail = msg.sender_id === currentUser.id ? msg.receiver?.email : msg.sender?.email;
+    // Count unread (only if I am receiver)
+    if (msg.receiver_id === currentUser.id && !msg.is_read) {
+        conversations[otherId].unreadCount++;
+    }
+});
 
-        if (!conversations[otherId]) {
-            conversations[otherId] = {
-                userId: otherId,
-                email: otherEmail || 'Unknown User',
-                lastMessage: msg,
-                unreadCount: 0
-            };
-        }
-        // Since messages are ordered by date desc, the first one we see is the latest
-        // (if the query was ordered correct, which it was)
+const conversationList = Object.values(conversations).sort((a, b) =>
+    new Date(b.lastMessage.created_at) - new Date(a.lastMessage.created_at)
+);
 
-        // Count unread (only if I am receiver)
-        if (msg.receiver_id === currentUser.id && !msg.is_read) {
-            conversations[otherId].unreadCount++;
-        }
-    });
-
-    const conversationList = Object.values(conversations).sort((a, b) =>
-        new Date(b.lastMessage.created_at) - new Date(a.lastMessage.created_at)
-    );
-
-    return (
-        <div className="inbox-container">
-            {conversationList.length === 0 ? (
-                <div className="empty-state">
-                    <p>No messages yet.</p>
-                </div>
-            ) : (
-                <div className="conversation-list">
-                    {conversationList.map(convo => (
-                        <div key={convo.userId} className="convo-card" onClick={() => setSelectedChat(convo)}>
-                            <div className="avatar">{convo.email[0].toUpperCase()}</div>
-                            <div className="convo-details">
-                                <div className="convo-header">
-                                    <h3>{convo.email}</h3>
-                                    <span className="date">{new Date(convo.lastMessage.created_at).toLocaleDateString()}</span>
-                                </div>
-                                <p className="last-message">
-                                    {convo.lastMessage.sender_id === currentUser.id && 'You: '}
-                                    {convo.lastMessage.content}
-                                </p>
+return (
+    <div className="inbox-container">
+        {conversationList.length === 0 ? (
+            <div className="empty-state">
+                <p>No messages yet.</p>
+            </div>
+        ) : (
+            <div className="conversation-list">
+                {conversationList.map(convo => (
+                    <div key={convo.userId} className="convo-card" onClick={() => setSelectedChat(convo)}>
+                        <div className="avatar">{convo.email[0].toUpperCase()}</div>
+                        <div className="convo-details">
+                            <div className="convo-header">
+                                <h3>{convo.email}</h3>
+                                <span className="date">{new Date(convo.lastMessage.created_at).toLocaleDateString()}</span>
                             </div>
-                            {convo.unreadCount > 0 && <span className="unread-badge">{convo.unreadCount}</span>}
+                            <p className="last-message">
+                                {convo.lastMessage.sender_id === currentUser.id && 'You: '}
+                                {convo.lastMessage.content}
+                            </p>
                         </div>
-                    ))}
-                </div>
-            )}
+                        {convo.unreadCount > 0 && <span className="unread-badge">{convo.unreadCount}</span>}
+                    </div>
+                ))}
+            </div>
+        )}
 
-            <ChatWindow
-                currentUser={currentUser}
-                receiverId={selectedChat?.userId}
-                receiverName={selectedChat?.email}
-                receiverEmail={selectedChat?.email}
-                isOpen={!!selectedChat}
-                onClose={() => setSelectedChat(null)}
-            />
+        <ChatWindow
+            currentUser={currentUser}
+            receiverId={selectedChat?.userId}
+            receiverName={selectedChat?.email}
+            receiverEmail={selectedChat?.email}
+            isOpen={!!selectedChat}
+            onClose={() => setSelectedChat(null)}
+        />
 
-            <style jsx>{`
+        <style jsx>{`
                 .inbox-container {
                     max-width: 800px;
                     margin: 0 auto;
@@ -175,6 +191,6 @@ export default function InboxClient({ currentUser, messages: initialMessages }) 
                     padding: 4rem;
                 }
             `}</style>
-        </div>
-    );
+    </div>
+);
 }
