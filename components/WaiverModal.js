@@ -3,77 +3,77 @@
 import { useState } from 'react';
 
 export default function WaiverModal({ isOpen, onClose, onSign, waiverUrl }) {
-    const [signature, setSignature] = useState('');
-    const [agreed, setAgreed] = useState(false);
-    const [isSigning, setIsSigning] = useState(false);
+  const [signature, setSignature] = useState('');
+  const [agreed, setAgreed] = useState(false);
+  const [isSigning, setIsSigning] = useState(false);
 
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    const handleSign = async () => {
-        if (!signature || !agreed) return;
+  const handleSign = async () => {
+    if (!signature || !agreed) return;
 
-        setIsSigning(true);
-        // Simulate API call or just return success
-        await new Promise(r => setTimeout(r, 1000));
+    setIsSigning(true);
+    // Simulate API call or just return success
+    await new Promise(r => setTimeout(r, 1000));
 
-        onSign({ signature, date: new Date().toISOString() });
-        setIsSigning(false);
-    };
+    onSign({ signature, date: new Date().toISOString() });
+    setIsSigning(false);
+  };
 
-    return (
-        <div className="modal-overlay">
-            <div className="modal-content glass">
-                <h2>Rental Agreement & Liability Waiver</h2>
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content glass">
+        <h2>Rental Agreement & Liability Waiver</h2>
 
-                <div className="waiver-scroll-area">
-                    <p><strong>1. LIABILITY WAIVER</strong></p>
-                    <p>By renting this item, I acknowledge that using it involves inherent risks. I assume all responsibility for any injury, damage, or loss that may occur during the rental period.</p>
+        <div className="waiver-scroll-area">
+          <p><strong>1. LIABILITY WAIVER</strong></p>
+          <p>By renting this item, I VOLUNTARILY ASSUME ALL RISKS OF ACCIDENT, INJURY, DEATH, OR PROPERTY DAMAGE. I understand that off-road vehicles and heavy machinery are inherently dangerous.</p>
 
-                    <p><strong>2. DAMAGE POLICY</strong></p>
-                    <p>I agree to return the item in the same condition as received. I authorize HobbyRent to charge my payment method for any damages or cleaning fees.</p>
+          <p><strong>2. DAMAGE POLICY</strong></p>
+          <p>I agree to return the item in the same condition as received. I authorize HobbyRent to charge my payment method for any damages, theft, or cleaning fees verified by the Owner.</p>
 
-                    <p><strong>3. RETURN POLICY</strong></p>
-                    <p>Items must be returned by the agreed-upon date and time. Late returns will incur additional daily fees.</p>
+          <p><strong>3. INDEMNIFICATION</strong></p>
+          <p>I agree to defend, indemnify, and hold harmless HobbyRent and the Owner from any claims arising from my use of the equipment.</p>
 
-                    {waiverUrl && (
-                        <p><a href={waiverUrl} target="_blank" rel="noreferrer">View Full Contract PDF</a></p>
-                    )}
-                </div>
+          {waiverUrl && (
+            <p><a href={waiverUrl} target="_blank" rel="noreferrer">View Full Contract PDF</a></p>
+          )}
+        </div>
 
-                <div className="signing-area">
-                    <label className="checkbox-label">
-                        <input
-                            type="checkbox"
-                            checked={agreed}
-                            onChange={(e) => setAgreed(e.target.checked)}
-                        />
-                        I have read and agree to the terms above.
-                    </label>
+        <div className="signing-area">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+            />
+            I have read and agree to the terms above.
+          </label>
 
-                    <div className="signature-input">
-                        <label>Type your full name to sign:</label>
-                        <input
-                            type="text"
-                            placeholder="e.g. John Doe"
-                            value={signature}
-                            onChange={(e) => setSignature(e.target.value)}
-                        />
-                    </div>
-                </div>
+          <div className="signature-input">
+            <label>Type your full name to sign:</label>
+            <input
+              type="text"
+              placeholder="e.g. John Doe"
+              value={signature}
+              onChange={(e) => setSignature(e.target.value)}
+            />
+          </div>
+        </div>
 
-                <div className="modal-actions">
-                    <button className="btn btn-secondary" onClick={onClose} disabled={isSigning}>Cancel</button>
-                    <button
-                        className="btn btn-primary"
-                        onClick={handleSign}
-                        disabled={!agreed || signature.length < 3 || isSigning}
-                    >
-                        {isSigning ? 'Signing...' : 'Sign & Confirm'}
-                    </button>
-                </div>
-            </div>
+        <div className="modal-actions">
+          <button className="btn btn-secondary" onClick={onClose} disabled={isSigning}>Cancel</button>
+          <button
+            className="btn btn-primary"
+            onClick={handleSign}
+            disabled={!agreed || signature.length < 3 || isSigning}
+          >
+            {isSigning ? 'Signing...' : 'Sign & Confirm'}
+          </button>
+        </div>
+      </div>
 
-            <style jsx>{`
+      <style jsx>{`
         .modal-overlay {
           position: fixed;
           inset: 0;
@@ -138,6 +138,6 @@ export default function WaiverModal({ isOpen, onClose, onSign, waiverUrl }) {
           margin-top: 0.5rem;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

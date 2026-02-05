@@ -31,6 +31,16 @@ export default function RentalDetailsPage({ params }) {
             }
             setCurrentUser(user);
 
+            setCurrentUser(user);
+
+            // Validate UUID
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                setError("Invalid rental ID.");
+                setLoading(false);
+                return;
+            }
+
             // 1. Fetch Rental Basic Data
             const { data: rentalData, error: rentalError } = await supabase
                 .from('rentals')

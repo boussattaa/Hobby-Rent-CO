@@ -11,7 +11,7 @@ export async function POST(request) {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     try {
-        const { itemId, price, name, addProtection, startDate, endDate, rentalId } = await request.json();
+        const { itemId, price, name, protectionPlan, protectionFee, startDate, endDate, rentalId, waiverSignature } = await request.json();
         const supabase = await createClient();
 
         let rental;
@@ -43,8 +43,12 @@ export async function POST(request) {
                 item_name: item.name, // Preserve item name for historical records
                 renter_id: user.id,
                 owner_id: item.owner_id,
-                total_price: price + 15 + (addProtection ? 20 : 0),
-                status: 'pending' // Default to pending
+                total_price: price + 15 + (protectionFee || 0),
+                status: 'pending', // Default to pending
+                waiver_signed: !!waiverSignature,
+                waiver_signature: waiverSignature || null,
+                protection_plan_level: protectionPlan || 'basic',
+                protection_fee: protectionFee || 0
             };
 
             if (isHourly) {
@@ -100,15 +104,17 @@ export async function POST(request) {
             }
         ];
 
-        if (addProtection) {
+        if (protectionFee > 0) {
             line_items.push({
                 price_data: {
                     currency: 'usd',
                     product_data: {
-                        name: 'Damage Protection Plan',
-                        description: 'Coverage for accidental damage up to $5,000'
+                        name: `Protection Plan (${protectionPlan})`,
+                        description: protectionPlan === 'premier'
+                            ? '$0 Deductible, $1,500 max out of pocket'
+                            : 'Standard Protection Plan'
                     },
-                    unit_amount: 2000, // $20.00
+                    unit_amount: Math.round(protectionFee * 100),
                 },
                 quantity: 1,
             });

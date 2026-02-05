@@ -4,11 +4,13 @@ import { createClient } from '@/utils/supabase/client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import WaiverModal from '@/components/WaiverModal';
 
 export default function RentalsPage() {
     const supabase = createClient();
     const [rentals, setRentals] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [signingRental, setSigningRental] = useState(null);
 
     useEffect(() => {
         const fetchRentals = async () => {
@@ -34,6 +36,32 @@ export default function RentalsPage() {
 
         fetchRentals();
     }, []);
+
+    const handleWaiverSigned = async (signatureData) => {
+        if (!signingRental) return;
+
+        try {
+            const { error } = await supabase
+                .from('rentals')
+                .update({
+                    waiver_signed: true,
+                    waiver_signature: signatureData
+                })
+                .eq('id', signingRental.id);
+
+            if (error) throw error;
+
+            // Update local state
+            setRentals(prev => prev.map(r =>
+                r.id === signingRental.id ? { ...r, waiver_signed: true } : r
+            ));
+            setSigningRental(null);
+            alert("Waiver signed successfully!");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to save waiver signature.");
+        }
+    };
 
     if (loading) return <div className="container" style={{ padding: '4rem' }}>Loading rentals...</div>;
 
@@ -80,9 +108,25 @@ export default function RentalsPage() {
                                         </Link>
 
                                         {rental.status === 'approved' && (
-                                            <Link href={`/rentals/${rental.id}/inspection`} className="btn btn-primary full-width">
-                                                Start Pickup Inspection
-                                            </Link>
+                                            <>
+                                                <Link href={`/rentals/${rental.id}/inspection`} className="btn btn-primary full-width">
+                                                    Start Pickup Inspection
+                                                </Link>
+                                                {!rental.waiver_signed && (
+                                                    <button
+                                                        onClick={() => setSigningRental(rental)}
+                                                        className="btn full-width"
+                                                        style={{
+                                                            marginTop: '0.5rem',
+                                                            background: '#fee2e2',
+                                                            color: '#b91c1c',
+                                                            border: '1px solid #fca5a5'
+                                                        }}
+                                                    >
+                                                        ⚠️ Sign Liability Waiver
+                                                    </button>
+                                                )}
+                                            </>
                                         )}
                                         {rental.status === 'active' && (
                                             <Link href={`/rentals/${rental.id}/inspection`} className="btn btn-secondary full-width">
@@ -99,6 +143,14 @@ export default function RentalsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Waiver Modal */}
+            <WaiverModal
+                isOpen={!!signingRental}
+                onClose={() => setSigningRental(null)}
+                onSign={handleWaiverSigned}
+                waiverUrl="/terms"
+            />
 
             <style jsx>{`
         .rentals-page { padding: 4rem 0; min-height: 80vh; }
@@ -143,6 +195,21 @@ export default function RentalsPage() {
         
         .btn-disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; border: none; }
         .full-width { width: 100%; text-align: center; display: block; }
+
+        .waiver-badge {
+            display: inline-block;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+        .waiver-badge.signed {
+            background: #dcfce7;
+            color: #166534;
+        }
       `}</style>
         </div>
     );

@@ -1,0 +1,3 @@
+ALTER TABLE rentals 
+ADD COLUMN IF NOT EXISTS protection_plan_level TEXT DEFAULT 'basic',
+ADD COLUMN IF NOT EXISTS protection_fee NUMERIC DEFAULT 0;

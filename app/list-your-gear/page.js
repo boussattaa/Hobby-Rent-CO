@@ -660,40 +660,24 @@ export default function ListYourGear() {
                 <div className="host-terms-box">
                   <div className="term-item">
                     <h5>1. Safety & Legality</h5>
-                    <p>Condition: You commit to providing a vehicle/item that is safe, legally registered, insured, and in good mechanical condition.</p>
-                    <p>Ownership: You must own the item or have explicit legal authority to share it for compensation.</p>
-                    <p>Clean Title: You generally cannot list vehicles with "salvage," "branded," or "written off" titles.</p>
-                    <p>Recalls: You must not list any vehicle subject to an open safety recall without addressing the issue first.</p>
+                    <p><strong>Safe Condition:</strong> You commit to providing equipment that is safe, mechanically sound, and free of known defects (e.g., bald tires, bad brakes).</p>
+                    <p><strong>Legal Authority:</strong> You certify that you own the item or have explicit legal authority to rent it out.</p>
+                    <p><strong>Maintenance:</strong> You have performed all manufacturer-recommended maintenance.</p>
                   </div>
                   <div className="term-item">
-                    <h5>2. Listing Accuracy</h5>
-                    <p>Truthfulness: Your listing must be complete and accurate. You cannot offer a vehicle or "Extra" that you do not have the authority to share.</p>
-                    <p>Pricing: You must honor the price quoted to the guest at the time of booking. You cannot cancel a booking just to seek a higher price from another guest.</p>
-                    <p>Photos: If you upload images, they must accurately represent the current condition of the vehicle.</p>
+                    <h5>2. The Rental Process</h5>
+                    <p><strong>Instruction:</strong> You will provide the Renter with a walkthrough of controls and safety features before handover.</p>
+                    <p><strong>Verification:</strong> You are responsible for physically verifying the Renter's ID and age at pickup.</p>
                   </div>
                   <div className="term-item">
-                    <h5>3. The Rental Process</h5>
-                    <p>Verification: You are responsible for verifying that the guest has a current, valid driver’s license that matches the name on the reservation before handing over the keys.</p>
-                    <p>Availability: You must ensure the vehicle is available at the agreed-upon location at the start of the reservation.</p>
-                    <p>No Weapons: You must remove any firearms or weapons from the vehicle prior to the rental.</p>
+                    <h5>3. Insurance & Risk</h5>
+                    <p><strong>Personal Policy Warning:</strong> You acknowledge that your personal insurance (Home/Auto) likely does NOT cover commercial rental activity.</p>
+                    <p><strong>Assumption of Risk:</strong> Unless you have a specific commercial policy or Protection Plan, you assume the risk of renting to third parties.</p>
                   </div>
                   <div className="term-item">
                     <h5>4. Payments & Earnings</h5>
-                    <p>Stripe Connection: Payment processing is provided by Stripe. As a host, you agree to the Stripe Connected Account Agreement.</p>
-                    <p>Tax Info: You agree to provide accurate and updated tax and business information to HobbyRent and Stripe.</p>
-                    <p>Deductions: The platform reserves the right to deduct fees or amounts owed (e.g., for claims or disputes) from your earnings.</p>
-                  </div>
-                  <div className="term-item">
-                    <h5>5. Damage & Insurance</h5>
-                    <p>Reporting Window: If you believe a guest caused damage, you must report it no more than 24 hours after the trip ends to be eligible for coverage.</p>
-                    <p>Cooperation: You must cooperate fully with investigations into damage or theft claims.</p>
-                    <p>Personal Insurance: You must maintain your own valid auto insurance policy that meets minimum legal requirements. Note that your personal policy may not cover commercial rentals.</p>
-                  </div>
-                  <div className="term-item">
-                    <h5>6. Legal Disclaimer</h5>
-                    <p>Platform Role: HobbyRent is not a rental car company or a leasing agency; it is a platform connecting owners and renters.</p>
-                    <p>Indemnification: You agree to release, defend, and indemnify HobbyRent from claims, liabilities, or damages arising from your listing or your violation of these terms.</p>
-                    <p>Dispute Resolution: Disputes between the platform and hosts are generally resolved via binding arbitration, rather than in court.</p>
+                    <p><strong>Stripe:</strong> You agree to the Stripe Connected Account Agreement for payment processing.</p>
+                    <p><strong>Indemnification:</strong> You agree to defend and hold HobbyRent harmless from claims arising from your failure to maintain your equipment.</p>
                   </div>
                 </div>
 

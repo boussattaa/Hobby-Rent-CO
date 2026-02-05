@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import WaiverModal from '@/components/WaiverModal';
 
 // Initialize Stripe with the Publishable Key
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
@@ -25,7 +26,9 @@ export default function CheckoutPage() {
     const [item, setItem] = useState(ITEMS_DB[itemId] || null);
     const [fetching, setFetching] = useState(!ITEMS_DB[itemId] && !!itemId);
     const [loading, setLoading] = useState(false);
-    const [addProtection, setAddProtection] = useState(false);
+    const [protectionPlan, setProtectionPlan] = useState('standard'); // Default to Standard
+    const [showWaiver, setShowWaiver] = useState(false);
+    const [signature, setSignature] = useState(null);
 
     useEffect(() => {
         if (!itemId || ITEMS_DB[itemId]) return;
@@ -33,7 +36,7 @@ export default function CheckoutPage() {
         const fetchItem = async () => {
             const { data } = await supabase
                 .from('items')
-                .select('name, price, hourly_rate, price_type')
+                .select('name, price, hourly_rate, price_type, instant_book')
                 .eq('id', itemId)
                 .single();
 
@@ -93,10 +96,30 @@ export default function CheckoutPage() {
     }
 
     const rentalTotal = Math.round(calculatedRentalPrice * 100) / 100; // Round to 2 decimals
-    const protectionFee = 20;
-    const total = rentalTotal + serviceFee + (addProtection ? protectionFee : 0);
 
-    const handleCheckout = async () => {
+    // Calculate Protection Fee
+    let protectionFee = 0;
+    if (protectionPlan === 'standard') protectionFee = 20;
+    if (protectionPlan === 'premier') protectionFee = 59;
+
+    const total = rentalTotal + serviceFee + protectionFee;
+
+    const handleWaiverSigned = (signedData) => {
+        setSignature(signedData);
+        setShowWaiver(false);
+        // Continue checkout automatically
+        initiateCheckout(signedData);
+    };
+
+    const handleCheckout = () => {
+        if (item.instant_book && !signature) {
+            setShowWaiver(true);
+            return;
+        }
+        initiateCheckout(signature);
+    };
+
+    const initiateCheckout = async (waiverData) => {
         setLoading(true);
         try {
             const stripe = await stripePromise;
@@ -111,10 +134,12 @@ export default function CheckoutPage() {
                     itemId,
                     price: rentalTotal,
                     name: `${itemName} (${durationDisplay})`,
-                    addProtection,
+                    protectionPlan,
+                    protectionFee,
                     startDate: startParam,
                     endDate: endParam,
-                    type: rentalType
+                    rentalId: null, // New rental
+                    waiverSignature: waiverData || null
                 }),
             });
 
@@ -130,7 +155,7 @@ export default function CheckoutPage() {
             if (url) {
                 window.location.href = url;
             } else {
-                throw new Error("No checkout URL returned");
+                throw new Error("No checkout ULR returned");
             }
         } catch (err) {
             console.error(err);
@@ -170,23 +195,59 @@ export default function CheckoutPage() {
                             <span>${serviceFee}</span>
                         </div>
 
-                        <div className="protection-option" style={{ margin: '1.5rem 0', padding: '1rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '0.75rem' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={addProtection}
-                                    onChange={(e) => setAddProtection(e.target.checked)}
-                                    style={{ width: '20px', height: '20px' }}
-                                />
-                                <div>
-                                    <div style={{ fontWeight: '600' }}>Add Damage Protection (+$20)</div>
-                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Cover accidental damage up to $5,000</div>
+                        <div className="protection-section" style={{ margin: '1.5rem 0', padding: '1.5rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>AdventureAssure Protection</h3>
+
+                            {/* Basic Option */}
+                            <label className={`plan-option ${protectionPlan === 'basic' ? 'selected' : ''}`}>
+                                <div className="plan-header">
+                                    <input
+                                        type="radio"
+                                        name="protection"
+                                        checked={protectionPlan === 'basic'}
+                                        onChange={() => setProtectionPlan('basic')}
+                                    />
+                                    <strong>Basic</strong>
                                 </div>
+                                <div className="plan-price">$0</div>
+                                <p className="plan-desc">Waive damage liability protection. You assume full responsibility for all repair costs.</p>
+                            </label>
+
+                            {/* Standard Option */}
+                            <label className={`plan-option ${protectionPlan === 'standard' ? 'selected' : ''}`}>
+                                <div className="plan-header">
+                                    <input
+                                        type="radio"
+                                        name="protection"
+                                        checked={protectionPlan === 'standard'}
+                                        onChange={() => setProtectionPlan('standard')}
+                                    />
+                                    <strong>Standard</strong>
+                                </div>
+                                <div className="plan-price">$20</div>
+                                <p className="plan-desc">Solid protection. Covers accidental damage up to $3,000. $1,500 liability cap.</p>
+                            </label>
+
+                            {/* Premier Option */}
+                            <label className={`plan-option ${protectionPlan === 'premier' ? 'selected' : ''}`}>
+                                <div className="plan-header">
+                                    <input
+                                        type="radio"
+                                        name="protection"
+                                        checked={protectionPlan === 'premier'}
+                                        onChange={() => setProtectionPlan('premier')}
+                                    />
+                                    <strong>Premier</strong>
+                                    <span className="badge">Most Popular</span>
+                                </div>
+                                <div className="plan-price">$59</div>
+                                <p className="plan-desc">$0 Damage Deposit. $1,500 max out-of-pocket. Includes all Standard benefits.</p>
                             </label>
                         </div>
-                        {addProtection && (
+
+                        {protectionFee > 0 && (
                             <div className="summary-row">
-                                <span>Damage Protection</span>
+                                <span>Protection Plan ({protectionPlan})</span>
                                 <span>${protectionFee}</span>
                             </div>
                         )}
@@ -214,6 +275,13 @@ export default function CheckoutPage() {
                     </div>
                 </div>
             </div>
+
+            <WaiverModal
+                isOpen={showWaiver}
+                onClose={() => setShowWaiver(false)}
+                onSign={handleWaiverSigned}
+                waiverUrl="/terms"
+            />
 
             <style jsx>{`
         .checkout-page {
@@ -244,6 +312,55 @@ export default function CheckoutPage() {
 
         @media (max-width: 768px) {
           .checkout-grid { grid-template-columns: 1fr; }
+        }
+        .plan-option {
+            display: block;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .plan-option:hover {
+            border-color: #cbd5e1;
+        }
+
+        .plan-option.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .plan-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .plan-price {
+            font-weight: 700;
+            color: #1e293b;
+            margin-left: 1.8rem;
+        }
+
+        .plan-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-left: 1.8rem;
+            line-height: 1.4;
+        }
+
+        .badge {
+            background: #ffedd5;
+            color: #c2410c;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: auto;
         }
       `}</style>
         </div >

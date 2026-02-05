@@ -56,7 +56,7 @@ export async function POST(request) {
         <p><strong>Total:</strong> $${booking.total_price}</p>
         <p><strong>Dates:</strong> ${new Date(booking.start_date).toLocaleDateString()} - ${new Date(booking.end_date).toLocaleDateString()}</p>
         <br/>
-        <a href="${process.env.NEXT_PUBLIC_BASE_URL}/rentals/manage" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Request</a>
+        <a href="${process.env.NEXT_PUBLIC_BASE_URL}/dashboard" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Request</a>
       `;
         } else if (type === 'status_change') {
             // Notify Renter

@@ -385,7 +385,6 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
               <p className="description">{item.description}</p>
 
               <div className="features">
-                <div className="feature-item">🛡️ Insurance Included</div>
                 <div className="feature-item">⭐ 4.9 Star Equipment</div>
                 <div className="feature-item">✅ Verified Owner</div>
               </div>
