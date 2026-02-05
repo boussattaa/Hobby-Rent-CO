@@ -1,10 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/utils/supabase/client';
 import ChatWindow from '@/components/ChatWindow';
 
-export default function InboxClient({ currentUser, messages }) {
+export default function InboxClient({ currentUser, messages: initialMessages }) {
+    const [messages, setMessages] = useState(initialMessages);
     const [selectedChat, setSelectedChat] = useState(null);
+    const supabase = createClient();
+
+    useEffect(() => {
+        setMessages(initialMessages);
+    }, [initialMessages]);
+
+    useEffect(() => {
+        const channel = supabase
+            .channel('inbox_realtime')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages',
+                filter: `receiver_id=eq.${currentUser.id}`
+            }, async (payload) => {
+                // Fetch full message with sender details
+                const { data, error } = await supabase
+                    .from('messages')
+                    .select('*, sender:sender_id(email), receiver:receiver_id(email)')
+                    .eq('id', payload.new.id)
+                    .single();
+
+                if (data) {
+                    setMessages(prev => [data, ...prev]);
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [currentUser.id, supabase]);
 
     // Group messages by the "other" person
     const conversations = {};

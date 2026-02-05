@@ -1,13 +1,50 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { createClient } from '@/utils/supabase/client';
 
 import { approveRental, rejectRental } from './actions';
 
-export default function DashboardClient({ rentals, user, messages }) {
+export default function DashboardClient({ rentals, user, messages: initialMessages }) {
     const [activeTab, setActiveTab] = useState('overview');
+    const [messages, setMessages] = useState(initialMessages || []);
+    const supabase = createClient();
+
+    useEffect(() => {
+        const channel = supabase
+            .channel('dashboard_messages')
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages',
+                filter: `receiver_id=eq.${user.id}`
+            }, async (payload) => {
+                // Fetch full message with booking/item/sender details
+                const { data, error } = await supabase
+                    .from('messages')
+                    .select(`
+                        *,
+                        sender:sender_id(email, first_name),
+                        booking:booking_id(
+                            id,
+                            item:item_id(id, name, image_url)
+                        )
+                    `)
+                    .eq('id', payload.new.id)
+                    .single();
+
+                if (data) {
+                    setMessages(prev => [data, ...prev]);
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user.id, supabase]);
 
     // Group rentals by status
     const pendingParams = ['pending'];
