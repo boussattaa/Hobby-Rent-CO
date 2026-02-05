@@ -103,6 +103,7 @@ export async function createListing(formData) {
         description: formData.get('description'),
         image_url: formData.get('image_url') || '/images/dirt-hero.png',
         video_url: formData.get('video_url'),
+        instant_book: formData.get('instant_book') === 'on',
     }
 
     // Fix for price NOT NULL constraint if Hourly

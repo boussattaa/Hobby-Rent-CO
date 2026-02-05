@@ -3,79 +3,94 @@
 import { useState } from 'react';
 
 export default function EarningsCalculator() {
-    const [dailyPrice, setDailyPrice] = useState(100);
-    const [daysRented, setDaysRented] = useState(5);
+  const [dailyPrice, setDailyPrice] = useState(100);
+  const [daysRented, setDaysRented] = useState(5);
 
-    const monthlyEarnings = dailyPrice * daysRented;
-    const yearlyEarnings = monthlyEarnings * 12;
+  const monthlyGross = dailyPrice * daysRented;
+  const yearlyGross = monthlyGross * 12;
 
-    // Assumed platform fee for display accuracy (e.g. 20%)
-    const platformFee = 0.20;
-    const netMonthly = monthlyEarnings * (1 - platformFee);
-    const netYearly = yearlyEarnings * (1 - platformFee);
+  // Fees: 10% Platform + Stripe (2.9% + 0.30)
+  const calculateNet = (gross) => {
+    if (gross === 0) return 0;
+    const platformFee = gross * 0.10;
+    const stripeFee = (gross * 0.029) + 0.30;
+    return gross - platformFee - stripeFee;
+  };
 
-    return (
-        <div className="calculator-card glass">
-            <div className="calc-header">
-                <h3>💰 Estimate Your Earnings</h3>
-                <p>See how much you could make by listing your idle gear.</p>
-            </div>
+  const netMonthly = calculateNet(monthlyGross);
+  const netYearly = calculateNet(yearlyGross);
 
-            <div className="calc-body">
-                <div className="input-group">
-                    <label>
-                        Daily Rental Price
-                        <span className="value-badge">${dailyPrice}</span>
-                    </label>
-                    <input
-                        type="range"
-                        min="20"
-                        max="1000"
-                        step="10"
-                        value={dailyPrice}
-                        onChange={(e) => setDailyPrice(Number(e.target.value))}
-                        className="slider"
-                    />
-                    <div className="slider-labels">
-                        <span>$20</span>
-                        <span>$1000</span>
-                    </div>
-                </div>
+  return (
+    <div className="calculator-card glass">
+      <div className="calc-header">
+        <h3>💰 Estimate Your Earnings</h3>
+        <p>See how much you could make by listing your idle gear.</p>
+      </div>
 
-                <div className="input-group">
-                    <label>
-                        Days Rented per Month
-                        <span className="value-badge">{daysRented} Days</span>
-                    </label>
-                    <input
-                        type="range"
-                        min="1"
-                        max="30"
-                        step="1"
-                        value={daysRented}
-                        onChange={(e) => setDaysRented(Number(e.target.value))}
-                        className="slider"
-                    />
-                    <div className="slider-labels">
-                        <span>1 Day</span>
-                        <span>30 Days</span>
-                    </div>
-                </div>
+      <div className="calc-body">
+        <div className="input-group">
+          <label>
+            Daily Rental Price
+            <span className="value-badge">${dailyPrice}</span>
+          </label>
+          <input
+            type="range"
+            min="20"
+            max="1000"
+            step="10"
+            value={dailyPrice}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              setDailyPrice(val);
+            }}
+            className="calc-range-input"
+          />
+          <div className="slider-labels">
+            <span>$20</span>
+            <span>$1000</span>
+          </div>
+        </div>
 
-                <div className="results-box">
-                    <div className="result-row">
-                        <span>Monthly Potential</span>
-                        <span className="amount highlight">${netMonthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                    </div>
-                    <div className="result-row">
-                        <span>Yearly Potential</span>
-                        <span className="amount highlight">${netYearly.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                    </div>
-                    <p className="disclaimer">*Estimates after 20% platform fee. Actual earnings vary by demand.</p>
-                </div>
-            </div>
+        <div className="input-group">
+          <label>
+            Days Rented per Month
+            <span className="value-badge">{daysRented} Days</span>
+          </label>
+          <input
+            type="range"
+            min="1"
+            max="30"
+            step="1"
+            value={daysRented}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              setDaysRented(val);
+            }}
+            className="calc-range-input"
+          />
+          <div className="slider-labels">
+            <span>1 Day</span>
+            <span>30 Days</span>
+          </div>
+        </div>
 
-            <style jsx>{`
+        <div className="results-box">
+          <div className="result-row">
+            <span>Monthly Take-Home</span>
+            <span className="amount highlight">${netMonthly.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+          </div>
+          <div className="result-row">
+            <span>Yearly Take-Home</span>
+            <span className="amount highlight">${netYearly.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+          </div>
+          <div className="fee-breakdown">
+            <span>Deductions: 10% platform fee + Stripe processing (2.9% + $0.30)</span>
+          </div>
+          <p className="disclaimer">Actual earnings vary by demand and seasonal factors.</p>
+        </div>
+      </div>
+
+      <style jsx>{`
         .calculator-card {
           background: linear-gradient(145deg, #ffffff, #f8fafc);
           border: 1px solid var(--border-color);
@@ -83,6 +98,8 @@ export default function EarningsCalculator() {
           padding: 2rem;
           margin-bottom: 3rem;
           box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+          position: relative;
+          z-index: 10;
         }
 
         .calc-header {
@@ -116,24 +133,63 @@ export default function EarningsCalculator() {
           font-size: 0.9rem;
         }
 
-        .slider {
+        .calc-range-input {
           width: 100%;
           height: 8px;
           background: #e2e8f0;
           border-radius: 4px;
           appearance: none;
+          -webkit-appearance: none;
           cursor: pointer;
+          outline: none;
+          display: block;
+          margin: 10px 0;
+          position: relative;
+          z-index: 20;
         }
 
-        .slider::-webkit-slider-thumb {
+        /* Webkit/Chrome Styles */
+        .calc-range-input::-webkit-slider-runnable-track {
+          width: 100%;
+          height: 8px;
+          cursor: pointer;
+          background: #e2e8f0;
+          border-radius: 4px;
+        }
+
+        .calc-range-input::-webkit-slider-thumb {
           appearance: none;
+          -webkit-appearance: none;
           width: 24px;
           height: 24px;
-          background: var(--accent-color);
+          background: #3b82f6; /* Hardcoded blue to ensure visibility */
           border-radius: 50%;
           cursor: pointer;
           border: 2px solid white;
           box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+          margin-top: -8px; /* Centers thumb on track */
+          position: relative;
+          z-index: 30;
+        }
+
+        /* Firefox Styles */
+        .calc-range-input::-moz-range-track {
+          width: 100%;
+          height: 8px;
+          cursor: pointer;
+          background: #e2e8f0;
+          border-radius: 4px;
+        }
+
+        .calc-range-input::-moz-range-thumb {
+          width: 24px;
+          height: 24px;
+          background: #3b82f6;
+          border-radius: 50%;
+          cursor: pointer;
+          border: 2px solid white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+          border: none;
         }
 
         .slider-labels {
@@ -173,11 +229,20 @@ export default function EarningsCalculator() {
           color: #fbbf24; /* Amber 400 */
         }
 
-        .disclaimer {
-          font-size: 0.75rem;
-          color: rgba(255,255,255,0.5);
+        .fee-breakdown {
+          font-size: 0.8rem;
+          color: rgba(255,255,255,0.7);
           text-align: center;
           margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px dashed rgba(255,255,255,0.2);
+        }
+
+        .disclaimer {
+          font-size: 0.7rem;
+          color: rgba(255,255,255,0.4);
+          text-align: center;
+          margin-top: 0.5rem;
         }
 
         @media (min-width: 768px) {
@@ -187,6 +252,6 @@ export default function EarningsCalculator() {
            }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

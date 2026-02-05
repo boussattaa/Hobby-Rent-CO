@@ -19,6 +19,11 @@ export default function ListingCard({ item }) {
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     style={{ objectFit: 'cover' }}
                 />
+                {item.instant_book && (
+                    <div className="instant-badge">
+                        <span>⚡ Instant Book</span>
+                    </div>
+                )}
             </div>
             <div className="card-details">
                 <div className="card-header">
@@ -53,6 +58,23 @@ export default function ListingCard({ item }) {
                     position: relative;
                     height: 200px;
                     background: #f0f0f0;
+                }
+
+                .instant-badge {
+                    position: absolute;
+                    top: 12px;
+                    left: 12px;
+                    background: white;
+                    color: #10b981;
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 800;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                    z-index: 5;
                 }
 
                 .card-details {

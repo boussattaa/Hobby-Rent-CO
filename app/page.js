@@ -5,6 +5,7 @@ import Image from 'next/image';
 import SearchBar from '@/components/SearchBar';
 import HowItWorks from '@/components/HowItWorks';
 import FeaturedRentals from '@/components/FeaturedRentals';
+import EarningsCalculator from '@/components/EarningsCalculator';
 
 export default function Home() {
   const categories = [
@@ -84,6 +85,24 @@ export default function Home() {
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Earnings Calculator Section */}
+      <section className="earnings-section" style={{ padding: '6rem 0', background: 'white' }}>
+        <div className="container">
+          <div className="section-header" style={{ marginBottom: '4rem' }}>
+            <h2 className="section-title">Turn Your Gear into Cash</h2>
+            <p className="section-subtitle" style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>
+              See how much you could earn by sharing your equipment with the HobbyRent community.
+            </p>
+          </div>
+          <EarningsCalculator />
+          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+            <Link href="/list-your-gear" className="btn btn-primary btn-lg">
+              Start Your First Listing
+            </Link>
           </div>
         </div>
       </section>

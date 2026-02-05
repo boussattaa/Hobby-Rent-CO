@@ -211,6 +211,7 @@ export default function ListYourGear() {
   const [uploading, setUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('offroad');
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [hostAgreement, setHostAgreement] = useState(false);
 
   // Define which subcategories have engines/motors
   const NON_MOTORIZED_ITEMS = [
@@ -517,6 +518,19 @@ export default function ListYourGear() {
                 <label>Pricing Model</label>
                 <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                   <PriceSelection />
+
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px dashed #e2e8f0' }}>
+                    <label className="toggle-label" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
+                      <div className="switch">
+                        <input type="checkbox" name="instant_book" />
+                        <span className="slider round"></span>
+                      </div>
+                      <div>
+                        <span style={{ fontWeight: 700, display: 'block' }}>⚡ Instant Book</span>
+                        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>If enabled, bookings are automatically accepted without your manual approval.</span>
+                      </div>
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -639,8 +653,81 @@ export default function ListYourGear() {
               </div>
             </div>
 
+            {/* Host Commitments & Responsibilities Section */}
+            <div className="form-group full" style={{ marginTop: '2rem' }}>
+              <div className="host-agreement-container">
+                <h3 className="section-title">Host Commitments & Responsibilities</h3>
+                <div className="host-terms-box">
+                  <div className="term-item">
+                    <h5>1. Safety & Legality</h5>
+                    <p>Condition: You commit to providing a vehicle/item that is safe, legally registered, insured, and in good mechanical condition.</p>
+                    <p>Ownership: You must own the item or have explicit legal authority to share it for compensation.</p>
+                    <p>Clean Title: You generally cannot list vehicles with "salvage," "branded," or "written off" titles.</p>
+                    <p>Recalls: You must not list any vehicle subject to an open safety recall without addressing the issue first.</p>
+                  </div>
+                  <div className="term-item">
+                    <h5>2. Listing Accuracy</h5>
+                    <p>Truthfulness: Your listing must be complete and accurate. You cannot offer a vehicle or "Extra" that you do not have the authority to share.</p>
+                    <p>Pricing: You must honor the price quoted to the guest at the time of booking. You cannot cancel a booking just to seek a higher price from another guest.</p>
+                    <p>Photos: If you upload images, they must accurately represent the current condition of the vehicle.</p>
+                  </div>
+                  <div className="term-item">
+                    <h5>3. The Rental Process</h5>
+                    <p>Verification: You are responsible for verifying that the guest has a current, valid driver’s license that matches the name on the reservation before handing over the keys.</p>
+                    <p>Availability: You must ensure the vehicle is available at the agreed-upon location at the start of the reservation.</p>
+                    <p>No Weapons: You must remove any firearms or weapons from the vehicle prior to the rental.</p>
+                  </div>
+                  <div className="term-item">
+                    <h5>4. Payments & Earnings</h5>
+                    <p>Stripe Connection: Payment processing is provided by Stripe. As a host, you agree to the Stripe Connected Account Agreement.</p>
+                    <p>Tax Info: You agree to provide accurate and updated tax and business information to HobbyRent and Stripe.</p>
+                    <p>Deductions: The platform reserves the right to deduct fees or amounts owed (e.g., for claims or disputes) from your earnings.</p>
+                  </div>
+                  <div className="term-item">
+                    <h5>5. Damage & Insurance</h5>
+                    <p>Reporting Window: If you believe a guest caused damage, you must report it no more than 24 hours after the trip ends to be eligible for coverage.</p>
+                    <p>Cooperation: You must cooperate fully with investigations into damage or theft claims.</p>
+                    <p>Personal Insurance: You must maintain your own valid auto insurance policy that meets minimum legal requirements. Note that your personal policy may not cover commercial rentals.</p>
+                  </div>
+                  <div className="term-item">
+                    <h5>6. Legal Disclaimer</h5>
+                    <p>Platform Role: HobbyRent is not a rental car company or a leasing agency; it is a platform connecting owners and renters.</p>
+                    <p>Indemnification: You agree to release, defend, and indemnify HobbyRent from claims, liabilities, or damages arising from your listing or your violation of these terms.</p>
+                    <p>Dispute Resolution: Disputes between the platform and hosts are generally resolved via binding arbitration, rather than in court.</p>
+                  </div>
+                </div>
+
+                <div className="agreement-checkbox-wrapper">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      required
+                      checked={hostAgreement}
+                      onChange={(e) => setHostAgreement(e.target.checked)}
+                    />
+                    <div className="checkbox-text">
+                      <strong>Host Agreement:</strong> By listing this item, I certify that:
+                      <ul>
+                        <li>I own this vehicle/item or have legal authority to rent it out.</li>
+                        <li>It is in safe, mechanical condition and has no open safety recalls.</li>
+                        <li>I understand I must verify the renter's ID physically at pickup.</li>
+                        <li>I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="https://stripe.com/connect-account/legal" target="_blank">Stripe Connected Account Agreement</a></li>
+                      </ul>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <div className="form-actions">
-              <button type="submit" className="btn btn-primary btn-lg" disabled={uploading}>Create Listing</button>
+              <button
+                type="submit"
+                className="btn btn-primary btn-lg"
+                disabled={uploading || !hostAgreement}
+              >
+                {uploading ? 'Processing...' : 'Create Listing'}
+              </button>
+              {!hostAgreement && <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>Please agree to the host responsibilities to proceed.</p>}
               {errorMsg && <p className="error-message" style={{ color: 'red', marginTop: '1rem' }}>{errorMsg}</p>}
             </div>
           </form>
@@ -753,6 +840,132 @@ export default function ListYourGear() {
             color: red;
             transform: scale(1.02);
         }
+
+        .host-agreement-container {
+          background: #f8fafc;
+          border-radius: 16px;
+          border: 1px solid #e2e8f0;
+          padding: 1.5rem;
+        }
+
+        .host-agreement-container .section-title {
+          font-size: 1.25rem;
+          color: #1e293b;
+          margin-bottom: 1rem;
+          font-weight: 700;
+        }
+
+        .host-terms-box {
+          max-height: 250px;
+          overflow-y: auto;
+          background: white;
+          padding: 1rem;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          margin-bottom: 1.5rem;
+          font-size: 0.9rem;
+          line-height: 1.5;
+        }
+
+        .term-item {
+          margin-bottom: 1.5rem;
+        }
+
+        .term-item h5 {
+          color: #0f172a;
+          font-size: 1rem;
+          margin-bottom: 0.5rem;
+          font-weight: 600;
+        }
+
+        .term-item p {
+          color: #475569;
+          margin-bottom: 0.25rem;
+        }
+
+        .agreement-checkbox-wrapper {
+          padding-top: 1rem;
+          border-top: 1px solid #e2e8f0;
+        }
+
+        .checkbox-label {
+          display: flex;
+          align-items: flex-start;
+          gap: 1rem;
+          cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+          width: 20px;
+          height: 20px;
+          margin-top: 4px;
+        }
+
+        .checkbox-text {
+          color: #1e293b;
+          font-size: 0.95rem;
+        }
+
+        .checkbox-text ul {
+          margin: 0.5rem 0 0 1.25rem;
+          padding: 0;
+          list-style-type: disc;
+          color: #64748b;
+          font-size: 0.85rem;
+        }
+
+        .checkbox-text li {
+          margin-bottom: 0.25rem;
+        }
+
+        .checkbox-text a {
+          color: #0f172a;
+          text-decoration: underline;
+          font-weight: 500;
+        }
+
+        .host-terms-box::-webkit-scrollbar {
+          width: 6px;
+        }
+        .host-terms-box::-webkit-scrollbar-track {
+          background: #f1f5f9;
+        }
+        .host-terms-box::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 3px;
+        }
+
+        /* Toggle Switch Styles */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 50px;
+          height: 24px;
+          flex-shrink: 0;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background-color: #cbd5e1;
+          transition: .4s;
+          border-radius: 24px;
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 18px;
+          width: 18px;
+          left: 3px;
+          bottom: 3px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #10b981; }
+        input:focus + .slider { box-shadow: 0 0 1px #10b981; }
+        input:checked + .slider:before { transform: translateX(26px); }
       `}</style>
     </div>
   );
