@@ -43,83 +43,77 @@ export default function InboxClient({ currentUser, messages: initialMessages }) 
                     setMessages(prev => [enrichedMessage, ...prev]);
                 }
             })
+            .subscribe();
 
-
-        if (data) {
-            setMessages(prev => [data, ...prev]);
-        }
-    })
-        .subscribe();
-
-    return () => {
-        supabase.removeChannel(channel);
-    };
-}, [currentUser.id, supabase]);
-
-// Group messages by the "other" person
-const conversations = {};
-messages.forEach(msg => {
-    const otherId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
-    const otherEmail = msg.sender_id === currentUser.id ? msg.receiver?.email : msg.sender?.email;
-
-    if (!conversations[otherId]) {
-        conversations[otherId] = {
-            userId: otherId,
-            email: otherEmail || 'Unknown User',
-            lastMessage: msg,
-            unreadCount: 0
+        return () => {
+            supabase.removeChannel(channel);
         };
-    }
-    // Since messages are ordered by date desc, the first one we see is the latest
-    // (if the query was ordered correct, which it was)
+    }, [currentUser.id, supabase]);
 
-    // Count unread (only if I am receiver)
-    if (msg.receiver_id === currentUser.id && !msg.is_read) {
-        conversations[otherId].unreadCount++;
-    }
-});
+    // Group messages by the "other" person
+    const conversations = {};
+    messages.forEach(msg => {
+        const otherId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
+        const otherEmail = msg.sender_id === currentUser.id ? msg.receiver?.email : msg.sender?.email;
 
-const conversationList = Object.values(conversations).sort((a, b) =>
-    new Date(b.lastMessage.created_at) - new Date(a.lastMessage.created_at)
-);
+        if (!conversations[otherId]) {
+            conversations[otherId] = {
+                userId: otherId,
+                email: otherEmail || 'Unknown User',
+                lastMessage: msg,
+                unreadCount: 0
+            };
+        }
+        // Since messages are ordered by date desc, the first one we see is the latest
+        // (if the query was ordered correct, which it was)
 
-return (
-    <div className="inbox-container">
-        {conversationList.length === 0 ? (
-            <div className="empty-state">
-                <p>No messages yet.</p>
-            </div>
-        ) : (
-            <div className="conversation-list">
-                {conversationList.map(convo => (
-                    <div key={convo.userId} className="convo-card" onClick={() => setSelectedChat(convo)}>
-                        <div className="avatar">{convo.email[0].toUpperCase()}</div>
-                        <div className="convo-details">
-                            <div className="convo-header">
-                                <h3>{convo.email}</h3>
-                                <span className="date">{new Date(convo.lastMessage.created_at).toLocaleDateString()}</span>
+        // Count unread (only if I am receiver)
+        if (msg.receiver_id === currentUser.id && !msg.is_read) {
+            conversations[otherId].unreadCount++;
+        }
+    });
+
+    const conversationList = Object.values(conversations).sort((a, b) =>
+        new Date(b.lastMessage.created_at) - new Date(a.lastMessage.created_at)
+    );
+
+    return (
+        <div className="inbox-container">
+            {conversationList.length === 0 ? (
+                <div className="empty-state">
+                    <p>No messages yet.</p>
+                </div>
+            ) : (
+                <div className="conversation-list">
+                    {conversationList.map(convo => (
+                        <div key={convo.userId} className="convo-card" onClick={() => setSelectedChat(convo)}>
+                            <div className="avatar">{convo.email[0].toUpperCase()}</div>
+                            <div className="convo-details">
+                                <div className="convo-header">
+                                    <h3>{convo.email}</h3>
+                                    <span className="date">{new Date(convo.lastMessage.created_at).toLocaleDateString()}</span>
+                                </div>
+                                <p className="last-message">
+                                    {convo.lastMessage.sender_id === currentUser.id && 'You: '}
+                                    {convo.lastMessage.content}
+                                </p>
                             </div>
-                            <p className="last-message">
-                                {convo.lastMessage.sender_id === currentUser.id && 'You: '}
-                                {convo.lastMessage.content}
-                            </p>
+                            {convo.unreadCount > 0 && <span className="unread-badge">{convo.unreadCount}</span>}
                         </div>
-                        {convo.unreadCount > 0 && <span className="unread-badge">{convo.unreadCount}</span>}
-                    </div>
-                ))}
-            </div>
-        )}
+                    ))}
+                </div>
+            )}
 
-        <ChatWindow
-            currentUser={currentUser}
-            receiverId={selectedChat?.userId}
-            receiverName={selectedChat?.email}
-            receiverEmail={selectedChat?.email}
-            isOpen={!!selectedChat}
-            onClose={() => setSelectedChat(null)}
-        />
+            <ChatWindow
+                currentUser={currentUser}
+                receiverId={selectedChat?.userId}
+                receiverName={selectedChat?.email}
+                receiverEmail={selectedChat?.email}
+                isOpen={!!selectedChat}
+                onClose={() => setSelectedChat(null)}
+            />
 
-        <style jsx>{`
+            <style jsx>{`
                 .inbox-container {
                     max-width: 800px;
                     margin: 0 auto;
@@ -191,6 +185,6 @@ return (
                     padding: 4rem;
                 }
             `}</style>
-    </div>
-);
+        </div>
+    );
 }
