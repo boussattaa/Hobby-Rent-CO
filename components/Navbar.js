@@ -227,6 +227,11 @@ export default function Navbar({ user }) {
                       My Trips (Renter)
                     </Link>
 
+                    <Link href="/inbox" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                      <span className="item-icon">💬</span>
+                      Messages
+                    </Link>
+
                     <Link href="/my-listings" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
                       <span className="item-icon">📦</span>
                       My Listings

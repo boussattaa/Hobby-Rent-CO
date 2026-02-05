@@ -45,9 +45,24 @@ export default async function DashboardPage() {
 
 
 
+    // 3. Fetch Messages where user is receiver
+    const { data: messages } = await supabase
+        .from('messages')
+        .select(`
+            *,
+            sender:sender_id(email, first_name),
+            booking:booking_id(
+                id,
+                item:item_id(id, name, image_url)
+            )
+        `)
+        .eq('receiver_id', user.id)
+        .order('created_at', { ascending: false });
+
     return (
         <DashboardClient
             rentals={enrichedRentals}
+            messages={messages || []}
             user={user}
         />
     );

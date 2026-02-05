@@ -6,7 +6,7 @@ import Image from 'next/image';
 
 import { approveRental, rejectRental } from './actions';
 
-export default function DashboardClient({ rentals, user }) {
+export default function DashboardClient({ rentals, user, messages }) {
     const [activeTab, setActiveTab] = useState('overview');
 
     // Group rentals by status
@@ -17,6 +17,32 @@ export default function DashboardClient({ rentals, user }) {
     const pendingRentals = rentals.filter(r => pendingParams.includes(r.status));
     const activeRentals = rentals.filter(r => activeParams.includes(r.status));
     const historyRentals = rentals.filter(r => completedParams.includes(r.status));
+
+    // Group messages by Item/Listing
+    const messagesByItem = {};
+    if (messages) {
+        messages.forEach(msg => {
+            // Check if attached to booking and thus item, otherwise group as 'General'
+            // We fetched: booking: { id, item: { id, name, image_url } }
+            const item = msg.booking?.item;
+            const itemId = item?.id || 'general';
+            const itemName = item?.name || 'General Inquiries';
+            const itemImage = item?.image_url;
+
+            if (!messagesByItem[itemId]) {
+                messagesByItem[itemId] = {
+                    itemId,
+                    itemName,
+                    itemImage,
+                    messages: [],
+                    unreadCount: 0
+                };
+            }
+            messagesByItem[itemId].messages.push(msg);
+            if (!msg.is_read) messagesByItem[itemId].unreadCount++;
+        });
+    }
+    const messageGroups = Object.values(messagesByItem);
 
     // Calculate basic stats
     const totalEarnings = rentals
@@ -67,10 +93,43 @@ export default function DashboardClient({ rentals, user }) {
                     >
                         All Bookings
                     </button>
+                    <button
+                        className={`tab ${activeTab === 'messages' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('messages')}
+                    >
+                        Messages {messageGroups.some(g => g.unreadCount > 0) && <span className="tab-badge" />}
+                    </button>
                 </div>
 
                 {activeTab === 'overview' && (
                     <div className="tab-pane">
+
+                        {/* Quick Message Preview (if any unread) */}
+                        {messageGroups.some(g => g.unreadCount > 0) && (
+                            <div className="section alert-section">
+                                <h2>New Messages 💬</h2>
+                                <div className="messages-preview-list">
+                                    {messageGroups.filter(g => g.unreadCount > 0).map(group => (
+                                        <div key={group.itemId} className="message-group-card" onClick={() => setActiveTab('messages')}>
+                                            <div className="group-info">
+                                                <div className="img-wrapper-sm">
+                                                    {group.itemImage ? (
+                                                        <Image src={group.itemImage} alt={group.itemName} fill style={{ objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <div className="placeholder-img">💬</div>
+                                                    )}
+                                                </div>
+                                                <div className="group-details">
+                                                    <h3>{group.itemName}</h3>
+                                                    <p>{group.unreadCount} new message(s)</p>
+                                                </div>
+                                            </div>
+                                            <button className="btn btn-secondary btn-sm">View</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* 1. Pending Requests (Priority) */}
                         {pendingRentals.length > 0 && (
@@ -117,6 +176,55 @@ export default function DashboardClient({ rentals, user }) {
                     </div>
                 )}
 
+                {activeTab === 'messages' && (
+                    <div className="tab-pane">
+                        <div className="section">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <h2>Messages by Listing</h2>
+                                <Link href="/inbox" className="btn btn-secondary btn-sm">Go to Full Inbox →</Link>
+                            </div>
+
+                            {messageGroups.length === 0 ? (
+                                <p className="empty-text">No messages yet.</p>
+                            ) : (
+                                <div className="messages-grid-list">
+                                    {messageGroups.map(group => (
+                                        <div key={group.itemId} className="message-group-item">
+                                            <div className="group-header">
+                                                <div className="img-wrapper-sm">
+                                                    {group.itemImage ? (
+                                                        <Image src={group.itemImage} alt={group.itemName} fill style={{ objectFit: 'cover' }} />
+                                                    ) : (
+                                                        <div className="placeholder-img">💬</div>
+                                                    )}
+                                                </div>
+                                                <div className="header-info">
+                                                    <h3>{group.itemName}</h3>
+                                                    <span className="msg-count">{group.messages.length} conversation(s)</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="recent-preview">
+                                                {group.messages.slice(0, 3).map((msg, i) => (
+                                                    <div key={msg.id || i} className={`preview-row ${!msg.is_read ? 'unread' : ''}`}>
+                                                        <span className="sender">{msg.sender?.first_name || msg.sender?.email || 'User'}:</span>
+                                                        <span className="content">{msg.content}</span>
+                                                        <span className="time">{new Date(msg.created_at).toLocaleDateString()}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="group-actions">
+                                                <Link href="/inbox" className="btn btn-primary btn-sm btn-block">Reply in Inbox</Link>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
             </div>
 
             <style jsx>{`
@@ -147,6 +255,36 @@ export default function DashboardClient({ rentals, user }) {
                 @media (max-width: 768px) {
                     .stats-grid { grid-template-columns: 1fr; }
                 }
+
+                .tab-badge { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: inline-block; margin-left: 6px; vertical-align: middle; }
+
+                .messages-preview-list { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+                .message-group-card { 
+                    background: white; padding: 1rem; border-radius: 12px; border: 1px solid #e2e8f0; 
+                    display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s;
+                }
+                .message-group-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+                .group-info { display: flex; gap: 1rem; align-items: center; }
+                .img-wrapper-sm { position: relative; width: 40px; height: 40px; border-radius: 8px; overflow: hidden; background: #f1f5f9; flex-shrink: 0; }
+                .placeholder-img { display: flex; align-items: center; justify-content: center; height: 100%; font-size: 1.2rem; }
+                .group-details h3 { font-size: 0.95rem; margin: 0; font-weight: 600; }
+                .group-details p { font-size: 0.8rem; color: #64748b; margin: 2px 0 0 0; }
+
+                .messages-grid-list { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); }
+                .message-group-item { background: white; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+                .group-header { padding: 1rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 0.75rem; }
+                .header-info h3 { font-size: 1rem; margin: 0; }
+                .msg-count { font-size: 0.8rem; color: #64748b; }
+                
+                .recent-preview { padding: 1rem; flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
+                .preview-row { font-size: 0.9rem; display: flex; gap: 0.5rem; color: #475569; }
+                .preview-row.unread { font-weight: 600; color: #0f172a; }
+                .preview-row .sender { color: #3b82f6; }
+                .preview-row .content { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                .preview-row .time { font-size: 0.75rem; color: #94a3b8; }
+                
+                .group-actions { padding: 1rem; border-top: 1px solid #e2e8f0; background: #fff; }
+                .btn-block { display: block; width: 100%; text-align: center; }
             `}</style>
         </div>
     );
