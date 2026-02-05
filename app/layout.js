@@ -43,18 +43,44 @@ export const metadata = {
   },
 }
 
+import { ThemeProvider } from '@/components/ThemeProvider'
+
 export default async function RootLayout({ children }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'HobbyRent',
+    url: 'https://www.hobbyrent.com',
+    logo: 'https://www.hobbyrent.com/icon.png',
+    description: 'The premium marketplace for renting outdoor gear and tools.',
+    sameAs: [
+      'https://twitter.com/hobbyrent',
+      'https://instagram.com/hobbyrent'
+    ]
+  }
+
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Navbar user={user} />
-        <main style={{ minHeight: '100vh', paddingTop: 'var(--header-height)' }}>
-          {children}
-        </main>
-        <Footer />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+          <Navbar user={user} />
+          <main style={{ minHeight: '100vh', paddingTop: 'var(--header-height)' }}>
+            {children}
+          </main>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   )

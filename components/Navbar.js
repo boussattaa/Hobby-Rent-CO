@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { useState, useEffect, useRef } from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Navbar({ user }) {
   const pathname = usePathname();
@@ -129,7 +130,8 @@ export default function Navbar({ user }) {
           ))}
         </div>
 
-        <div className="nav-actions">
+        <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <ThemeToggle />
           {user ? (
             <div className="user-actions">
               {/* Show List Gear for verified users, Verify Now for unverified */}
@@ -598,4 +600,3 @@ export default function Navbar({ user }) {
     </nav>
   );
 }
-

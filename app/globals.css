@@ -36,6 +36,24 @@
   --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.dark {
+  --background: #0f172a;
+  --surface: #1e293b;
+  --surface-glass: rgba(30, 41, 59, 0.8);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --border-color: #334155;
+  
+  /* Adjusted Brand Colors for Dark Mode */
+  --primary-color: #f8fafc; /* Invert primary to white/light */
+  --secondary-color: #1a1a1a;
+  
+  --dirt-secondary: #431407;
+  --water-secondary: #0c4a6e;
+  --housing-secondary: #312e81;
+  --trailers-secondary: #1e293b;
+}
+
 /* Reset & Base */
 * {
   box-sizing: border-box;
