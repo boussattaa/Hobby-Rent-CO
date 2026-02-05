@@ -59,9 +59,13 @@ export default function DashboardClient({ rentals, user, messages: initialMessag
     const messagesByItem = {};
     if (messages) {
         messages.forEach(msg => {
-            // Check if attached to rental and thus item, otherwise group as 'General'
-            // We fetched: rental: { id, item: { id, name, image_url } }
-            const item = msg.rental?.item;
+            // Check if attached to rental and thus item
+            // Structure: msg.rentals.items since we updated query to use 'rentals' table relation
+            // Handle both legacy alias 'rental' (if cached) or new 'rentals'
+            const rental = msg.rentals || msg.rental;
+            // 'items' vs 'item' (standard vs alias)
+            const item = rental?.items || rental?.item;
+
             const itemId = item?.id || 'general';
             const itemName = item?.name || 'General Inquiries';
             const itemImage = item?.image_url;

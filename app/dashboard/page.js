@@ -3,6 +3,8 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -43,21 +45,24 @@ export default async function DashboardPage() {
         }));
     }
 
-
-
     // 3. Fetch Messages where user is receiver
-    const { data: messages } = await supabase
+    // Using standard relation name 'rentals' instead of alias 'rental'
+    const { data: messages, error: messagesError } = await supabase
         .from('messages')
         .select(`
             *,
             sender:sender_id(email, first_name),
-            rental:rental_id(
+            rentals(
                 id,
-                item:item_id(id, name, image_url)
+                items(id, name, image_url)
             )
         `)
         .eq('receiver_id', user.id)
         .order('created_at', { ascending: false });
+
+    if (messagesError) {
+        console.error("Dashboard Messages Error:", messagesError);
+    }
 
     return (
         <DashboardClient

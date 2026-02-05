@@ -57,7 +57,9 @@ export default function Navbar({ user }) {
     // Mark read in DB
     await supabase.from('notifications').update({ is_read: true }).eq('id', notif.id);
 
-    if (notif.link) router.push(notif.link);
+    if (notif.link) {
+      window.location.href = notif.link;
+    }
   };
 
   // Close notif dropdown when clicking outside
