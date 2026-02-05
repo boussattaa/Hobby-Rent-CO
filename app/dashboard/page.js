@@ -51,15 +51,13 @@ export default async function DashboardPage() {
         .select(`
             *,
             sender:sender_id(email, first_name),
-            booking:booking_id(
+            rental:rental_id(
                 id,
                 item:item_id(id, name, image_url)
             )
         `)
         .eq('receiver_id', user.id)
         .order('created_at', { ascending: false });
-
-    console.log(`[Dashboard] Fetched ${messages?.length || 0} messages for user ${user.id}`);
 
     return (
         <DashboardClient

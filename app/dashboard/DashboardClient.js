@@ -27,7 +27,7 @@ export default function DashboardClient({ rentals, user, messages: initialMessag
                     .select(`
                         *,
                         sender:sender_id(email, first_name),
-                        booking:booking_id(
+                        rental:rental_id(
                             id,
                             item:item_id(id, name, image_url)
                         )
@@ -59,9 +59,9 @@ export default function DashboardClient({ rentals, user, messages: initialMessag
     const messagesByItem = {};
     if (messages) {
         messages.forEach(msg => {
-            // Check if attached to booking and thus item, otherwise group as 'General'
-            // We fetched: booking: { id, item: { id, name, image_url } }
-            const item = msg.booking?.item;
+            // Check if attached to rental and thus item, otherwise group as 'General'
+            // We fetched: rental: { id, item: { id, name, image_url } }
+            const item = msg.rental?.item;
             const itemId = item?.id || 'general';
             const itemName = item?.name || 'General Inquiries';
             const itemImage = item?.image_url;
