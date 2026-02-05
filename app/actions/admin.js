@@ -6,16 +6,15 @@ import { revalidatePath } from 'next/cache';
 export async function verifyUser(userId) {
     const supabase = await createClient();
 
-    // Check if current user is admin (optional, for now assumed protected by route or middleware)
-
     const { error } = await supabase
         .from('profiles')
-        .update({ id_verified_status: 'verified' })
+        .update({
+            id_verified_status: 'verified',
+            is_verified: true
+        })
         .eq('id', userId);
 
     if (error) throw new Error(error.message);
-
-    // Send Notification (Optional enhancement for later: Notify user their ID is verified)
 
     revalidatePath('/admin');
     return { success: true };
@@ -26,7 +25,10 @@ export async function rejectUser(userId) {
 
     const { error } = await supabase
         .from('profiles')
-        .update({ id_verified_status: 'rejected' })
+        .update({
+            id_verified_status: 'rejected',
+            is_verified: false
+        })
         .eq('id', userId);
 
     if (error) throw new Error(error.message);
