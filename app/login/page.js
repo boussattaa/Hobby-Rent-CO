@@ -19,7 +19,10 @@ export default async function LoginPage(props) {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">Password</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label htmlFor="password" style={{ marginBottom: 0 }}>Password</label>
+                <Link href="/forgot-password" style={{ fontSize: '0.8rem', color: '#64748b', textDecoration: 'none' }}>Forgot Password?</Link>
+              </div>
               <input id="password" name="password" type="password" required placeholder="••••••••" />
             </div>
 
