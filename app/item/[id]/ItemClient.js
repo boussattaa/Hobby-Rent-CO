@@ -8,6 +8,8 @@ import { createClient } from '@/utils/supabase/client';
 import DeleteButton from '@/components/DeleteButton';
 import ChatWindow from '@/components/ChatWindow';
 import ReviewList from '@/components/ReviewList';
+import AvailabilityCalendar from '@/components/AvailabilityCalendar';
+import WaiverModal from '@/components/WaiverModal';
 
 // Mock database (legacy/demo items)
 const ITEMS_DB = {
@@ -66,10 +68,26 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
   const [bookingMode, setBookingMode] = useState('daily');
   const [existingRentals, setExistingRentals] = useState([]);
 
+  // Waiver State
+  const [isWaiverOpen, setIsWaiverOpen] = useState(false);
+  const [isRenterVerified, setIsRenterVerified] = useState(false);
+  const [waiverSigned, setWaiverSigned] = useState(false);
+  const [signatureData, setSignatureData] = useState(null);
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUser(user);
+
+      // Check if renter is verified
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_verified')
+          .eq('id', user.id)
+          .single();
+        setIsRenterVerified(!!profile?.is_verified);
+      }
     };
     checkAuth();
 
@@ -409,40 +427,15 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                 )}
 
                 {bookingMode === 'daily' && (
-                  <div className="date-picker-mock">
-                    <div className="date-field">
-                      <label>Start Date</label>
-                      <input
-                        type="date"
-                        min={today}
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                      />
-                    </div>
-                    <div className="date-field">
-                      <label>End Date</label>
-                      <input
-                        type="date"
-                        min={startDate || today}
-                        value={endDate}
-                        onChange={(e) => {
-                          setEndDate(e.target.value);
-                          setAvailabilityError('');
-                          if (startDate && e.target.value) {
-                            let curr = new Date(startDate);
-                            const end = new Date(e.target.value);
-                            while (curr <= end) {
-                              if (blockedDates.has(curr.toISOString().split('T')[0])) {
-                                setAvailabilityError('Selected dates include unavailable days.');
-                                break;
-                              }
-                              curr.setDate(curr.getDate() + 1);
-                            }
-                          }
-                        }}
-                        disabled={!startDate}
-                      />
-                    </div>
+                  <div className="calendar-wrapper" style={{ marginBottom: '1.5rem' }}>
+                    <AvailabilityCalendar
+                      blockedDates={Array.from(blockedDates)}
+                      onDateSelect={({ start, end }) => {
+                        setStartDate(start);
+                        setEndDate(end);
+                        setAvailabilityError('');
+                      }}
+                    />
                   </div>
                 )}
 
@@ -563,18 +556,28 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                   <span>${calculateTotal().toFixed(2)}</span>
                 </div>
 
-                <Link
-                  href={getCheckoutLink()}
-                  className={`btn btn-primary full-width ${(!startDate || availabilityError || (item.price_type === 'daily' && !endDate) || (item.price_type === 'hourly' && (!startTime || !endTime))) ? 'disabled' : ''}`}
+                <button
+                  onClick={() => {
+                    if (!currentUser) {
+                      router.push('/login');
+                      return;
+                    }
+                    if (!isRenterVerified) {
+                      router.push('/verify?message=Please verify your identity before renting');
+                      return;
+                    }
+                    setIsWaiverOpen(true);
+                  }}
+                  className="btn btn-primary full-width"
+                  disabled={!startDate || availabilityError || (item.price_type === 'daily' && !endDate) || (item.price_type === 'hourly' && (!startTime || !endTime))}
                   style={{
                     textAlign: 'center',
-                    textDecoration: 'none',
                     opacity: (!startDate || availabilityError || (item.price_type === 'daily' && !endDate) || (item.price_type === 'hourly' && (!startTime || !endTime))) ? 0.5 : 1,
-                    pointerEvents: (!startDate || availabilityError || (item.price_type === 'daily' && !endDate) || (item.price_type === 'hourly' && (!startTime || !endTime))) ? 'none' : 'auto'
+                    cursor: (!startDate || availabilityError || (item.price_type === 'daily' && !endDate) || (item.price_type === 'hourly' && (!startTime || !endTime))) ? 'not-allowed' : 'pointer'
                   }}
                 >
                   Request to Rent
-                </Link>
+                </button>
                 <button
                   onClick={handleMessageOwner}
                   className="btn btn-secondary full-width"
@@ -641,6 +644,77 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
         rentalId={null}
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
+      />
+
+      <WaiverModal
+        isOpen={isWaiverOpen}
+        onClose={() => setIsWaiverOpen(false)}
+        onSign={async (signatureData) => {
+          setWaiverSigned(true);
+          setSignatureData(signatureData);
+          setIsWaiverOpen(false); // Close modal immediately or keep open with loading? Better to keep open or show loading overlay.
+
+          if (!currentUser) {
+            router.push('/login');
+            return;
+          }
+
+          try {
+            // 1. Create Booking Record
+            const { data, error } = await supabase
+              .from('bookings')
+              .insert({
+                item_id: item.id,
+                user_id: currentUser.id,
+                owner_id: item.owner_id,
+                start_date: bookingMode === 'hourly'
+                  ? `${startDate}T${startTime}`
+                  : `${startDate}T10:00:00`, // Default daily start time
+                end_date: bookingMode === 'hourly'
+                  ? `${startDate}T${endTime}`
+                  : `${endDate}T10:00:00`,
+                total_price: calculateTotal(),
+                status: item.instant_book ? 'approved' : 'pending',
+                waiver_signed: true,
+                waiver_url: 'signed_digitally' // distinct from PDF URL
+              })
+              .select()
+              .single();
+
+            if (error) throw error;
+
+            console.log('Booking created:', data);
+
+            // 2. Trigger Email Notification (Non-blocking)
+            if (data) {
+              const bookingId = data.id;
+              fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: 'new_request',
+                  bookingId
+                })
+              }).catch(err => console.error('Email trigger failed:', err));
+            }
+
+            // 3. Success Feedback
+            alert(item.instant_book
+              ? 'Booking Confirmed! You can now proceed to payment.'
+              : 'Request sent! The owner will be notified.');
+
+            // 4. Cleanup & Redirect
+            setStartDate(''); // Use empty string to match state type
+            setEndDate('');
+
+            // Redirect to Trips page
+            router.push('/rentals');
+
+          } catch (err) {
+            console.error('Booking failed:', err);
+            alert('Failed to create booking. Please try again.');
+          }
+        }}
       />
 
       <style jsx>{`

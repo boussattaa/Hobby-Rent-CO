@@ -43,8 +43,6 @@ export const metadata = {
   },
 }
 
-import { ThemeProvider } from '@/components/ThemeProvider'
-
 export default async function RootLayout({ children }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -63,24 +61,17 @@ export default async function RootLayout({ children }) {
   }
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-          />
-          <Navbar user={user} />
-          <main style={{ minHeight: '100vh', paddingTop: 'var(--header-height)' }}>
-            {children}
-          </main>
-          <Footer />
-        </ThemeProvider>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <Navbar user={user} />
+        <main style={{ minHeight: '100vh', paddingTop: 'var(--header-height)' }}>
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   )

@@ -28,7 +28,7 @@ export default async function PublicProfilePage({ params }) {
     // Get user profile
     const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, is_verified')
+        .select('id, first_name, last_name, is_verified, bio, social_links, created_at, id_verified_status')
         .eq('id', id)
         .single();
 

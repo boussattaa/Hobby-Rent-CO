@@ -7,12 +7,13 @@ export default async function AdminDashboard() {
     // Fetch High-Level Stats
     const { count: usersCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
     const { count: itemsCount } = await supabase.from('items').select('*', { count: 'exact', head: true });
-    const { count: rentalsCount } = await supabase.from('rentals').select('*', { count: 'exact', head: true });
+    // Switch to bookings table
+    const { count: rentalsCount } = await supabase.from('bookings').select('*', { count: 'exact', head: true });
 
-    // Get Recent Activity Data
+    // Get Recent Activity Data (Bookings)
     const { data: recentRentals } = await supabase
-        .from('rentals')
-        .select('*, items(name), profiles:renter_id(email)')
+        .from('bookings')
+        .select('*, items(name), profiles:user_id(email)') // Note: user_id is the renter in bookings table
         .order('created_at', { ascending: false })
         .limit(20);
 
@@ -30,10 +31,16 @@ export default async function AdminDashboard() {
 
     // Get Chart Data (Last 90 days)
     const { data: chartRentals } = await supabase
-        .from('rentals')
+        .from('bookings')
         .select('created_at, total_price')
         .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
         .order('created_at', { ascending: true });
+
+    // Get Pending Verifications
+    const { data: pendingUsers } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id_verified_status', 'pending');
 
     return (
         <AdminDashboardClient
@@ -44,6 +51,7 @@ export default async function AdminDashboard() {
             recentUsers={recentUsers}
             recentItems={recentItems}
             chartRentals={chartRentals}
+            pendingUsers={pendingUsers || []}
         />
     );
 }

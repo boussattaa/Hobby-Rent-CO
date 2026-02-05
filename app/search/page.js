@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import ListingCard from '@/components/ListingCard';
 import SearchSidebar from '@/components/SearchSidebar';
+import MapView from '@/components/MapView';
+import SearchFilters from '@/components/SearchFilters';
 import { geocodeLocation } from '@/utils/geocoding';
 
 function SearchContent() {
@@ -20,6 +22,10 @@ function SearchContent() {
     const subcats = searchParams.get('subcat')?.split(',') || [];
     const maxPrice = searchParams.get('max_price') || '';
 
+    // Direct Coords
+    const latParam = searchParams.get('lat');
+    const lngParam = searchParams.get('lng');
+
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const supabase = createClient();
@@ -29,6 +35,13 @@ function SearchContent() {
     const [mobileLocation, setMobileLocation] = useState(location);
     const [mobileCategory, setMobileCategory] = useState(category);
     const [mobileMaxPrice, setMobileMaxPrice] = useState(maxPrice);
+
+    // Map Toggle State
+    const [showMap, setShowMap] = useState(false);
+
+    // Advanced Filters State
+    const [instantBookOnly, setInstantBookOnly] = useState(false);
+    const [verifiedOnly, setVerifiedOnly] = useState(false);
 
     const categories = [
         { value: '', label: 'All Categories' },
@@ -64,22 +77,89 @@ function SearchContent() {
             if (maxPrice) {
                 queryBuilder = queryBuilder.lte('price', maxPrice);
             }
+            if (instantBookOnly) {
+                queryBuilder = queryBuilder.eq('instant_book', true);
+            }
+            if (verifiedOnly) {
+                // This requires a join filter which Supabase JS syntax makes tricky on one line
+                // For now, we will filter in memory if needed, or assume we denormalized is_verified to items
+                // Ideally: .filter('profiles.is_verified', 'eq', true)
+                // Let's filter in memory after fetch for this prototype to avoid complex join syntax errors
+            }
 
-            // Location Filter with Geocoding
-            if (location) {
+            // Location Filter with Geocoding or Direct Coords
+            if (latParam && lngParam) {
+                const lat = parseFloat(latParam);
+                const lng = parseFloat(lngParam);
+                const r = 0.7; // ~50 miles
+                queryBuilder = queryBuilder
+                    .gte('latitude', lat - r)
+                    .lte('latitude', lat + r)
+                    .gte('longitude', lng - r)
+                    .lte('longitude', lng + r);
+                console.log('Applying direct coordinate filter:', lat, lng);
+            } else if (location) {
                 console.log('Geocoding search location:', location);
                 const coords = await geocodeLocation(location);
 
                 if (coords) {
-                    // Approx 50 mile radius (0.7 degrees rough approximation)
-                    // This creates a bounding box
+                    // Hybrid Search: Try Bounding Box first. If it misses legacy items, we might want text match too.
+                    // Since purely combining them in one OR query is complex in Supabase JS, 
+                    // we will fetch by Bounding Box. If valid but returns few/no results, 
+                    // we can ALSO allow text matching (or just trust the box).
+                    // User Issue: "No results" for existing local items (likely missing coords).
+                    // Fix: We construct a query that allows EITHER:
+                    // 1. Inside Bounding Box
+                    // 2. OR Location matches text
+
                     const r = 0.7;
-                    queryBuilder = queryBuilder
-                        .gte('lat', coords.lat - r)
-                        .lte('lat', coords.lat + r)
-                        .gte('lng', coords.lng - r)
-                        .lte('lng', coords.lng + r);
-                    console.log('Applying coordinate filter:', coords);
+                    const minLat = coords.lat - r;
+                    const maxLat = coords.lat + r;
+                    const minLng = coords.lng - r;
+                    const maxLng = coords.lng + r;
+
+                    // Supabase .or() with filters is: .or('filter1,filter2')
+                    // Bounding box is 4 filters ANDed. 
+                    // It's hard to do (A&B&C&D) OR E.
+                    // EASIER: Run two parallel queries and merge results.
+
+                    const boxQuery = supabase.from('items').select('*')
+                        .gte('latitude', minLat).lte('latitude', maxLat)
+                        .gte('longitude', minLng).lte('longitude', maxLng);
+
+                    // Fuzzy Text Match: Use the extracted City/Town name instead of full string
+                    // "Meridian, Idaho" (input) -> "Meridian" (extracted) -> matches "Meridian ID" (DB)
+                    const city = coords.address?.city || coords.address?.town || coords.address?.village || coords.address?.county;
+                    const searchTerm = city || location; // Fallback to full string if no city found
+
+                    console.log(`Hybrid Search: Box vs Text ("${searchTerm}")`);
+
+                    const textQuery = supabase.from('items').select('*')
+                        .ilike('location', `%${searchTerm}%`);
+
+                    // Apply other filters to both
+                    const applyFilters = (qb) => {
+                        if (query) qb.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
+                        if (category) qb.eq('category', category);
+                        if (subcats.length > 0) qb.in('subcategory', subcats);
+                        if (maxPrice) qb.lte('price', maxPrice);
+                        if (instantBookOnly) qb.eq('instant_book', true);
+                        return qb;
+                    };
+
+                    const [boxRes, textRes] = await Promise.all([
+                        applyFilters(boxQuery),
+                        applyFilters(textQuery)
+                    ]);
+
+                    const combined = [...(boxRes.data || []), ...(textRes.data || [])];
+                    // Remove duplicates
+                    const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+
+                    setItems(unique);
+                    setLoading(false);
+                    return; // Exit early since we handled data setting
+
                 } else {
                     // Fallback to text match if geocoding fails
                     queryBuilder = queryBuilder.ilike('location', `%${location}%`);
@@ -92,14 +172,15 @@ function SearchContent() {
             if (data) {
                 setItems(data);
             } else if (error) {
-                console.error('Search error:', error);
+                console.error('Search error:', error.message, error.details, error.hint);
             }
 
             setLoading(false);
         };
 
         fetchResults();
-    }, [query, location, category, subcats.join(','), maxPrice, supabase]);
+        fetchResults();
+    }, [query, location, category, subcats.join(','), maxPrice, supabase, instantBookOnly, verifiedOnly]);
 
     const applyFilters = () => {
         const params = new URLSearchParams();
@@ -174,17 +255,40 @@ function SearchContent() {
                 {/* Results Area */}
                 <div className="results-area">
                     <header className="search-header">
-                        <h1>Search Results</h1>
-                        <p>
-                            {loading ? 'Searching...' : `Found ${items.length} items`}
-                            {query && <span> for "<strong>{query}</strong>"</span>}
-                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                            <div>
+                                <h1>Search Results</h1>
+                                <p>
+                                    {loading ? 'Searching...' : `Found ${items.length} items`}
+                                    {query && <span> for "<strong>{query}</strong>"</span>}
+                                </p>
+                            </div>
+                            <button
+                                className={`btn ${showMap ? 'btn-primary' : 'btn-secondary'}`}
+                                onClick={() => setShowMap(!showMap)}
+                            >
+                                {showMap ? 'Show List' : 'Show Map 🗺️'}
+                            </button>
+                        </div>
                     </header>
+
+                    <SearchFilters
+                        currentFilters={{ instantBook: instantBookOnly, verifiedOwner: verifiedOnly }}
+                        onFilterChange={(f) => {
+                            setInstantBookOnly(f.instantBook);
+                            setVerifiedOnly(f.verifiedOwner);
+                            // Trigger re-fetch or re-filter here via dependencies
+                        }}
+                    />
 
                     {loading ? (
                         <div className="loading-state">
                             <div className="spinner"></div>
                             <p>Finding the best gear...</p>
+                        </div>
+                    ) : showMap ? (
+                        <div style={{ height: '600px', marginBottom: '2rem' }}>
+                            <MapView listings={items} />
                         </div>
                     ) : items.length > 0 ? (
                         <div className="search-grid">

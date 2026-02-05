@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import VerificationBadge from '@/components/VerificationBadge';
 
 const categoryLabels = {
     offroad: '🏍️ Offroad',
@@ -31,8 +32,25 @@ export default function PublicProfileClient({ profile, listings, displayName }) 
                 </div>
                 <div className="profile-info">
                     <h1>{displayName}</h1>
-                    {profile.is_verified && (
-                        <span className="verified-badge">✓ Verified</span>
+
+                    <div className="badges-row">
+                        {profile.is_verified && <VerificationBadge status="verified" />}
+                        {profile.id_verified_status && profile.id_verified_status !== 'unverified' && (
+                            <VerificationBadge status={profile.id_verified_status} />
+                        )}
+                        <span className="joined-date">Member since {new Date(profile.created_at || Date.now()).getFullYear()}</span>
+                    </div>
+
+                    {profile.bio && <p className="bio">{profile.bio}</p>}
+
+                    {profile.social_links && Object.keys(profile.social_links).length > 0 && (
+                        <div className="social-links">
+                            {Object.entries(profile.social_links).map(([platform, handle]) => (
+                                <a key={platform} href={`https://${platform}.com/${handle}`} target="_blank" rel="noopener noreferrer" className="social-link">
+                                    {platform}
+                                </a>
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>
@@ -104,6 +122,7 @@ export default function PublicProfileClient({ profile, listings, displayName }) 
                     font-size: 2rem;
                 }
                 .verified-badge {
+                    /* Legacy style support */
                     display: inline-block;
                     background: #dcfce7;
                     color: #16a34a;
@@ -111,6 +130,47 @@ export default function PublicProfileClient({ profile, listings, displayName }) 
                     border-radius: 50px;
                     font-size: 0.85rem;
                     font-weight: 600;
+                }
+                
+                .badges-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+                    margin-bottom: 1rem;
+                }
+
+                .joined-date {
+                    color: var(--text-secondary);
+                    font-size: 0.9rem;
+                }
+
+                .bio {
+                    color: var(--text-secondary);
+                    line-height: 1.6;
+                    margin-bottom: 1rem;
+                    max-width: 600px;
+                }
+
+                .social-links {
+                    display: flex;
+                    gap: 0.75rem;
+                }
+
+                .social-link {
+                    background: #f1f5f9;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 6px;
+                    font-size: 0.85rem;
+                    color: var(--text-secondary);
+                    text-decoration: none;
+                    text-transform: capitalize;
+                    transition: all 0.2s;
+                }
+
+                .social-link:hover {
+                    background: var(--text-primary);
+                    color: white;
                 }
 
                 .listings-section h2 {

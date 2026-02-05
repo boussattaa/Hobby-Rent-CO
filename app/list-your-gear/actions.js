@@ -33,15 +33,39 @@ export async function createListing(formData) {
     const zip = formData.get('zip');
     let locationStr = formData.get('location'); // Old field backup
 
+    // Geocoding Strategy:
+    // 1. Use Private Storage Address if available (Highest Priority for Accuracy)
+    // 2. Fallback to City/State/Zip
+    const privateAddress = formData.get('storage_address');
+
+    let publicLocationStr = "Unknown Location";
     if (city && state && zip) {
-        locationStr = `${city}, ${state} ${zip}`;
+        publicLocationStr = `${city}, ${state} ${zip}`;
     } else if (zip) {
-        locationStr = zip;
+        publicLocationStr = zip;
     }
 
-    // Fallback if user uses old form cache or something
-    if (!locationStr && !zip) locationStr = "Unknown Location";
-    const coords = await geocodeLocation(locationStr);
+    // Geocode the best address we have
+    // If we have a private address, use it for the pin source
+    const geocodeTarget = privateAddress || publicLocationStr;
+    const coords = await geocodeLocation(geocodeTarget);
+
+    let itemsLat = null;
+    let itemsLng = null;
+    let storageLat = null;
+    let storageLng = null;
+
+    if (coords) {
+        // Store EXACT coords for private record
+        storageLat = coords.lat;
+        storageLng = coords.lng;
+
+        // Calculate Jittered coords for public record
+        // Random offset ~3-5 miles
+        const jitter = () => (Math.random() - 0.5) * 0.12;
+        itemsLat = coords.lat + jitter();
+        itemsLng = coords.lng + jitter();
+    }
 
     const publicSpecs = {};
     if (formData.get('specs')) {
@@ -68,20 +92,14 @@ export async function createListing(formData) {
         subcategory: formData.get('subcategory'),
         // Pricing
         price_type: formData.get('price_type') || 'daily',
-        price: formData.get('price') ? parseFloat(formData.get('price')) : null, // Allowed null if hourly? DB might require not null on price. Better to store something or make nullable. Let's assume nullable or fill with 0?
-        // Note: 'price' column is likely NOT NULL. If hourly, we might need to store a dummy value or the hourly rate as 'price' alongside 'hourly_rate'. 
-        // Strategy: 'price' = Daily Rate. 'hourly_rate' = Hourly Rate. 
-        // If Hourly only: Price = 0 or Hourly Rate * 8? 
-        // Let's set price to 0 if not provided to pass DB constraints, or make it nullable.
-        // Assuming user runs migration, but existing columns usually stay not null.
-        // Let's put 0 if empty.
+        price: formData.get('price') ? parseFloat(formData.get('price')) : null,
         weekend_price: formData.get('weekend_price') ? parseFloat(formData.get('weekend_price')) : null,
         hourly_rate: formData.get('hourly_rate') ? parseFloat(formData.get('hourly_rate')) : null,
         min_duration: formData.get('min_duration') ? parseInt(formData.get('min_duration')) : 4,
 
-        location: locationStr,
-        lat: coords ? coords.lat : null,
-        lng: coords ? coords.lng : null,
+        location: publicLocationStr, // Public generic text
+        lat: itemsLat,               // Randomly offset pin
+        lng: itemsLng,               // Randomly offset pin
         description: formData.get('description'),
         image_url: formData.get('image_url') || '/images/dirt-hero.png',
         video_url: formData.get('video_url'),
@@ -134,6 +152,9 @@ export async function createListing(formData) {
             // Removed purchase info as requested
             insurance_policy: formData.get('insurance_policy'),
             storage_address: formData.get('storage_address'),
+            // Save Exact Coordinates here
+            storage_lat: storageLat,
+            storage_lng: storageLng,
             emergency_contact: formData.get('emergency_contact')
         };
 

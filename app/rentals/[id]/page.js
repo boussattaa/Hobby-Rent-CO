@@ -71,7 +71,11 @@ export default function RentalDetailsPage({ params }) {
             }
 
             // Securely Fetch Private Address (For Renter Only)
-            if (isUserRenter && enrichedRental.item_id && (enrichedRental.status === 'approved' || enrichedRental.status === 'active')) {
+            // Only reveal once: PAID (approved/active) AND CONTRACT SIGNED
+            const isPaidAndConfirmed = (enrichedRental.status === 'approved' || enrichedRental.status === 'active');
+            const isContractSigned = enrichedRental.contract_signed === true;
+
+            if (isUserRenter && enrichedRental.item_id && isPaidAndConfirmed && isContractSigned) {
                 const { data: privateData, error: privateError } = await supabase
                     .from('item_private_details')
                     .select('storage_address, emergency_contact')
@@ -182,7 +186,12 @@ export default function RentalDetailsPage({ params }) {
                                     </>
                                 ) : (
                                     <div className="locked-state">
-                                        <p>Address will be revealed once the booking is approved.</p>
+                                        <p>🔒 Pickup address will be revealed once:</p>
+                                        <ul style={{ textAlign: 'left', margin: '0.5rem auto', maxWidth: '250px', fontSize: '0.9rem' }}>
+                                            <li>Booking is approved ✓</li>
+                                            <li>Payment is complete ✓</li>
+                                            <li>Contract is signed</li>
+                                        </ul>
                                     </div>
                                 )}
                             </div>

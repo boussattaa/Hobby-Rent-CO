@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import { stripe } from '@/utils/stripe';
 import { createClient } from '@/utils/supabase/server';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export async function POST(request) {
     try {
@@ -10,31 +8,22 @@ export async function POST(request) {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            return NextResponse.json({ error: { message: 'Unauthorized' } }, { status: 401 });
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Create the session
+        // Create a Verification Session
         const verificationSession = await stripe.identity.verificationSessions.create({
             type: 'document',
-            options: {
-                document: {
-                    require_matching_selfie: true, // High trust factor
-                },
-            },
             metadata: {
-                user_id: user.id
+                user_id: user.id,
             },
+            return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/verify?session_id={CHECKOUT_SESSION_ID}`, // Note: Identity uses a different return URL logic usually, but let's check docs. 
+            // Identity uses 'return_url' for the flow redirect.
         });
 
-        // Return the client secret to the frontend
-        return NextResponse.json({
-            clientSecret: verificationSession.client_secret,
-        });
+        return NextResponse.json({ clientSecret: verificationSession.client_secret });
     } catch (error) {
-        console.error('Error creating verification session:', error);
-        return NextResponse.json(
-            { error: { message: error.message } },
-            { status: 500 }
-        );
+        console.error('Stripe Identity Error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

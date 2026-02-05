@@ -2,10 +2,11 @@
 
 import ActivityFeed from '@/components/admin/ActivityFeed';
 import RevenueChart from '@/components/admin/RevenueChart';
+import UserVerificationTable from '@/components/admin/UserVerificationTable';
 
 export default function AdminDashboardClient({
     usersCount, itemsCount, rentalsCount,
-    recentRentals, recentUsers, recentItems, chartRentals
+    recentRentals, recentUsers, recentItems, chartRentals, pendingUsers
 }) {
 
     // Merge and sort activities
@@ -40,6 +41,17 @@ export default function AdminDashboardClient({
             <div className="dashboard-grid">
                 {/* Left Column: Analytics */}
                 <div className="analytics-col">
+
+                    {/* Pending Verifications */}
+                    {pendingUsers && pendingUsers.length > 0 && (
+                        <div className="section mb-8">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2>Pending Verifications <span className="badge-count">{pendingUsers.length}</span></h2>
+                            </div>
+                            <UserVerificationTable users={pendingUsers} />
+                        </div>
+                    )}
+
                     <RevenueChart rentals={chartRentals || []} />
 
                     <div className="section mt-6">
@@ -131,6 +143,17 @@ export default function AdminDashboardClient({
                 .status-badge.approved { background: #dcfce7; color: #166534; }
                 .status-badge.active { background: #dbeafe; color: #1e40af; }
                 .status-badge.completed { background: #f1f5f9; color: #475569; }
+
+                .badge-count {
+                    background: #ef4444; 
+                    color: white; 
+                    padding: 0.1rem 0.5rem; 
+                    border-radius: 50px; 
+                    font-size: 0.8rem;
+                    margin-left: 0.5rem;
+                    vertical-align: middle;
+                }
+                .mb-8 { margin-bottom: 2rem; }
             `}</style>
         </div>
     );

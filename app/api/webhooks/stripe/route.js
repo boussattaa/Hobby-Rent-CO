@@ -65,7 +65,10 @@ async function updateUserVerificationStatus(userId) {
 
     const { error } = await supabase
         .from('profiles')
-        .update({ is_verified: true })
+        .update({
+            is_verified: true,
+            id_verified_status: 'verified'
+        })
         .eq('id', userId);
 
     if (error) {
