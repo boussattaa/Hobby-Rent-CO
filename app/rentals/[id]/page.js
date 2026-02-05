@@ -339,6 +339,7 @@ export default function RentalDetailsPage({ params }) {
                 currentUser={currentUser}
                 receiverId={isOwner ? rental.renter_id : rental.owner_id}
                 receiverName={isOwner ? (rental.renter?.first_name || 'Renter') : (rental.owner?.first_name || 'Owner')}
+                receiverEmail={isOwner ? rental.renter?.email : rental.owner?.email}
                 rentalId={rental.id} // Link chat to this rental context
                 isOpen={isChatOpen}
                 onClose={() => setIsChatOpen(false)}

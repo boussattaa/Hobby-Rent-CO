@@ -64,6 +64,7 @@ export default function InboxClient({ currentUser, messages }) {
                 currentUser={currentUser}
                 receiverId={selectedChat?.userId}
                 receiverName={selectedChat?.email}
+                receiverEmail={selectedChat?.email}
                 isOpen={!!selectedChat}
                 onClose={() => setSelectedChat(null)}
             />
