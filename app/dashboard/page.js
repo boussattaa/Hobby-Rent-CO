@@ -47,11 +47,10 @@ export default async function DashboardPage() {
 
     // 3. Fetch Messages where user is receiver
     // Using standard relation name 'rentals' instead of alias 'rental'
-    const { data: messages, error: messagesError } = await supabase
+    const { data: rawMessages, error: messagesError } = await supabase
         .from('messages')
         .select(`
             *,
-            sender:sender_id(email, first_name),
             rentals(
                 id,
                 items(id, name, image_url)
@@ -62,6 +61,23 @@ export default async function DashboardPage() {
 
     if (messagesError) {
         console.error("Dashboard Messages Error:", messagesError);
+    }
+
+    let messages = [];
+    if (rawMessages && rawMessages.length > 0) {
+        // Manual join for Senders (Profiles)
+        const senderIds = [...new Set(rawMessages.map(m => m.sender_id))];
+        const { data: senders } = await supabase
+            .from('profiles')
+            .select('id, email, first_name')
+            .in('id', senderIds);
+
+        const senderMap = new Map(senders?.map(s => [s.id, s]) || []);
+
+        messages = rawMessages.map(msg => ({
+            ...msg,
+            sender: senderMap.get(msg.sender_id) || { email: 'Unknown', first_name: 'User' }
+        }));
     }
 
     return (
