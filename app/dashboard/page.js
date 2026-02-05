@@ -59,6 +59,8 @@ export default async function DashboardPage() {
         .eq('receiver_id', user.id)
         .order('created_at', { ascending: false });
 
+    console.log(`[Dashboard] Fetched ${messages?.length || 0} messages for user ${user.id}`);
+
     return (
         <DashboardClient
             rentals={enrichedRentals}
