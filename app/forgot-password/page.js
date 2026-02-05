@@ -33,10 +33,10 @@ export default async function ForgotPasswordPage(props) {
                         </p>
 
                         {searchParams?.message && (
-                            <p className="message">{searchParams.message}</p>
+                            <p className="form-message error">{searchParams.message}</p>
                         )}
                         {searchParams?.success && (
-                            <p className="message success" style={{ color: '#16a34a', backgroundColor: '#f0fdf4', padding: '0.75rem', borderRadius: '8px', border: '1px solid #bcf0da' }}>
+                            <p className="form-message success">
                                 {searchParams.success}
                             </p>
                         )}

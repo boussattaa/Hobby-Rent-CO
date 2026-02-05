@@ -49,7 +49,7 @@ export default async function LoginPage(props) {
             </p>
 
             {searchParams?.message && (
-              <p className="message">{searchParams.message}</p>
+              <p className="form-message error">{searchParams.message}</p>
             )}
           </form>
         </div>
