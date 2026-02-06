@@ -54,6 +54,8 @@ export async function POST(request) {
             .from('rentals')
             .update({
                 status: 'approved',
+                waiver_signed: true,
+                contract_signed: true,
                 stripe_payment_intent_id: session.payment_intent // Save for refunds
             })
             .eq('id', rentalId);

@@ -25,6 +25,18 @@ export async function POST(request) {
                 .single();
 
             if (fetchError || !existingRental) throw new Error("Rental not found");
+
+            // Update waiver fields if provided
+            if (waiverSignature) {
+                await supabase.from('rentals').update({
+                    waiver_signed: true,
+                    waiver_signature: waiverSignature,
+                    contract_signed: true, // Also set this for legacy compatibility
+                    protection_plan_level: protectionPlan || existingRental.protection_plan_level,
+                    protection_fee: protectionFee || existingRental.protection_fee
+                }).eq('id', rentalId);
+            }
+
             rental = existingRental;
         } else {
             // CREATE NEW RENTAL (Legacy / Instant Book)
@@ -47,6 +59,7 @@ export async function POST(request) {
                 status: 'pending', // Default to pending
                 waiver_signed: !!waiverSignature,
                 waiver_signature: waiverSignature || null,
+                contract_signed: !!waiverSignature, // Mirror waiver_signed
                 protection_plan_level: protectionPlan || 'basic',
                 protection_fee: protectionFee || 0
             };
