@@ -52,6 +52,7 @@ export async function updateListing(formData) {
         model: formData.get('model'),
         rules: formData.get('rules'),
         features: formData.get('features') ? formData.get('features').split(',').map(s => s.trim()).filter(Boolean) : [],
+        instant_book: formData.get('instant_book') === 'true', // Handle form data string
     };
 
     // Specs

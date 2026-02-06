@@ -21,10 +21,19 @@ export default async function InboxPage() {
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
+    // Filter out deleted messages
+    const validMessages = rawMessages?.filter(msg => {
+        const isSender = msg.sender_id === user.id;
+        const isReceiver = msg.receiver_id === user.id;
+        if (isSender && msg.deleted_by_sender) return false;
+        if (isReceiver && msg.deleted_by_receiver) return false;
+        return true;
+    }) || [];
+
     let messages = [];
-    if (rawMessages && rawMessages.length > 0) {
+    if (validMessages.length > 0) {
         const userIds = new Set();
-        rawMessages.forEach(msg => {
+        validMessages.forEach(msg => {
             userIds.add(msg.sender_id);
             userIds.add(msg.receiver_id);
         });

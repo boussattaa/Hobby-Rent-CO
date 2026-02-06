@@ -145,7 +145,8 @@ export default function EditListingPage() {
                     maintenance_notes: privateDetails?.maintenance_notes || '',
                     insurance_policy: privateDetails?.insurance_policy || '',
                     storage_address: privateDetails?.storage_address || '',
-                    emergency_contact: privateDetails?.emergency_contact || ''
+                    emergency_contact: privateDetails?.emergency_contact || '',
+                    instant_book: data.instant_book || false
                 });
             } else if (error) {
                 console.error("Error fetching item:", error);
@@ -460,6 +461,27 @@ export default function EditListingPage() {
                                             </div>
                                         </div>
                                     )}
+                                </div>
+                            </div>
+
+                            <div className="form-group full">
+                                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <span>Instant Book</span>
+                                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 'normal' }}>
+                                        Allow renters to book without manual approval?
+                                    </span>
+                                </label>
+                                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            name="instant_book"
+                                            checked={formData.instant_book}
+                                            onChange={(e) => setFormData({ ...formData, instant_book: e.target.checked })}
+                                            style={{ width: '20px', height: '20px' }}
+                                        />
+                                        <span>Enable Instant Book for this listing</span>
+                                    </label>
                                 </div>
                             </div>
 

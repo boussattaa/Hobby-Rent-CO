@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import ChatWindow from '@/components/ChatWindow';
+import { deleteConversation } from './actions';
 
 export default function InboxClient({ currentUser, messages: initialMessages }) {
     const [messages, setMessages] = useState(initialMessages);
@@ -77,6 +78,26 @@ export default function InboxClient({ currentUser, messages: initialMessages }) 
         new Date(b.lastMessage.created_at) - new Date(a.lastMessage.created_at)
     );
 
+    // Handler for deletion
+    const handleDelete = async (e, otherUserId) => {
+        e.stopPropagation();
+        if (!confirm('Start fresh? This will hide the conversation for you.')) return;
+
+        const result = await deleteConversation(otherUserId);
+        if (result.success) {
+            // Remove from local state immediately
+            setMessages(prev => prev.filter(msg =>
+                !((msg.sender_id === currentUser.id && msg.receiver_id === otherUserId) ||
+                    (msg.receiver_id === currentUser.id && msg.sender_id === otherUserId))
+            ));
+            if (selectedChat?.userId === otherUserId) {
+                setSelectedChat(null);
+            }
+        } else {
+            alert('Error deleting: ' + result.message);
+        }
+    };
+
     return (
         <div className="inbox-container">
             {conversationList.length === 0 ? (
@@ -98,7 +119,16 @@ export default function InboxClient({ currentUser, messages: initialMessages }) 
                                     {convo.lastMessage.content}
                                 </p>
                             </div>
-                            {convo.unreadCount > 0 && <span className="unread-badge">{convo.unreadCount}</span>}
+                            <div className="convo-actions">
+                                {convo.unreadCount > 0 && <span className="unread-badge">{convo.unreadCount}</span>}
+                                <button
+                                    className="delete-btn"
+                                    onClick={(e) => handleDelete(e, convo.userId)}
+                                    title="Delete Conversation"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -178,6 +208,27 @@ export default function InboxClient({ currentUser, messages: initialMessages }) 
                     border-radius: 99px;
                     font-size: 0.75rem;
                     font-weight: 600;
+                }
+                .convo-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+                .delete-btn {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    font-size: 1.2rem;
+                    opacity: 0;
+                    transition: opacity 0.2s;
+                    padding: 4px;
+                    border-radius: 4px;
+                }
+                .delete-btn:hover {
+                    background: #fee2e2;
+                }
+                .convo-card:hover .delete-btn {
+                    opacity: 1;
                 }
                 .empty-state {
                     text-align: center;

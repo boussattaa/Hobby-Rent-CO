@@ -22,9 +22,12 @@ export default function RentalsPage() {
                 .select(`
             *,
             items (
+                id,
                 name,
                 image_url,
-                location
+                location,
+                instant_book,
+                price_type
             )
         `)
                 .eq('renter_id', user.id)
@@ -134,7 +137,16 @@ export default function RentalsPage() {
                                             </Link>
                                         )}
                                         {rental.status === 'pending' && (
-                                            <button disabled className="btn btn-disabled full-width">Awaiting Approval</button>
+                                            rental.items?.instant_book ? (
+                                                <Link
+                                                    href={`/checkout?itemId=${rental.items.id}&start=${rental.start_date}&end=${rental.end_date}&type=${rental.price_type || 'daily'}`}
+                                                    className="btn btn-primary full-width"
+                                                >
+                                                    Complete Payment
+                                                </Link>
+                                            ) : (
+                                                <button disabled className="btn btn-disabled full-width">Awaiting Approval</button>
+                                            )
                                         )}
                                     </div>
                                 </div>

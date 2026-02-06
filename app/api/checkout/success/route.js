@@ -1,6 +1,4 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 export async function POST(request) {
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -10,7 +8,18 @@ export async function POST(request) {
     try {
         const { sessionId } = await request.json();
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-        const supabase = await createClient();
+
+        // Use Admin Client to bypass RLS for status update
+        const supabaseAdmin = createAdminClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY,
+            {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false
+                }
+            }
+        );
 
         // 1. Verify Session
         const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -24,7 +33,7 @@ export async function POST(request) {
         }
 
         // 2. Update Rental Status and save payment intent for refunds
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
             .from('rentals')
             .update({
                 status: 'approved',
