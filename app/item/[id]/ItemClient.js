@@ -9,11 +9,6 @@ import DeleteButton from '@/components/DeleteButton';
 import ChatWindow from '@/components/ChatWindow';
 import ReviewList from '@/components/ReviewList';
 import AvailabilityCalendar from '@/components/AvailabilityCalendar';
-import { createClient } from '@/utils/supabase/client';
-import DeleteButton from '@/components/DeleteButton';
-import ChatWindow from '@/components/ChatWindow';
-import ReviewList from '@/components/ReviewList';
-import AvailabilityCalendar from '@/components/AvailabilityCalendar';
 
 // Mock database (legacy/demo items)
 const ITEMS_DB = {
@@ -71,11 +66,8 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
   // Booking Mode State (Daily vs Hourly)
   const [bookingMode, setBookingMode] = useState('daily');
   const [existingRentals, setExistingRentals] = useState([]);
-
-  // Booking Mode State (Daily vs Hourly)
-  const [bookingMode, setBookingMode] = useState('daily');
-  const [existingRentals, setExistingRentals] = useState([]);
   const [isRenterVerified, setIsRenterVerified] = useState(false);
+
 
   useEffect(() => {
     const checkAuth = async () => {
