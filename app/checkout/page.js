@@ -109,24 +109,30 @@ export default function CheckoutPage() {
         setSignature(signedData);
         setShowWaiver(false);
         // Continue checkout automatically
-        initiateCheckout(signedData);
+        if (!item?.instant_book && !rentalId) {
+            submitRequestOnly(signedData);
+        } else {
+            initiateCheckout(signedData);
+        }
     };
 
     const handleCheckout = () => {
-        // If we have an existing rentalId, we are completing a payment, not submitting a new request
-        if (!item.instant_book && !rentalId) {
-            submitRequestOnly();
-            return;
-        }
-
-        if ((item.instant_book || rentalId) && !signature) {
+        if (!signature) {
             setShowWaiver(true);
             return;
         }
+
+        // If we have an existing rentalId, we are completing a payment, not submitting a new request
+        if (!item.instant_book && !rentalId) {
+            submitRequestOnly(signature);
+            return;
+        }
+
         initiateCheckout(signature);
     };
 
-    const submitRequestOnly = async () => {
+    const submitRequestOnly = async (waiverData) => {
+        const sigToUse = waiverData || signature;
         setLoading(true);
         try {
             const response = await fetch('/api/checkout', {
@@ -143,7 +149,7 @@ export default function CheckoutPage() {
                     startDate: startParam,
                     endDate: endParam,
                     rentalId: null, // New rental
-                    waiverSignature: signature || null,
+                    waiverSignature: sigToUse || null,
                     requestOnly: true // Key flag
                 }),
             });
