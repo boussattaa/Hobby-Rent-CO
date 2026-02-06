@@ -43,7 +43,7 @@ export async function POST(request) {
                 item_name: item.name, // Preserve item name for historical records
                 renter_id: user.id,
                 owner_id: item.owner_id,
-                total_price: price + 15 + (protectionFee || 0),
+                total_price: price + 1 + (protectionFee || 0),
                 status: 'pending', // Default to pending
                 waiver_signed: !!waiverSignature,
                 waiver_signature: waiverSignature || null,
@@ -98,7 +98,7 @@ export async function POST(request) {
                     product_data: {
                         name: 'Service Fee',
                     },
-                    unit_amount: 1500, // $15.00
+                    unit_amount: 100, // $1.00
                 },
                 quantity: 1,
             }

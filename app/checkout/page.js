@@ -57,7 +57,7 @@ export default function CheckoutPage() {
     const itemPrice = item ? Number(item.price) : 0;
     const itemHourlyRate = item ? Number(item.hourly_rate || 0) : 0;
     const itemName = item ? item.name : "Unknown Item";
-    const serviceFee = 15;
+    const serviceFee = 1;
 
     // Calculate duration
     let durationDisplay = "";

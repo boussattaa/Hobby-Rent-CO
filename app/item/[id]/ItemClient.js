@@ -188,14 +188,14 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
   // Cost and Link Calculation
   const calculateTotal = () => {
     if (bookingMode === 'hourly') {
-      if (!startDate || !startTime || !endTime) return ((item.hourly_rate || 0) * (item.min_duration || 4)) + 15;
+      if (!startDate || !startTime || !endTime) return ((item.hourly_rate || 0) * (item.min_duration || 4)) + 1;
       const start = new Date(`${startDate}T${startTime}`);
       let end = new Date(`${startDate}T${endTime}`);
       let hours = (end - start) / (1000 * 60 * 60);
       if (hours <= 0) hours = 0;
-      return (hours * (item.hourly_rate || 0)) + 15;
+      return (hours * (item.hourly_rate || 0)) + 1;
     } else {
-      if (!startDate || !endDate) return (item.price || 0) + 15;
+      if (!startDate || !endDate) return (item.price || 0) + 1;
       let s = new Date(startDate);
       const e = new Date(endDate);
       let diff = Math.ceil((e - s) / (1000 * 3600 * 24));
@@ -212,7 +212,7 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
           est += (item.price || 0);
         }
       }
-      return est + 15;
+      return est + 1;
     }
   };
 
@@ -543,7 +543,7 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
 
                 <div className="summary-row">
                   <span>Service Fee</span>
-                  <span>$15</span>
+                  <span>$1</span>
                 </div>
                 <div className="summary-row total">
                   <span>Total (est)</span>
