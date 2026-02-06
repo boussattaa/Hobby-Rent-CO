@@ -4,12 +4,17 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 
 import { sendNewMessageEmail } from '@/app/actions/email';
+import { markMessagesAsRead } from '@/app/inbox/actions';
 
 export default function ChatWindow({ currentUser, receiverId, receiverName, receiverEmail, rentalId, isOpen, onClose }) {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
-    const supabase = createClient();
+    const supabaseRef = useRef(null);
+    if (!supabaseRef.current) {
+        supabaseRef.current = createClient();
+    }
+    const supabase = supabaseRef.current;
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -24,7 +29,15 @@ export default function ChatWindow({ currentUser, receiverId, receiverName, rece
                 .order('created_at', { ascending: true });
 
             if (error) console.error('Error fetching messages:', error);
-            else setMessages(data || []);
+            else {
+                setMessages(data || []);
+
+                // Only mark as read if there are actually unread messages FOR ME
+                const hasUnread = data?.some(m => m.receiver_id === currentUser.id && !m.is_read);
+                if (hasUnread) {
+                    markMessagesAsRead(receiverId);
+                }
+            }
             setLoading(false);
         };
 
@@ -32,7 +45,7 @@ export default function ChatWindow({ currentUser, receiverId, receiverName, rece
 
         // Subscribe to new messages
         const channel = supabase
-            .channel('chat_room')
+            .channel(`chat_${receiverId}`)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
@@ -41,27 +54,30 @@ export default function ChatWindow({ currentUser, receiverId, receiverName, rece
             }, (payload) => {
                 if (payload.new.sender_id === receiverId) {
                     setMessages(prev => [...prev, payload.new]);
+                    // Mark this specific new message as read too
+                    markMessagesAsRead(receiverId);
                 }
-            })
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'messages',
-                filter: `sender_id=eq.${currentUser.id}`
-            }, (payload) => {
-                // Optimistically added already, but good to confirm or sync
-                // Simplest is to just ignore own echos if we add them locally
             })
             .subscribe();
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [isOpen, currentUser, receiverId, supabase]);
+    }, [isOpen, currentUser?.id, receiverId]); // Stable dependencies
 
+    // Scroll to bottom on open or new messages
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isOpen]);
+        if (isOpen && messages.length > 0) {
+            // Use requestAnimationFrame to ensure DOM is updated
+            const scroll = () => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }); // auto is less likely to loop/stutter than smooth if updates are fast
+            };
+            scroll();
+            // Fallback for slower renders
+            const timeout = setTimeout(scroll, 50);
+            return () => clearTimeout(timeout);
+        }
+    }, [messages.length, isOpen]);
 
     const handleSend = async (e) => {
         e.preventDefault();

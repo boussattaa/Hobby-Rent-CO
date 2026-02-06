@@ -7,10 +7,18 @@ import { createClient } from '@/utils/supabase/client';
 
 import { approveRental, rejectRental } from './actions';
 
+import ChatWindow from '@/components/ChatWindow';
+
 export default function DashboardClient({ rentals, user, messages: initialMessages }) {
     const [activeTab, setActiveTab] = useState('overview');
     const [messages, setMessages] = useState(initialMessages || []);
+    const [selectedChat, setSelectedChat] = useState(null);
     const supabase = createClient();
+
+    // Sync state when props change (vital for revalidatePath to work)
+    useEffect(() => {
+        setMessages(initialMessages || []);
+    }, [initialMessages]);
 
     useEffect(() => {
         const channel = supabase
@@ -27,9 +35,9 @@ export default function DashboardClient({ rentals, user, messages: initialMessag
                     .select(`
                         *,
                         sender:sender_id(email, first_name),
-                        rental:rental_id(
+                        rentals:rental_id(
                             id,
-                            item:item_id(id, name, image_url)
+                            items:item_id(id, name, image_url)
                         )
                     `)
                     .eq('id', payload.new.id)
@@ -59,11 +67,7 @@ export default function DashboardClient({ rentals, user, messages: initialMessag
     const messagesByItem = {};
     if (messages) {
         messages.forEach(msg => {
-            // Check if attached to rental and thus item
-            // Structure: msg.rentals.items since we updated query to use 'rentals' table relation
-            // Handle both legacy alias 'rental' (if cached) or new 'rentals'
             const rental = msg.rentals || msg.rental;
-            // 'items' vs 'item' (standard vs alias)
             const item = rental?.items || rental?.item;
 
             const itemId = item?.id || 'general';
@@ -80,10 +84,28 @@ export default function DashboardClient({ rentals, user, messages: initialMessag
                 };
             }
             messagesByItem[itemId].messages.push(msg);
-            if (!msg.is_read) messagesByItem[itemId].unreadCount++;
+
+            // Refinment: ONLY count as unread if I am the receiver
+            if (!msg.is_read && msg.receiver_id === user.id) {
+                messagesByItem[itemId].unreadCount++;
+            }
         });
     }
     const messageGroups = Object.values(messagesByItem);
+
+    const openChat = (otherUserId, otherUserEmail) => {
+        // Optimistically mark messages from this user as read in local state
+        setMessages(prev => prev.map(m =>
+            (m.sender_id === otherUserId && m.receiver_id === user.id)
+                ? { ...m, is_read: true }
+                : m
+        ));
+
+        setSelectedChat({
+            userId: otherUserId,
+            email: otherUserEmail || 'User'
+        });
+    };
 
     // Calculate basic stats
     const totalEarnings = rentals
@@ -151,7 +173,16 @@ export default function DashboardClient({ rentals, user, messages: initialMessag
                                 <h2>New Messages 💬</h2>
                                 <div className="messages-preview-list">
                                     {messageGroups.filter(g => g.unreadCount > 0).map(group => (
-                                        <div key={group.itemId} className="message-group-card" onClick={() => setActiveTab('messages')}>
+                                        <div
+                                            key={group.itemId}
+                                            className="message-group-card"
+                                            onClick={() => {
+                                                const firstMsg = group.messages[0];
+                                                const otherUserId = firstMsg.sender_id === user.id ? firstMsg.receiver_id : firstMsg.sender_id;
+                                                const otherUserEmail = firstMsg.sender_id === user.id ? firstMsg.receiver?.email : firstMsg.sender?.email;
+                                                openChat(otherUserId, otherUserEmail);
+                                            }}
+                                        >
                                             <div className="group-info">
                                                 <div className="img-wrapper-sm">
                                                     {group.itemImage ? (
@@ -256,7 +287,17 @@ export default function DashboardClient({ rentals, user, messages: initialMessag
                                             </div>
 
                                             <div className="group-actions">
-                                                <Link href="/inbox" className="btn btn-primary btn-sm btn-block">Reply in Inbox</Link>
+                                                <button
+                                                    onClick={() => {
+                                                        const firstMsg = group.messages[0];
+                                                        const otherUserId = firstMsg.sender_id === user.id ? firstMsg.receiver_id : firstMsg.sender_id;
+                                                        const otherUserEmail = firstMsg.sender_id === user.id ? firstMsg.receiver?.email : firstMsg.sender?.email;
+                                                        openChat(otherUserId, otherUserEmail);
+                                                    }}
+                                                    className="btn btn-primary btn-sm btn-block"
+                                                >
+                                                    Reply in Dashboard
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
@@ -267,6 +308,15 @@ export default function DashboardClient({ rentals, user, messages: initialMessag
                 )}
 
             </div>
+
+            <ChatWindow
+                currentUser={user}
+                receiverId={selectedChat?.userId}
+                receiverName={selectedChat?.email}
+                receiverEmail={selectedChat?.email}
+                isOpen={!!selectedChat}
+                onClose={() => setSelectedChat(null)}
+            />
 
             <style jsx>{`
                 .dashboard-page { min-height: 100vh; background: #f8fafc; padding-bottom: 4rem; }
@@ -355,28 +405,32 @@ function RentalRow({ rental }) {
 
             <div className="rental-actions">
                 {rental.status === 'pending' ? (
-                    <>
-                        <button
-                            onClick={async () => {
-                                if (confirm('Approve this rental?')) {
-                                    await approveRental(rental.id);
-                                }
-                            }}
-                            className="btn btn-primary btn-sm"
-                        >
-                            Approve
-                        </button>
-                        <button
-                            onClick={async () => {
-                                if (confirm('Reject this rental?')) {
-                                    await rejectRental(rental.id);
-                                }
-                            }}
-                            className="btn btn-secondary btn-sm reject"
-                        >
-                            Reject
-                        </button>
-                    </>
+                    rental.items?.instant_book ? (
+                        <span className="status-badge awaiting_payment">Awaiting Payment</span>
+                    ) : (
+                        <>
+                            <button
+                                onClick={async () => {
+                                    if (confirm('Approve this rental?')) {
+                                        await approveRental(rental.id);
+                                    }
+                                }}
+                                className="btn btn-primary btn-sm"
+                            >
+                                Approve
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (confirm('Reject this rental?')) {
+                                        await rejectRental(rental.id);
+                                    }
+                                }}
+                                className="btn btn-secondary btn-sm reject"
+                            >
+                                Reject
+                            </button>
+                        </>
+                    )
                 ) : (
                     <span className={`status-badge ${rental.status}`}>{rental.status === 'awaiting_payment' ? 'Awaiting Payment' : rental.status}</span>
                 )}

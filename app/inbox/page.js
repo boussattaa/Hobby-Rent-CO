@@ -45,7 +45,7 @@ export default async function InboxPage() {
 
         const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-        messages = rawMessages.map(msg => ({
+        messages = validMessages.map(msg => ({
             ...msg,
             sender: profileMap.get(msg.sender_id) || { email: 'Unknown', first_name: 'User' },
             receiver: profileMap.get(msg.receiver_id) || { email: 'Unknown', first_name: 'User' }

@@ -30,7 +30,7 @@ export default async function DashboardPage() {
     if (rentalsData && rentalsData.length > 0) {
         // Fetch Items
         const itemIds = [...new Set(rentalsData.map(r => r.item_id))];
-        const { data: items } = await supabase.from('items').select('id, name, image_url').in('id', itemIds);
+        const { data: items } = await supabase.from('items').select('id, name, image_url, instant_book').in('id', itemIds);
         const itemsMap = new Map(items?.map(i => [i.id, i]) || []);
 
         // Fetch Renters
@@ -45,8 +45,7 @@ export default async function DashboardPage() {
         }));
     }
 
-    // 3. Fetch Messages where user is receiver
-    // Using standard relation name 'rentals' instead of alias 'rental'
+    // 3. Fetch Messages where user is participant
     const { data: rawMessages, error: messagesError } = await supabase
         .from('messages')
         .select(`
@@ -56,27 +55,41 @@ export default async function DashboardPage() {
                 items(id, name, image_url)
             )
         `)
-        .eq('receiver_id', user.id)
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
     if (messagesError) {
         console.error("Dashboard Messages Error:", messagesError);
     }
 
+    // Filter out deleted messages
+    const validMessages = rawMessages?.filter(msg => {
+        const isSender = msg.sender_id === user.id;
+        const isReceiver = msg.receiver_id === user.id;
+        if (isSender && msg.deleted_by_sender) return false;
+        if (isReceiver && msg.deleted_by_receiver) return false;
+        return true;
+    }) || [];
+
     let messages = [];
-    if (rawMessages && rawMessages.length > 0) {
-        // Manual join for Senders (Profiles)
-        const senderIds = [...new Set(rawMessages.map(m => m.sender_id))];
-        const { data: senders } = await supabase
+    if (validMessages.length > 0) {
+        // Manual join for Senders/Receivers (Profiles)
+        const userIds = [...new Set([
+            ...validMessages.map(m => m.sender_id),
+            ...validMessages.map(m => m.receiver_id)
+        ])];
+
+        const { data: profiles } = await supabase
             .from('profiles')
             .select('id, email, first_name')
-            .in('id', senderIds);
+            .in('id', userIds);
 
-        const senderMap = new Map(senders?.map(s => [s.id, s]) || []);
+        const profileMap = new Map(profiles?.map(s => [s.id, s]) || []);
 
-        messages = rawMessages.map(msg => ({
+        messages = validMessages.map(msg => ({
             ...msg,
-            sender: senderMap.get(msg.sender_id) || { email: 'Unknown', first_name: 'User' }
+            sender: profileMap.get(msg.sender_id) || { email: 'Unknown', first_name: 'User' },
+            receiver: profileMap.get(msg.receiver_id) || { email: 'Unknown', first_name: 'User' }
         }));
     }
 
