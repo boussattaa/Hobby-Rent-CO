@@ -34,6 +34,23 @@ export async function POST(request) {
 
         if (error) throw error;
 
+        // 3. Trigger Emails (Non-blocking)
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+        // Notify Renter (Approved)
+        fetch(`${baseUrl}/api/send-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'status_change', bookingId: rentalId })
+        }).catch(err => console.error("Renter Email Failed:", err));
+
+        // Notify Owner (Confirmed)
+        fetch(`${baseUrl}/api/send-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'new_booking_confirmed', bookingId: rentalId })
+        }).catch(err => console.error("Owner Email Failed:", err));
+
         return NextResponse.json({ success: true, rentalId });
 
     } catch (err) {

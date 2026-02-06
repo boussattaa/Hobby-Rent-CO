@@ -68,6 +68,18 @@ export async function POST(request) {
         <br/>
         <a href="${process.env.NEXT_PUBLIC_BASE_URL}/rentals" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Booking</a>
       `;
+        } else if (type === 'new_booking_confirmed') {
+            // Notify Owner of Instant/Paid Booking
+            recipientId = booking.owner_id;
+            subject = `New Booking Confirmed: ${booking.items.title}`;
+            htmlContent = `
+        <h1>New Booking Confirmed!</h1>
+        <p>Great news! You have a new confirmed booking for <strong>${booking.items.title}</strong>.</p>
+        <p><strong>Total Payout:</strong> $${(booking.total_price * 0.9).toFixed(2)}</p>
+        <p><strong>Dates:</strong> ${new Date(booking.start_date).toLocaleDateString()} - ${new Date(booking.end_date).toLocaleDateString()}</p>
+        <br/>
+        <a href="${process.env.NEXT_PUBLIC_BASE_URL}/dashboard" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Booking</a>
+      `;
         } else {
             return NextResponse.json({ error: 'Invalid email type' }, { status: 400 });
         }
