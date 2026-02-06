@@ -15,6 +15,7 @@ const ITEMS_DB = {};
 export default function CheckoutPage() {
     const searchParams = useSearchParams();
     const itemId = searchParams.get('itemId');
+    const rentalId = searchParams.get('rentalId');
     const startParam = searchParams.get('start');
     const endParam = searchParams.get('end');
     // Detect type: either passed explicit 'type' or infer from format? 
@@ -112,12 +113,13 @@ export default function CheckoutPage() {
     };
 
     const handleCheckout = () => {
-        if (!item.instant_book) {
+        // If we have an existing rentalId, we are completing a payment, not submitting a new request
+        if (!item.instant_book && !rentalId) {
             submitRequestOnly();
             return;
         }
 
-        if (item.instant_book && !signature) {
+        if ((item.instant_book || rentalId) && !signature) {
             setShowWaiver(true);
             return;
         }
@@ -185,7 +187,7 @@ export default function CheckoutPage() {
                     protectionFee,
                     startDate: startParam,
                     endDate: endParam,
-                    rentalId: null, // New rental
+                    rentalId: rentalId || null, // Use existing rentalId if present
                     waiverSignature: waiverData || null
                 }),
             });
@@ -309,7 +311,7 @@ export default function CheckoutPage() {
                             className="btn btn-primary full-width"
                             style={{ marginTop: '2rem' }}
                         >
-                            {loading ? 'Processing...' : (item.instant_book ? 'Proceed to Payment' : 'Submit Rental Request')}
+                            {loading ? 'Processing...' : (item.instant_book || rentalId ? 'Proceed to Payment' : 'Submit Rental Request')}
                         </button>
                     </div>
 
