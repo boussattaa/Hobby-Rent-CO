@@ -7,9 +7,15 @@ import { useSearchParams } from 'next/navigation';
 function SuccessContent() {
     const searchParams = useSearchParams();
     const sessionId = searchParams.get('session_id');
-    const [status, setStatus] = useState('verifying'); // verifying, success, error
+    const type = searchParams.get('type');
+    const rentalId = searchParams.get('rental_id');
+
+    // Default to 'verifying' if we have a session, otherwise 'request' if explicit, or error
+    const [status, setStatus] = useState(type === 'request' ? 'request_sent' : 'verifying');
 
     useEffect(() => {
+        if (type === 'request') return; // No verification needed for simple requests
+
         if (!sessionId) {
             setStatus('error');
             return;
@@ -35,7 +41,7 @@ function SuccessContent() {
         };
 
         verifyPayment();
-    }, [sessionId]);
+    }, [sessionId, type]);
 
     return (
         <div className="container" style={{ padding: '4rem 2rem', textAlign: 'center' }}>
@@ -56,6 +62,23 @@ function SuccessContent() {
                         <Link href="/rentals" className="btn btn-primary">
                             Go to My Trips
                         </Link>
+                    </>
+                )}
+
+                {status === 'request_sent' && (
+                    <>
+                        <h1 style={{ color: '#0ea5e9', marginBottom: '1rem' }}>Request Sent! 📩</h1>
+                        <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+                            We've sent your rental request to the owner. You'll be notified once they approve it so you can complete the payment.
+                        </p>
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                            <Link href="/rentals" className="btn btn-primary">
+                                View My Trips
+                            </Link>
+                            <Link href="/" className="btn btn-secondary">
+                                Return Home
+                            </Link>
+                        </div>
                     </>
                 )}
 

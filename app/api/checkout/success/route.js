@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 export async function POST(request) {
@@ -23,17 +25,32 @@ export async function POST(request) {
 
         // 1. Verify Session
         const session = await stripe.checkout.sessions.retrieve(sessionId);
-        if (!session || session.payment_status !== 'paid') {
-            return NextResponse.json({ error: 'Payment not successful' }, { status: 400 });
+        console.log("Stripe Session Status:", session.payment_status, session.status);
+
+        if (!session || (session.payment_status !== 'paid' && session.status !== 'complete')) {
+            console.error("Payment not successful:", session.payment_status);
+            return NextResponse.json({ error: `Payment not successful: ${session.payment_status}` }, { status: 400 });
         }
 
-        const rentalId = session.metadata.rentalId;
+        const rentalId = session.metadata?.rentalId;
         if (!rentalId) {
+            console.error("No rental ID in session metadata:", session.metadata);
             return NextResponse.json({ error: 'No rental ID in metadata' }, { status: 400 });
         }
 
-        // 2. Update Rental Status and save payment intent for refunds
-        const { error } = await supabaseAdmin
+        // 2. Update Rental Status if not already updated
+        // First check current status to avoid redundant triggers
+        const { data: currentRental } = await supabaseAdmin
+            .from('rentals')
+            .select('status')
+            .eq('id', rentalId)
+            .single();
+
+        if (currentRental?.status === 'approved' || currentRental?.status === 'active') {
+            return NextResponse.json({ success: true, rentalId, alreadyUpdated: true });
+        }
+
+        const { error: updateError } = await supabaseAdmin
             .from('rentals')
             .update({
                 status: 'approved',
@@ -41,7 +58,12 @@ export async function POST(request) {
             })
             .eq('id', rentalId);
 
-        if (error) throw error;
+        if (updateError) {
+            console.error("Database Update Error:", updateError);
+            throw updateError;
+        }
+
+        console.log("Rental successfully updated to approved:", rentalId);
 
         // 3. Trigger Emails (Non-blocking)
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';

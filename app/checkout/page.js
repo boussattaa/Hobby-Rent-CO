@@ -112,12 +112,59 @@ export default function CheckoutPage() {
     };
 
     const handleCheckout = () => {
+        if (!item.instant_book) {
+            submitRequestOnly();
+            return;
+        }
+
         if (item.instant_book && !signature) {
             setShowWaiver(true);
             return;
         }
         initiateCheckout(signature);
     };
+
+    const submitRequestOnly = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    itemId,
+                    price: rentalTotal,
+                    name: `${itemName} (${durationDisplay})`,
+                    protectionPlan,
+                    protectionFee,
+                    startDate: startParam,
+                    endDate: endParam,
+                    rentalId: null, // New rental
+                    waiverSignature: signature || null,
+                    requestOnly: true // Key flag
+                }),
+            });
+
+            const { success, rentalId, error: apiError } = await response.json();
+
+            if (apiError) {
+                console.error(apiError);
+                alert("Request submission failed: " + apiError);
+                setLoading(false);
+                return;
+            }
+
+            if (success) {
+                window.location.href = `/success?type=request&rental_id=${rentalId}`;
+            } else {
+                throw new Error("Failed to submit request");
+            }
+        } catch (err) {
+            console.error(err);
+            setLoading(false);
+        }
+    }
 
     const initiateCheckout = async (waiverData) => {
         setLoading(true);
@@ -262,15 +309,17 @@ export default function CheckoutPage() {
                             className="btn btn-primary full-width"
                             style={{ marginTop: '2rem' }}
                         >
-                            {loading ? 'Processing...' : 'Proceed to Payment'}
+                            {loading ? 'Processing...' : (item.instant_book ? 'Proceed to Payment' : 'Submit Rental Request')}
                         </button>
                     </div>
 
                     <div className="info-section glass">
-                        <h3>Safe & Secure</h3>
+                        <h3>{item.instant_book ? 'Safe & Secure' : 'How it Works'}</h3>
                         <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                            Payments are processed securely by Stripe. We do not store your card details.
-                            You will be redirected to a secure payment page to complete your booking.
+                            {item.instant_book
+                                ? 'Payments are processed securely by Stripe. We do not store your card details. You will be redirected to a secure payment page to complete your booking.'
+                                : 'For this item, your request will be sent to the owner for approval. Once approved, you will be notified to come back and complete the payment to secure your dates.'
+                            }
                         </p>
                     </div>
                 </div>

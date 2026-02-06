@@ -136,17 +136,16 @@ export default function RentalsPage() {
                                                 Start Dropoff Inspection
                                             </Link>
                                         )}
-                                        {rental.status === 'pending' && (
-                                            rental.items?.instant_book ? (
-                                                <Link
-                                                    href={`/checkout?itemId=${rental.items.id}&start=${rental.start_date}&end=${rental.end_date}&type=${rental.price_type || 'daily'}`}
-                                                    className="btn btn-primary full-width"
-                                                >
-                                                    Complete Payment
-                                                </Link>
-                                            ) : (
-                                                <button disabled className="btn btn-disabled full-width">Awaiting Approval</button>
-                                            )
+                                        {(rental.status === 'awaiting_payment' || (rental.status === 'pending' && rental.items?.instant_book)) && (
+                                            <Link
+                                                href={`/checkout?itemId=${rental.items?.id}&start=${rental.start_date}&end=${rental.end_date}&type=${rental.price_type || 'daily'}&rentalId=${rental.id}`}
+                                                className="btn btn-primary full-width"
+                                            >
+                                                Complete Payment
+                                            </Link>
+                                        )}
+                                        {rental.status === 'pending' && !rental.items?.instant_book && (
+                                            <button disabled className="btn btn-disabled full-width">Awaiting Owner Approval</button>
                                         )}
                                     </div>
                                 </div>
@@ -194,6 +193,7 @@ export default function RentalsPage() {
             text-transform: uppercase;
         }
         .status-badge.pending { background: #fef3c7; color: #d97706; }
+        .status-badge.awaiting_payment { background: #fef3c7; color: #d97706; border: 1px dashed #d97706; }
         .status-badge.approved { background: #dcfce7; color: #166534; }
         .status-badge.active { background: #dbeafe; color: #1e40af; }
         .status-badge.completed { background: #f1f5f9; color: #64748b; }

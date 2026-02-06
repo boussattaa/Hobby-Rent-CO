@@ -11,7 +11,7 @@ export async function POST(request) {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     try {
-        const { itemId, price, name, protectionPlan, protectionFee, startDate, endDate, rentalId, waiverSignature } = await request.json();
+        const { itemId, price, name, protectionPlan, protectionFee, startDate, endDate, rentalId, waiverSignature, requestOnly } = await request.json();
         const supabase = await createClient();
 
         let rental;
@@ -118,6 +118,10 @@ export async function POST(request) {
                 },
                 quantity: 1,
             });
+        }
+
+        if (requestOnly) {
+            return NextResponse.json({ success: true, rentalId: rental.id });
         }
 
         const session = await stripe.checkout.sessions.create({
