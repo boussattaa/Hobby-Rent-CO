@@ -147,7 +147,7 @@ export default function CheckoutPage() {
 
             if (apiError) {
                 console.error(apiError);
-                alert("Payment initiation failed.");
+                alert("Payment initiation failed: " + apiError);
                 setLoading(false);
                 return;
             }

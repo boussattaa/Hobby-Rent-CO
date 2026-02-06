@@ -134,6 +134,6 @@ export async function POST(request) {
         return NextResponse.json({ url: session.url });
     } catch (err) {
         console.error(err);
-        return NextResponse.json({ error: 'Error creating checkout session' }, { status: 500 });
+        return NextResponse.json({ error: err.message || 'Error creating checkout session' }, { status: 500 });
     }
 }

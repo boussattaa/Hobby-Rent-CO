@@ -4,8 +4,7 @@ import { useState } from 'react';
 
 export default function SearchFilters({ onFilterChange, currentFilters = {} }) {
     const [localFilters, setLocalFilters] = useState({
-        instantBook: currentFilters.instantBook || false,
-        verifiedOwner: currentFilters.verifiedOwner || false
+        instantBook: currentFilters.instantBook || false
     });
 
     const handleChange = (key, value) => {
@@ -25,14 +24,6 @@ export default function SearchFilters({ onFilterChange, currentFilters = {} }) {
                 <span>⚡ Instant Book</span>
             </label>
 
-            <label className="toggle-label">
-                <input
-                    type="checkbox"
-                    checked={localFilters.verifiedOwner}
-                    onChange={(e) => handleChange('verifiedOwner', e.target.checked)}
-                />
-                <span>🛡️ Verified Owners Only</span>
-            </label>
 
             <style jsx>{`
             .advanced-filters {
