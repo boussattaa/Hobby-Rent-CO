@@ -11,7 +11,13 @@ export async function createStripeConnectAccount() {
     if (!user) throw new Error('Not authenticated');
 
     // Default to localhost for development if not set
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    let baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+    // Stripe Live Mode requires HTTPS for redirects.
+    // If we are using a live key, we MUST use https.
+    if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_live')) {
+        baseUrl = baseUrl.replace('http://', 'https://');
+    }
 
     if (!baseUrl) {
         // Should effectively never happen with the default above, but good for safety

@@ -137,6 +137,11 @@ export async function POST(request) {
             return NextResponse.json({ success: true, rentalId: rental.id });
         }
 
+        let origin = request.headers.get('origin') || 'http://localhost:3000';
+        if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_live')) {
+            origin = origin.replace('http://', 'https://');
+        }
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: line_items,
@@ -144,8 +149,8 @@ export async function POST(request) {
             metadata: {
                 rentalId: rental.id
             },
-            success_url: `${request.headers.get('origin')}/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${request.headers.get('origin')}/item/${itemId}`,
+            success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${origin}/item/${itemId}`,
         });
 
         return NextResponse.json({ url: session.url });
