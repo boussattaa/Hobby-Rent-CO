@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import ChatWidget from '@/components/ChatWidget'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const inter = Inter({ subsets: ['latin'] })
@@ -73,8 +74,10 @@ export default async function RootLayout({ children }) {
           {children}
         </main>
         <Footer />
+        <ChatWidget />
         <SpeedInsights />
       </body>
     </html>
   )
 }
+
