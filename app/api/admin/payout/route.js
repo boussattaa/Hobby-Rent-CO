@@ -2,9 +2,13 @@ import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function POST(request) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+        return NextResponse.json({ error: 'Stripe Secret Key missing' }, { status: 500 });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
     try {
         const supabase = await createClient();
 

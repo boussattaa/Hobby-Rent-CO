@@ -4,9 +4,13 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
 export async function POST(req) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+        return new NextResponse('Stripe Secret Key missing', { status: 500 });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
     try {
         const body = await req.text();
         // Fixed for Next.js 15/16: headers() is async
