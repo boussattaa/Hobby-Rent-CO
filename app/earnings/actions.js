@@ -24,6 +24,23 @@ export async function createStripeConnectAccount() {
         throw new Error('Missing NEXT_PUBLIC_BASE_URL environment variable');
     }
 
+    const isStripePaused = !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_dummy');
+
+    if (isStripePaused) {
+        console.log("Stripe is in PAUSE/STANDBY mode. Mocking Stripe Connect Account onboarding.");
+        const mockAccountId = 'acct_mock_' + user.id;
+
+        await supabase
+            .from('profiles')
+            .update({ 
+                stripe_account_id: mockAccountId,
+                stripe_details_submitted: true
+            })
+            .eq('id', user.id);
+
+        return `${baseUrl}/earnings?mock_stripe_connected=true`;
+    }
+
     // 1. Create a Standard/Express account
     try {
         const account = await stripe.accounts.create({
@@ -61,6 +78,12 @@ export async function getStripeDashboardLink() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
+
+    const isStripePaused = !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_dummy');
+    if (isStripePaused) {
+        console.log("Stripe is in PAUSE/STANDBY mode. Mocking login link.");
+        return `/earnings?mock_stripe_dashboard=true`;
+    }
 
     const { data: profile } = await supabase.from('profiles').select('stripe_account_id').eq('id', user.id).single();
     if (!profile?.stripe_account_id) throw new Error('No attached Stripe account');

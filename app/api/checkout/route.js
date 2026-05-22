@@ -4,11 +4,8 @@ import Stripe from 'stripe';
 import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request) {
-    if (!process.env.STRIPE_SECRET_KEY) {
-        return NextResponse.json({ error: 'Stripe Secret Key missing' }, { status: 500 });
-    }
-
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const isStripePaused = !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_dummy');
+    const stripe = !isStripePaused ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
     try {
         const { itemId, price, name, protectionPlan, protectionFee, startDate, endDate, rentalId, waiverSignature, requestOnly } = await request.json();
@@ -140,6 +137,12 @@ export async function POST(request) {
         let origin = request.headers.get('origin') || 'http://localhost:3000';
         if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_live')) {
             origin = origin.replace('http://', 'https://');
+        }
+
+        if (isStripePaused) {
+            console.log("Stripe is in PAUSE/STANDBY mode. Mocking checkout URL.");
+            const successUrl = `${origin}/success?session_id=mock_session_${rental.id}`;
+            return NextResponse.json({ url: successUrl });
         }
 
         const session = await stripe.checkout.sessions.create({

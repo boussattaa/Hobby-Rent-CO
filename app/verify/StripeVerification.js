@@ -25,6 +25,12 @@ export default function StripeVerification() {
 
             if (error) throw new Error(error);
 
+            if (clientSecret === 'mock_identity_session_secret_success') {
+                alert('Verification successful (Stripe Mock Mode)!');
+                window.location.reload();
+                return;
+            }
+
             // 2. Redirect to Stripe Identity Verification
             const stripe = await stripePromise;
             const { error: stripeError } = await stripe.verifyIdentity(clientSecret);

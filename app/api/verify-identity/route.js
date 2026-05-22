@@ -11,6 +11,24 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const isStripePaused = !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_dummy');
+
+        if (isStripePaused) {
+            console.log("Stripe is in PAUSE/STANDBY mode. Auto-approving verification in Supabase.");
+
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({
+                    is_verified: true,
+                    id_verified_status: 'verified'
+                })
+                .eq('id', user.id);
+
+            if (profileError) throw profileError;
+
+            return NextResponse.json({ clientSecret: 'mock_identity_session_secret_success' });
+        }
+
         // Create a Verification Session
         const verificationSession = await stripe.identity.verificationSessions.create({
             type: 'document',

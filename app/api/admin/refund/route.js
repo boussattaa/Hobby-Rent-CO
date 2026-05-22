@@ -3,10 +3,7 @@ import Stripe from 'stripe';
 import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request) {
-    if (!process.env.STRIPE_SECRET_KEY) {
-        return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
-    }
-
+    const isStripePaused = !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_dummy');
     const supabase = await createClient();
 
     // Check if user is logged in (admin check would go here in production)
@@ -35,6 +32,31 @@ export async function POST(request) {
 
         if (!rental.stripe_payment_intent_id) {
             return NextResponse.json({ error: 'No payment found for this rental. Cannot refund.' }, { status: 400 });
+        }
+
+        if (isStripePaused) {
+            console.log("Stripe is in PAUSE/STANDBY mode. Mocking refund.");
+            const refundAmount = amount || (rental.total_price || 0);
+            const { error: updateError } = await supabase
+                .from('rentals')
+                .update({
+                    status: 'cancelled',
+                    refunded: true,
+                    refund_amount: refundAmount,
+                    refund_id: 'mock_refund_' + rentalId,
+                    refunded_at: new Date().toISOString()
+                })
+                .eq('id', rentalId);
+
+            if (updateError) {
+                console.error('Error updating rental after mock refund:', updateError);
+            }
+
+            return NextResponse.json({
+                success: true,
+                refundId: 'mock_refund_' + rentalId,
+                amountRefunded: refundAmount
+            });
         }
 
         // 2. Create Stripe refund

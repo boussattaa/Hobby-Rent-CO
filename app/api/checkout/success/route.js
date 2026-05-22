@@ -3,13 +3,9 @@ import Stripe from 'stripe';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 export async function POST(request) {
-    if (!process.env.STRIPE_SECRET_KEY) {
-        return NextResponse.json({ error: 'Stripe Secret Key missing' }, { status: 500 });
-    }
-
     try {
         const { sessionId } = await request.json();
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+        const isStripePaused = !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_dummy');
 
         // Use Admin Client to bypass RLS for status update
         const supabaseAdmin = createAdminClient(
@@ -22,6 +18,60 @@ export async function POST(request) {
                 }
             }
         );
+
+        if (sessionId && sessionId.startsWith('mock_session_')) {
+            const rentalId = sessionId.replace('mock_session_', '');
+
+            // 2. Update Rental Status if not already updated
+            const { data: currentRental } = await supabaseAdmin
+                .from('rentals')
+                .select('status')
+                .eq('id', rentalId)
+                .single();
+
+            if (currentRental?.status === 'approved' || currentRental?.status === 'active') {
+                return NextResponse.json({ success: true, rentalId, alreadyUpdated: true });
+            }
+
+            const { error: updateError } = await supabaseAdmin
+                .from('rentals')
+                .update({
+                    status: 'approved',
+                    waiver_signed: true,
+                    contract_signed: true,
+                    stripe_payment_intent_id: 'mock_payment_intent_' + rentalId
+                })
+                .eq('id', rentalId);
+
+            if (updateError) {
+                console.error("Database Update Error:", updateError);
+                throw updateError;
+            }
+
+            console.log("Rental successfully approved via Stripe mock standby mode:", rentalId);
+
+            // 3. Trigger Emails (Non-blocking)
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+            fetch(`${baseUrl}/api/send-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'status_change', bookingId: rentalId })
+            }).catch(err => console.error("Renter Email Failed:", err));
+
+            fetch(`${baseUrl}/api/send-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'new_booking_confirmed', bookingId: rentalId })
+            }).catch(err => console.error("Owner Email Failed:", err));
+
+            return NextResponse.json({ success: true, rentalId });
+        }
+
+        if (!process.env.STRIPE_SECRET_KEY) {
+            return NextResponse.json({ error: 'Stripe Secret Key missing' }, { status: 500 });
+        }
+
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
         // 1. Verify Session
         const session = await stripe.checkout.sessions.retrieve(sessionId);
