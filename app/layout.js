@@ -10,6 +10,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
+  metadataBase: new URL('https://www.hobbyrent.com'),
   title: 'HobbyRent | Rent Offroad, Watersports, Trailers & Tools',
   description: 'The premium marketplace for renting outdoor gear and tools. Turn your toys into income.',
   manifest: '/manifest.json',

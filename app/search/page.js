@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import ListingCard from '@/components/ListingCard';
 import SearchSidebar from '@/components/SearchSidebar';
@@ -138,18 +138,18 @@ function SearchContent() {
                         .ilike('location', `%${searchTerm}%`);
 
                     // Apply other filters to both
-                    const applyFilters = (qb) => {
-                        if (query) qb.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
-                        if (category) qb.eq('category', category);
-                        if (subcats.length > 0) qb.in('subcategory', subcats);
-                        if (maxPrice) qb.lte('price', maxPrice);
-                        if (instantBookOnly) qb.eq('instant_book', true);
+    const applyFiltersToQuery = (qb) => {
+                        if (query) qb = qb.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
+                        if (category) qb = qb.eq('category', category);
+                        if (subcats.length > 0) qb = qb.in('subcategory', subcats);
+                        if (maxPrice) qb = qb.lte('price', maxPrice);
+                        if (instantBookOnly) qb = qb.eq('instant_book', true);
                         return qb;
                     };
 
                     const [boxRes, textRes] = await Promise.all([
-                        applyFilters(boxQuery),
-                        applyFilters(textQuery)
+                        applyFiltersToQuery(boxQuery),
+                        applyFiltersToQuery(textQuery)
                     ]);
 
                     const combined = [...(boxRes.data || []), ...(textRes.data || [])];
@@ -179,8 +179,7 @@ function SearchContent() {
         };
 
         fetchResults();
-        fetchResults();
-    }, [query, location, category, subcats.join(','), maxPrice, supabase, instantBookOnly, verifiedOnly]);
+    }, [query, location, category, subcats.join(','), maxPrice, instantBookOnly, verifiedOnly]);
 
     const applyFilters = () => {
         const params = new URLSearchParams();
@@ -196,8 +195,13 @@ function SearchContent() {
         applyFilters();
     };
 
-    // Auto-apply filter when dropdowns change
+    // Auto-apply filter when dropdowns change (but NOT on initial mount)
+    const hasMounted = useRef(false);
     useEffect(() => {
+        if (!hasMounted.current) {
+            hasMounted.current = true;
+            return;
+        }
         if (mobileCategory !== category || mobileMaxPrice !== maxPrice) {
             const params = new URLSearchParams();
             if (mobileQuery || query) params.set('q', mobileQuery || query);

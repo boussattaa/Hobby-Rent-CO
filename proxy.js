@@ -2,6 +2,20 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
+// Routes that require authentication
+const PROTECTED_ROUTES = [
+    '/dashboard',
+    '/inbox',
+    '/list-your-gear',
+    '/my-listings',
+    '/earnings',
+    '/rentals',
+    '/account',
+    '/verify',
+    '/edit-listing',
+    '/manage-availability',
+]
+
 export async function middleware(request) {
     let response = NextResponse.next({
         request: {
@@ -9,7 +23,6 @@ export async function middleware(request) {
         },
     })
 
-    // Create an unmodified client to ensure we can read cookies
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -35,7 +48,17 @@ export async function middleware(request) {
         }
     )
 
-    await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Protect private routes
+    const pathname = request.nextUrl.pathname
+    const isProtected = PROTECTED_ROUTES.some(route => pathname.startsWith(route))
+
+    if (isProtected && !user) {
+        const loginUrl = new URL('/login', request.url)
+        loginUrl.searchParams.set('redirect_to', pathname)
+        return NextResponse.redirect(loginUrl)
+    }
 
     return response
 }
@@ -48,7 +71,6 @@ export const config = {
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
          * - images/ (public images)
-         * Feel free to modify this pattern to include more paths.
          */
         '/((?!_next/static|_next/image|favicon.ico|images/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],

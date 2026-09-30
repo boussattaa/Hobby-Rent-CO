@@ -3,8 +3,39 @@ import OpenAI from 'openai';
 import { createClient } from '@/utils/supabase/server';
 import { sendEmail } from '@/utils/resend';
 
+// Simple in-memory rate limiter (resets on cold start, suitable for edge/serverless)
+// For production scale, use Vercel KV or Upstash Redis
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per IP per minute
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return true;
+  }
+  entry.count++;
+  return false;
+}
+
 export async function POST(req) {
   try {
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+               req.headers.get('x-real-ip') ||
+               'unknown';
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment before sending another message.' },
+        { status: 429 }
+      );
+    }
+
     const { messages } = await req.json();
 
     if (!process.env.OPENAI_API_KEY) {
@@ -210,7 +241,11 @@ async function captureLeadTool(name, email, phone, message) {
     }
 
     // 2. Trigger email notification via Resend
-    const recipient = process.env.ADMIN_EMAIL || 'boussattaa@gmail.com';
+    const recipient = process.env.ADMIN_EMAIL;
+    if (!recipient) {
+      console.warn('ADMIN_EMAIL env var not set — skipping lead email notification');
+    } else {
+
     const emailHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; background: #ffffff; color: #1e293b;">
         <h2 style="color: #3b82f6; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-top: 0;">New Lead Captured 🎯</h2>
@@ -241,17 +276,24 @@ async function captureLeadTool(name, email, phone, message) {
       </div>
     `;
 
-    const { success, error } = await sendEmail({
-      to: recipient,
-      subject: `[GearBuddy Lead] ${name} is interested!`,
-      html: emailHtml
-    });
+        const { success, error } = await sendEmail({
+          to: recipient,
+          subject: `[GearBuddy Lead] ${name} is interested!`,
+          html: emailHtml
+        });
+        return {
+          success: true,
+          databaseSaved: !dbError,
+          emailSent: success,
+          emailError: error ? error.message : null
+        };
+    }
 
     return {
       success: true,
       databaseSaved: !dbError,
-      emailSent: success,
-      emailError: error ? error.message : null
+      emailSent: false,
+      emailError: 'ADMIN_EMAIL not configured'
     };
 
   } catch (err) {

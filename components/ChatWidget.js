@@ -138,8 +138,11 @@ export default function ChatWidget() {
     // Format Bold (**text**)
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-    // Format Links ([text](url))
-    formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="chat-link">$1</a>');
+    // Format Links ([text](url)) — only allow safe http/https/relative URLs to prevent XSS
+    formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, linkText, url) => {
+      const safeUrl = /^https?:\/\//i.test(url) || url.startsWith('/') ? url : '#';
+      return `<a href="${safeUrl}" class="chat-link" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+    });
 
     // Format Lists (lines starting with - or *)
     const lines = formatted.split('\n');

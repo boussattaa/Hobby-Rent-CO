@@ -7,9 +7,9 @@ export default function EarningsCalculator() {
   const [daysRented, setDaysRented] = useState(5);
 
   const monthlyGross = dailyPrice * daysRented;
-  const yearlyGross = monthlyGross * 12;
 
-  // Fees: 10% Platform + Stripe (2.9% + 0.30)
+  // Fees: 10% Platform + Stripe (2.9% + $0.30 per transaction)
+  // The $0.30 Stripe flat fee is per-transaction, so it applies monthly, not once for the whole year.
   const calculateNet = (gross) => {
     if (gross === 0) return 0;
     const platformFee = gross * 0.10;
@@ -18,7 +18,8 @@ export default function EarningsCalculator() {
   };
 
   const netMonthly = calculateNet(monthlyGross);
-  const netYearly = calculateNet(yearlyGross);
+  // Apply monthly net × 12 (preserving per-transaction Stripe fee accuracy)
+  const netYearly = netMonthly * 12;
 
   return (
     <div className="calculator-card glass">

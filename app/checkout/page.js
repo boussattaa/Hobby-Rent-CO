@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { useState, useEffect } from 'react';
@@ -12,7 +13,7 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 // Mock database (for legacy support)
 const ITEMS_DB = {};
 
-export default function CheckoutPage() {
+function CheckoutContent() {
     const searchParams = useSearchParams();
     const itemId = searchParams.get('itemId');
     const rentalId = searchParams.get('rentalId');
@@ -210,7 +211,7 @@ export default function CheckoutPage() {
             if (url) {
                 window.location.href = url;
             } else {
-                throw new Error("No checkout ULR returned");
+                throw new Error("No checkout URL returned");
             }
         } catch (err) {
             console.error(err);
@@ -421,5 +422,22 @@ export default function CheckoutPage() {
         }
       `}</style>
         </div >
+    );
+}
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={
+            <div className="checkout-page">
+                <div className="container">
+                    <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                        <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+                        <p>Loading checkout...</p>
+                    </div>
+                </div>
+            </div>
+        }>
+            <CheckoutContent />
+        </Suspense>
     );
 }

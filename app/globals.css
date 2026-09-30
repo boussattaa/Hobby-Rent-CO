@@ -229,6 +229,28 @@ h3 {
   /* Dark fallback for white text visibility */
 }
 
+/* Missing hero overlay used in page.js — ensures text contrast over background image */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.50) 0%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
+  z-index: 1;
+}
+
+/* Hero subtitle for desktop */
+.subtitle {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 640px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
 .hero-background-wrapper {
   position: absolute;
   top: 0;

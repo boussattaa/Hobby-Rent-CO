@@ -6,8 +6,8 @@ export default function ListingCard({ item }) {
     // Ensure numeric price
     const price = Number(item.price);
 
-    // Fallback image if missing
-    const imageUrl = item.image_url || item.image || '/images/hero-bg.jpg';
+    // Fallback image if missing — use an existing public image
+    const imageUrl = item.image_url || item.image || '/images/hero-main.jpg';
 
     return (
         <Link href={`/item/${item.id}`} className="listing-card">

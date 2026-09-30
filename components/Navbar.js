@@ -263,7 +263,7 @@ export default function Navbar({ user }) {
               <Link href="/login" className="btn btn-secondary">
                 Log In
               </Link>
-              <Link href="/login" className="btn btn-primary">
+              <Link href="/signup" className="btn btn-primary">
                 Sign Up
               </Link>
             </div>

@@ -89,7 +89,7 @@ export function welcomeEmailHtml(firstName) {
             </div>
             <div class="footer">
                 <p>Rent the Adventure. Earn from your Gear.</p>
-                <p>© 2024 HobbyRent. All rights reserved.</p>
+                <p>© ${new Date().getFullYear()} HobbyRent. All rights reserved.</p>
             </div>
         </div>
     </body>

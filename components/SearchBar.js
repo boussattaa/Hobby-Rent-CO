@@ -156,7 +156,7 @@ export default function SearchBar() {
 
         .search-btn {
           background: var(--accent-color);
-          color: black;
+          color: white;
           border: none;
           padding: 0.8rem 2rem;
           border-radius: 30px;
