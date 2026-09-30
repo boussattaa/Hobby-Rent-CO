@@ -24,7 +24,7 @@ export const resend = {
     }
 };
 
-export async function sendEmail({ to, subject, html }) {
+export async function sendEmail({ to, subject, html, replyTo = 'support@hobbyrent.com' }) {
     const client = getResend();
 
     if (!client) {
@@ -33,8 +33,12 @@ export async function sendEmail({ to, subject, html }) {
     }
 
     try {
+        const fromEmail = process.env.EMAIL_FROM || 'HobbyRent <notifications@hobbyrent.com>';
+        const replyToEmail = replyTo || process.env.EMAIL_REPLY_TO || 'support@hobbyrent.com';
+
         const { data, error } = await client.emails.send({
-            from: 'HobbyRent <noreply@hobbyrent.com>',
+            from: fromEmail,
+            reply_to: replyToEmail,
             to,
             subject,
             html
@@ -129,7 +133,7 @@ export function messageNotificationHtml(senderName, itemName, messagePreview) {
                 </center>
             </div>
             <div class="footer">
-                <p>© 2024 HobbyRent. All rights reserved.</p>
+                <p>© ${new Date().getFullYear()} HobbyRent. All rights reserved.</p>
             </div>
         </div>
     </body>
@@ -173,12 +177,12 @@ export function rentalReminderRenterHtml(renterName, itemName, startDate, addres
                 <p>Please make sure to arrive on time and bring a valid ID.</p>
                 
                 <center>
-                    <a href="https://hobbyrent.com/trips" class="button">View Booking Details →</a>
+                    <a href="https://www.hobbyrent.com/rentals" class="button">View Booking Details →</a>
                 </center>
             </div>
             <div class="footer">
                 <p>Need help? Reply to this email or message the owner.</p>
-                <p>© 2024 HobbyRent. All rights reserved.</p>
+                <p>© ${new Date().getFullYear()} HobbyRent. All rights reserved.</p>
             </div>
         </div>
     </body>
@@ -220,12 +224,158 @@ export function rentalReminderOwnerHtml(ownerName, itemName, startDate, renterNa
                 <p>Please ensure the item is clean, charged/fueled, and ready for handover.</p>
                 
                 <center>
-                    <a href="https://hobbyrent.com/dashboard" class="button">Manage Rental →</a>
+                    <a href="https://www.hobbyrent.com/dashboard" class="button">Manage Rental →</a>
                 </center>
             </div>
             <div class="footer">
                 <p>Please message the renter if there are any last-minute updates.</p>
-                <p>© 2024 HobbyRent. All rights reserved.</p>
+                <p>© ${new Date().getFullYear()} HobbyRent. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
+
+export function bookingConfirmationHtml(renterName, itemName, startDate, endDate, totalPrice, bookingId) {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; padding: 20px 0; }
+            .logo { font-size: 24px; font-weight: bold; color: #1a1a1a; text-decoration: none; }
+            .content { background: #f8fafc; padding: 30px; border-radius: 12px; }
+            .summary-box { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0; }
+            .button { display: inline-block; background: #2563eb; color: white !important; padding: 12px 24px; border-radius: 25px; text-decoration: none; margin: 20px 0; }
+            .footer { text-align: center; padding: 20px; color: #64748b; font-size: 12px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">🏔️ HobbyRent</div>
+            </div>
+            <div class="content">
+                <h1>Booking Confirmed! 🎉</h1>
+                <p>Hi ${renterName || 'there'},</p>
+                <p>Your rental reservation has been successfully confirmed. You're all set to pick up your gear.</p>
+                
+                <div class="summary-box">
+                    <h3>📦 Reservation Summary</h3>
+                    <p><strong>Item:</strong> ${itemName}</p>
+                    <p><strong>Dates:</strong> ${startDate} – ${endDate}</p>
+                    <p><strong>Total Paid:</strong> $${totalPrice}</p>
+                    ${bookingId ? `<p style="font-size: 0.85em; color: #888;">Booking Reference: ${bookingId}</p>` : ''}
+                </div>
+
+                <p>Remember to complete your pre-rental inspection photos at pickup to ensure coverage under the <a href="https://www.hobbyrent.com/protection-plan" style="color: #2563eb;">HobbyRent Protection Plan</a>.</p>
+                
+                <center>
+                    <a href="https://www.hobbyrent.com/rentals" class="button">View Reservation Details →</a>
+                </center>
+            </div>
+            <div class="footer">
+                <p>Need support? Contact us at support@hobbyrent.com.</p>
+                <p>© ${new Date().getFullYear()} HobbyRent. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
+
+export function bookingRequestOwnerHtml(ownerName, renterName, itemName, startDate, endDate, payoutAmount, bookingId) {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; padding: 20px 0; }
+            .logo { font-size: 24px; font-weight: bold; color: #1a1a1a; text-decoration: none; }
+            .content { background: #f8fafc; padding: 30px; border-radius: 12px; }
+            .alert-box { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 20px 0; }
+            .button { display: inline-block; background: #1a1a1a; color: white !important; padding: 12px 24px; border-radius: 25px; text-decoration: none; margin: 20px 0; }
+            .footer { text-align: center; padding: 20px; color: #64748b; font-size: 12px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">🏔️ HobbyRent</div>
+            </div>
+            <div class="content">
+                <h1>New Booking Alert! 🚀</h1>
+                <p>Hi ${ownerName || 'Host'},</p>
+                <p>You have a new reservation for your equipment on HobbyRent.</p>
+                
+                <div class="alert-box">
+                    <h3>⚡ Booking Details</h3>
+                    <p><strong>Item:</strong> ${itemName}</p>
+                    <p><strong>Renter:</strong> ${renterName || 'Verified Renter'}</p>
+                    <p><strong>Rental Dates:</strong> ${startDate} – ${endDate}</p>
+                    <p><strong>Estimated Payout:</strong> $${payoutAmount}</p>
+                </div>
+
+                <p>Please review and prepare your item for handover.</p>
+                
+                <center>
+                    <a href="https://www.hobbyrent.com/dashboard" class="button">Go to Dashboard →</a>
+                </center>
+            </div>
+            <div class="footer">
+                <p>© ${new Date().getFullYear()} HobbyRent. All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+}
+
+export function listingPublishedHtml(ownerName, itemName, itemPrice, itemId) {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { text-align: center; padding: 20px 0; }
+            .logo { font-size: 24px; font-weight: bold; color: #1a1a1a; text-decoration: none; }
+            .content { background: #f8fafc; padding: 30px; border-radius: 12px; }
+            .card { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 20px 0; }
+            .button { display: inline-block; background: #2563eb; color: white !important; padding: 12px 24px; border-radius: 25px; text-decoration: none; margin: 20px 0; }
+            .footer { text-align: center; padding: 20px; color: #64748b; font-size: 12px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">🏔️ HobbyRent</div>
+            </div>
+            <div class="content">
+                <h1>Your Listing is Live! 🌟</h1>
+                <p>Hi ${ownerName || 'Host'},</p>
+                <p>Great news! Your listing <strong>${itemName}</strong> is now officially published on HobbyRent and visible to thousands of renters searching for gear.</p>
+                
+                <div class="card">
+                    <h3>${itemName}</h3>
+                    <p><strong>Rate:</strong> $${itemPrice}/day</p>
+                    <p style="color: #10b981; font-weight: bold;">Status: Active & Searchable</p>
+                </div>
+
+                <p>Tips for higher booking rates: keep your calendar up to date and respond promptly to renter inquiries.</p>
+                
+                <center>
+                    <a href="https://www.hobbyrent.com/item/${itemId}" class="button">View Your Listing →</a>
+                </center>
+            </div>
+            <div class="footer">
+                <p>© ${new Date().getFullYear()} HobbyRent. All rights reserved.</p>
             </div>
         </div>
     </body>

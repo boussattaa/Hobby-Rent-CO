@@ -107,9 +107,13 @@ export async function POST(request) {
         // We will default to a safe value or try the real one. 
         // Let's send to the actual user email. If it fails due to "unverified", we catch it.
 
+        const fromEmail = process.env.EMAIL_FROM || 'HobbyRent <notifications@hobbyrent.com>';
+        const replyToEmail = process.env.EMAIL_REPLY_TO || 'support@hobbyrent.com';
+
         const { data: emailData, error: emailError } = await resend.emails.send({
-            from: 'HobbyRent <onboarding@resend.dev>', // Standard Resend Test Sender
-            to: recipientEmail, // This might fail if not verified in Resend Dashboard
+            from: fromEmail,
+            reply_to: replyToEmail,
+            to: recipientEmail,
             subject: subject,
             html: htmlContent,
         });

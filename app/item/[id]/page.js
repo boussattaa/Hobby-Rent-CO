@@ -8,22 +8,52 @@ export async function generateMetadata({ params }) {
 
   if (!item) {
     return {
-      title: 'Item Not Found | HobbyRent'
-    }
+      title: 'Item Not Found | HobbyRent',
+    };
   }
 
-  // Fallback image if item has no image
-  // Note: OG images should ideally be absolute URLs, but Next.js often handles relative. 
-  // For best results, we might want to ensure it's absolute, but relative usually usually works if hosted on same domain.
-  const ogImage = item.image_url || '/images/dirt-hero.png';
+  const formattedPrice = `$${item.price}/day`;
+  const metaDescription = item.description
+    ? (item.description.length > 160 ? item.description.slice(0, 157) + '...' : item.description)
+    : `Rent ${item.name} on HobbyRent for ${formattedPrice}. Verified owners, easy booking, secure payment.`;
+
+  const ogImage = item.image_url?.startsWith('http')
+    ? item.image_url
+    : `https://www.hobbyrent.com${item.image_url || '/images/og-main.jpg'}`;
+
+  const canonicalUrl = `https://www.hobbyrent.com/item/${id}`;
+  const pageTitle = `${item.name} - ${formattedPrice} | HobbyRent`;
 
   return {
-    title: `${item.name} | HobbyRent`,
-    description: item.description,
+    title: pageTitle,
+    description: metaDescription,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
-      title: item.name,
-      description: item.description,
+      title: pageTitle,
+      description: metaDescription,
+      url: canonicalUrl,
+      siteName: 'HobbyRent',
+      type: 'website',
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: item.name,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description: metaDescription,
       images: [ogImage],
+    },
+    other: {
+      'product:price:amount': item.price.toString(),
+      'product:price:currency': 'USD',
     },
   };
 }

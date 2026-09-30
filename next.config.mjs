@@ -53,6 +53,11 @@ const nextConfig = {
         destination: '/search',
         permanent: true,
       },
+      {
+        source: '/insurance',
+        destination: '/protection-plan',
+        permanent: true,
+      },
     ];
   },
 };

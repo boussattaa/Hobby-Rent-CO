@@ -3,7 +3,17 @@ export default function robots() {
         rules: {
             userAgent: '*',
             allow: '/',
-            disallow: ['/admin/', '/api/'],
+            disallow: [
+                '/admin/',
+                '/api/',
+                '/dashboard/',
+                '/inbox/',
+                '/checkout/',
+                '/earnings/',
+                '/my-listings/',
+                '/account/',
+                '/rentals/',
+            ],
         },
         sitemap: 'https://www.hobbyrent.com/sitemap.xml',
     }

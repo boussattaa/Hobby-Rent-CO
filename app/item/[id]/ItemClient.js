@@ -9,6 +9,7 @@ import DeleteButton from '@/components/DeleteButton';
 import ChatWindow from '@/components/ChatWindow';
 import ReviewList from '@/components/ReviewList';
 import AvailabilityCalendar from '@/components/AvailabilityCalendar';
+import { trackEvent } from '@/utils/analytics';
 
 // Mock database (legacy/demo items)
 const ITEMS_DB = {
@@ -68,6 +69,17 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
   const [existingRentals, setExistingRentals] = useState([]);
   const [isRenterVerified, setIsRenterVerified] = useState(false);
 
+  // Track listing viewed conversion event
+  useEffect(() => {
+    if (item?.name) {
+      trackEvent('listing_viewed', {
+        item_id: item.id || id,
+        item_name: item.name,
+        category: item.category,
+        price: item.price
+      });
+    }
+  }, [item?.id, item?.name]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -582,6 +594,13 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                     // Redirect to Standardized Checkout Logic
                     const checkoutUrl = getCheckoutLink();
                     if (checkoutUrl && checkoutUrl !== '#') {
+                      trackEvent('checkout_initiated', {
+                        item_id: item.id || id,
+                        item_name: item.name,
+                        price: item.price,
+                        booking_mode: bookingMode,
+                        instant_book: item.instant_book || false
+                      });
                       router.push(checkoutUrl);
                     }
                   }}

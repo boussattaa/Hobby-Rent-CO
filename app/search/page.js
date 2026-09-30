@@ -10,6 +10,7 @@ import SearchSidebar from '@/components/SearchSidebar';
 import MapView from '@/components/MapView';
 import SearchFilters from '@/components/SearchFilters';
 import { geocodeLocation } from '@/utils/geocoding';
+import { trackEvent } from '@/utils/analytics';
 
 function SearchContent() {
     const searchParams = useSearchParams();
@@ -97,10 +98,10 @@ function SearchContent() {
                 const lng = parseFloat(lngParam);
                 const r = 0.7; // ~50 miles
                 queryBuilder = queryBuilder
-                    .gte('latitude', lat - r)
-                    .lte('latitude', lat + r)
-                    .gte('longitude', lng - r)
-                    .lte('longitude', lng + r);
+                    .gte('lat', lat - r)
+                    .lte('lat', lat + r)
+                    .gte('lng', lng - r)
+                    .lte('lng', lng + r);
                 console.log('Applying direct coordinate filter:', lat, lng);
             } else if (location) {
                 console.log('Geocoding search location:', location);
@@ -108,28 +109,15 @@ function SearchContent() {
 
                 if (coords) {
                     // Hybrid Search: Try Bounding Box first. If it misses legacy items, we might want text match too.
-                    // Since purely combining them in one OR query is complex in Supabase JS, 
-                    // we will fetch by Bounding Box. If valid but returns few/no results, 
-                    // we can ALSO allow text matching (or just trust the box).
-                    // User Issue: "No results" for existing local items (likely missing coords).
-                    // Fix: We construct a query that allows EITHER:
-                    // 1. Inside Bounding Box
-                    // 2. OR Location matches text
-
                     const r = 0.7;
                     const minLat = coords.lat - r;
                     const maxLat = coords.lat + r;
                     const minLng = coords.lng - r;
                     const maxLng = coords.lng + r;
 
-                    // Supabase .or() with filters is: .or('filter1,filter2')
-                    // Bounding box is 4 filters ANDed. 
-                    // It's hard to do (A&B&C&D) OR E.
-                    // EASIER: Run two parallel queries and merge results.
-
                     const boxQuery = supabase.from('items').select('*')
-                        .gte('latitude', minLat).lte('latitude', maxLat)
-                        .gte('longitude', minLng).lte('longitude', maxLng);
+                        .gte('lat', minLat).lte('lat', maxLat)
+                        .gte('lng', minLng).lte('lng', maxLng);
 
                     // Fuzzy Text Match: Use the extracted City/Town name instead of full string
                     // "Meridian, Idaho" (input) -> "Meridian" (extracted) -> matches "Meridian ID" (DB)
@@ -181,6 +169,12 @@ function SearchContent() {
 
             if (data) {
                 setItems(data);
+                trackEvent('search_performed', {
+                    query: query || undefined,
+                    location: location || undefined,
+                    category: category || undefined,
+                    results_count: data.length
+                });
             } else if (error) {
                 console.error('Search error:', error.message, error.details, error.hint);
             }
@@ -189,7 +183,15 @@ function SearchContent() {
         };
 
         fetchResults();
-    }, [query, location, category, subcats.join(','), maxPrice, instantBookOnly, verifiedOnly]);
+    }, [query, location, category, subcats.join(','), maxPrice, instantBookOnly, verifiedOnly, latParam, lngParam]);
+
+    // Keep mobile filter inputs in sync with browser navigation (back/forward)
+    useEffect(() => {
+        setMobileQuery(query);
+        setMobileLocation(location);
+        setMobileCategory(category);
+        setMobileMaxPrice(maxPrice);
+    }, [query, location, category, maxPrice]);
 
     const applyFilters = () => {
         const params = new URLSearchParams();

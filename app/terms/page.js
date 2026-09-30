@@ -38,6 +38,26 @@ export default function TermsPage() {
                     <li><strong>Under the Influence:</strong> Operating any equipment while under the influence of alcohol, drugs, or medication.</li>
                 </ul>
 
+                <h4>2.4 Security Deposit Pre-Authorization & Handling</h4>
+                <p>
+                    Where required by the listing or category, a temporary security deposit authorization hold will be placed on your credit or debit card up to 24 hours prior to the scheduled pickup time.
+                </p>
+                <ul>
+                    <li><strong>Release Timeline:</strong> If the equipment is returned on time, undamaged, clean, and with matching fuel/battery levels, the security hold is released automatically within <strong>48 hours</strong> of the return inspection.</li>
+                    <li><strong>Deductions:</strong> If damage, late return, cleaning issues, or fuel shortages are documented during the return inspection, HobbyRent reserves the right to capture the pre-authorized hold or charge your payment method on file up to the applicable deductible or repair cost.</li>
+                </ul>
+
+                <h4>2.5 Damage Reporting, Evidence & Dispute Procedures</h4>
+                <p>
+                    All parties agree to adhere strictly to the following damage claim protocol:
+                </p>
+                <ul>
+                    <li><strong>Mandatory Photo Documentation:</strong> Both Renter and Owner must document pre-rental condition and post-rental condition with clear, timestamped photos of all exterior surfaces, mechanical controls, and meters.</li>
+                    <li><strong>48-Hour Claim Window:</strong> Any incident or damage must be officially submitted via the HobbyRent platform within <strong>48 hours</strong> of the scheduled return time. Claims submitted after 48 hours without prior written notice may be denied.</li>
+                    <li><strong>Certified Estimates:</strong> Owners must submit an itemized repair estimate from a licensed mechanical shop, certified dealer, or authorized repair technician before reimbursement is disbursed.</li>
+                    <li><strong>Dispute Mediation:</strong> In the event of conflicting evidence, HobbyRent’s Trust & Safety team conducts an independent review of all photo, timestamp, and communication telemetry. HobbyRent’s administrative determination is binding on both parties subject to the Dispute Resolution provisions in Section 5.</li>
+                </ul>
+
                 <h3>3. Specific Terms for Owners (Hosts)</h3>
 
                 <h4>3.1 Owner Commitments</h4>
@@ -71,8 +91,11 @@ export default function TermsPage() {
                 <h4>5.1 HobbyRent is a Venue, Not a Rental Company</h4>
                 <p>HobbyRent is an online marketplace that connects Owners with Renters. HobbyRent does not own, inspect, maintain, or insure the equipment listed on the Services. We are not a party to the rental agreement between Owner and Renter.</p>
 
-                <h4>5.2 Assumption of Risk</h4>
-                <p style={{ fontWeight: 'bold' }}>READ CAREFULLY: BY USING THE SERVICES TO RENT EQUIPMENT (INCLUDING BUT NOT LIMITED TO ATVS, DIRT BIKES, JET SKIS, AND HEAVY MACHINERY), YOU VOLUNTARILY ASSUME ALL RISKS OF ACCIDENT, INJURY, ILLNESS, DISABILITY, DEATH, OR PROPERTY DAMAGE. You understand that these activities are inherently dangerous. You assume full responsibility for your safety and the safety of your passengers.</p>
+                <h4>5.2 Assumption of Risk & Liability Waiver</h4>
+                <p style={{ fontWeight: 'bold' }}>READ CAREFULLY: BY USING THE SERVICES TO RENT EQUIPMENT (INCLUDING BUT NOT LIMITED TO ATVS, DIRT BIKES, JET SKIS, TRAILERS, AND HEAVY MACHINERY), YOU VOLUNTARILY ASSUME ALL RISKS OF ACCIDENT, INJURY, ILLNESS, DISABILITY, DEATH, OR PROPERTY DAMAGE. You understand that operating powersports, marine vessels, trailers, and machinery carries inherent and foreseeable dangers.</p>
+                <p>
+                    <strong>Release & Digital Waiver:</strong> By completing a booking request, clicking "Book Now", checking agreement boxes, or submitting a digital signature on HobbyRent, you knowingly and irrevocably release, waive, and forever discharge the Equipment Owner, HobbyRent Inc., and their respective officers, agents, and affiliates from any and all claims, demands, or liabilities arising out of mechanical breakdown, operator error, bodily injury, or loss of life during the rental tenure.
+                </p>
 
                 <h4>5.3 Limitation of Liability</h4>
                 <p>To the fullest extent permitted by law, HobbyRent (and its officers, employees, and agents) shall not be liable for any incidental, special, or consequential damages, including lost profits, loss of data, or cost of substitute goods, arising out of or in connection with these Terms or the use of the Platform. In no event will HobbyRent’s aggregate liability to you exceed the greater of (1) the amounts you have paid or earned via the platform in the 12 months prior to the claim, or (2) One Hundred U.S. Dollars (US$100).</p>

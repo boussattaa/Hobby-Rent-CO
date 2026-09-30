@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/client';
 
 import { createListing } from './actions';
 import EarningsCalculator from '@/components/EarningsCalculator';
+import { trackEvent } from '@/utils/analytics';
 
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay, useDroppable } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -65,8 +66,13 @@ export default function ListYourGear() {
     if (result?.message) {
       setErrorMsg(result.message);
       setUploading(false);
+    } else {
+      trackEvent('listing_created', {
+        category: formData.get('category'),
+        name: formData.get('name'),
+        price: Number(formData.get('price'))
+      });
     }
-    // If successful, the action redirects, so we don't need to do anything else.
   };
 
   // Categories Config
