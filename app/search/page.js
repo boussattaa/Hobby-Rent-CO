@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import ListingCard from '@/components/ListingCard';
 import SearchSidebar from '@/components/SearchSidebar';
@@ -28,7 +28,7 @@ function SearchContent() {
 
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     // Mobile search state
     const [mobileQuery, setMobileQuery] = useState(query);

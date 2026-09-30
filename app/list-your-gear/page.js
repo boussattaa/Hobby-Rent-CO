@@ -94,6 +94,13 @@ export default function ListYourGear() {
       { group: "Construction", items: ["Cement Mixers", "Plate Compactors", "Scaffolding", "Generators", "Air Compressors"] },
       { group: "Power Tools", items: ["Hammer Drills", "Saws (Miter, Table, Concrete)", "Sanders", "Nail Guns"] },
       { group: "Cleaning/Finish", items: ["Pressure Washers", "Carpet Cleaners", "Paint Sprayers", "Floor Buffers"] }
+    ],
+    tools: [
+      { group: "Heavy Equipment", items: ["Mini Excavators", "Skid Steers / Bobcats", "Trenchers", "Compact Tractors"] },
+      { group: "Lawn & Garden", items: ["Tillers / Cultivators", "Wood Chippers", "Stump Grinders", "Aerators", "Commercial Mowers"] },
+      { group: "Construction", items: ["Cement Mixers", "Plate Compactors", "Scaffolding", "Generators", "Air Compressors"] },
+      { group: "Power Tools", items: ["Hammer Drills", "Saws (Miter, Table, Concrete)", "Sanders", "Nail Guns"] },
+      { group: "Cleaning/Finish", items: ["Pressure Washers", "Carpet Cleaners", "Paint Sprayers", "Floor Buffers"] }
     ]
   };
 
@@ -225,9 +232,14 @@ export default function ListYourGear() {
     'Floating Mats/Lilies'
   ];
 
+  const [specs, setSpecs] = useState({});
+  const updateSpec = (key, value) => {
+    setSpecs(prev => ({ ...prev, [key]: value }));
+  };
+
   // Items that don't need Year field (non-motorized water + most tools)
   const isNonMotorized = NON_MOTORIZED_ITEMS.includes(selectedSubcategory);
-  const skipYearField = isNonMotorized || selectedCategory === 'housing';
+  const skipYearField = isNonMotorized || selectedCategory === 'housing' || selectedCategory === 'tools';
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -371,7 +383,7 @@ export default function ListYourGear() {
                   <option value="offroad">Offroad</option>
                   <option value="water">Watersports</option>
                   <option value="trailers">Trailers</option>
-                  <option value="housing">Tools</option>
+                  <option value="tools">Tools & Equipment</option>
                 </select>
               </div>
 
@@ -411,53 +423,28 @@ export default function ListYourGear() {
                 <div className="form-group full">
                   <label>Offroad Specs</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <input type="text" placeholder="Engine Size (cc)" onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), engine_cc: e.target.value };
-                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                    }} />
-                    <input type="number" placeholder="Seat Capacity" onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), seat_capacity: e.target.value };
-                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                    }} />
+                    <input type="text" placeholder="Engine Size (cc)" onChange={(e) => updateSpec('engine_cc', e.target.value)} />
+                    <input type="number" placeholder="Seat Capacity" onChange={(e) => updateSpec('seat_capacity', e.target.value)} />
                   </div>
                 </div>
               )}
 
-              {/* ... Water and Trailer sections remain same ... */}
               {selectedCategory === 'water' && (
                 <div className="form-group full">
                   <label>{isNonMotorized ? 'Equipment Specs' : 'Watercraft Specs'}</label>
                   <div style={{ display: 'grid', gridTemplateColumns: isNonMotorized ? '1fr 1fr' : '1fr 1fr 1fr', gap: '1rem' }}>
-                    <input type="number" placeholder="Capacity (people)" onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), capacity: e.target.value };
-                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                    }} />
+                    <input type="number" placeholder="Capacity (people)" onChange={(e) => updateSpec('capacity', e.target.value)} />
 
                     {isNonMotorized ? (
                       <>
-                        <input type="text" placeholder="Length (ft)" onChange={(e) => {
-                          const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), length: e.target.value };
-                          document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                        }} />
-                        <input type="text" placeholder="Weight (lbs)" onChange={(e) => {
-                          const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), weight: e.target.value };
-                          document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                        }} />
-                        <input type="text" placeholder="Material (e.g. Plastic, Inflatable)" onChange={(e) => {
-                          const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), material: e.target.value };
-                          document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                        }} />
+                        <input type="text" placeholder="Length (ft)" onChange={(e) => updateSpec('length', e.target.value)} />
+                        <input type="text" placeholder="Weight (lbs)" onChange={(e) => updateSpec('weight', e.target.value)} />
+                        <input type="text" placeholder="Material (e.g. Plastic, Inflatable)" onChange={(e) => updateSpec('material', e.target.value)} />
                       </>
                     ) : (
                       <>
-                        <input type="text" placeholder="Horsepower" onChange={(e) => {
-                          const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), horsepower: e.target.value };
-                          document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                        }} />
-                        <input type="text" placeholder="Ball Hitch Size (if trailer incl.)" onChange={(e) => {
-                          const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), hitch_size: e.target.value };
-                          document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                        }} />
+                        <input type="text" placeholder="Horsepower" onChange={(e) => updateSpec('horsepower', e.target.value)} />
+                        <input type="text" placeholder="Ball Hitch Size (if trailer incl.)" onChange={(e) => updateSpec('hitch_size', e.target.value)} />
                       </>
                     )}
                   </div>
@@ -468,26 +455,17 @@ export default function ListYourGear() {
                 <div className="form-group full">
                   <label>Trailer Specs</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <input type="text" placeholder="Towing Capacity (lbs)" onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), towing_capacity: e.target.value };
-                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                    }} />
-                    <input type="text" placeholder="Ball Hitch Size (e.g. 2 inch)" onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), hitch_size: e.target.value };
-                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                    }} />
+                    <input type="text" placeholder="Towing Capacity (lbs)" onChange={(e) => updateSpec('towing_capacity', e.target.value)} />
+                    <input type="text" placeholder="Ball Hitch Size (e.g. 2 inch)" onChange={(e) => updateSpec('hitch_size', e.target.value)} />
                   </div>
                 </div>
               )}
 
-              {selectedCategory === 'housing' && (
+              {(selectedCategory === 'housing' || selectedCategory === 'tools') && (
                 <div className="form-group full">
                   <label>Tool/Equipment Specs</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                    <select onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), power_source: e.target.value };
-                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                    }}>
+                    <select onChange={(e) => updateSpec('power_source', e.target.value)}>
                       <option value="">Power Source</option>
                       <option value="Gas">Gas</option>
                       <option value="Electric (Corded)">Electric (Corded)</option>
@@ -495,19 +473,13 @@ export default function ListYourGear() {
                       <option value="Diesel">Diesel</option>
                       <option value="Manual">Manual/Hand-Powered</option>
                     </select>
-                    <input type="text" placeholder="Weight (lbs)" onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), weight: e.target.value };
-                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                    }} />
-                    <input type="text" placeholder="Power Requirements (e.g. 120V, 240V)" onChange={(e) => {
-                      const specs = { ...JSON.parse(document.getElementsByName('specs')[0]?.value || '{}'), power_requirements: e.target.value };
-                      document.getElementsByName('specs')[0].value = JSON.stringify(specs);
-                    }} />
+                    <input type="text" placeholder="Weight (lbs)" onChange={(e) => updateSpec('weight', e.target.value)} />
+                    <input type="text" placeholder="Power Requirements (e.g. 120V, 240V)" onChange={(e) => updateSpec('power_requirements', e.target.value)} />
                   </div>
                 </div>
               )}
 
-              <input type="hidden" name="specs" />
+              <input type="hidden" name="specs" value={JSON.stringify(specs)} />
 
               <div className="form-group full">
                 <label>Rules & Requirements</label>
