@@ -14,6 +14,13 @@ export default function Navbar({ user }) {
   const [firstName, setFirstName] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   // Notification State
   const [notifications, setNotifications] = useState([]);
@@ -78,6 +85,17 @@ export default function Navbar({ user }) {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close mobile drawer when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setMobileMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -268,8 +286,61 @@ export default function Navbar({ user }) {
               </Link>
             </div>
           )}
+
+          {/* Mobile Hamburger Toggle Button */}
+          <button
+            className="mobile-hamburger-btn"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileMenuOpen}
+          >
+            <span className="hamburger-icon">{mobileMenuOpen ? '✕' : '☰'}</span>
+          </button>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="mobile-drawer" ref={mobileMenuRef}>
+          <div className="mobile-drawer-categories">
+            <span className="mobile-drawer-label">Browse Gear</span>
+            <Link href="/offroad" className={`mobile-cat-link ${isActive('/offroad') ? 'active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+              <span className="cat-emoji">🏍️</span>
+              <div>
+                <strong>Offroad</strong>
+                <p>Dirt bikes, ATVs, UTVs, snowmobiles</p>
+              </div>
+            </Link>
+            <Link href="/water" className={`mobile-cat-link ${isActive('/water') ? 'active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+              <span className="cat-emoji">🚤</span>
+              <div>
+                <strong>Watersports</strong>
+                <p>Boats, jet skis, paddleboards, kayaks</p>
+              </div>
+            </Link>
+            <Link href="/trailers" className={`mobile-cat-link ${isActive('/trailers') ? 'active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+              <span className="cat-emoji">🚛</span>
+              <div>
+                <strong>Trailers</strong>
+                <p>Car haulers, utility, dump, campers</p>
+              </div>
+            </Link>
+            <Link href="/housing" className={`mobile-cat-link ${isActive('/housing') ? 'active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+              <span className="cat-emoji">🔧</span>
+              <div>
+                <strong>Tools & Equipment</strong>
+                <p>Heavy machinery, lawn, power tools</p>
+              </div>
+            </Link>
+          </div>
+          {!user && (
+            <div className="mobile-drawer-auth">
+              <Link href="/login" className="btn btn-secondary full-width" onClick={() => setMobileMenuOpen(false)}>Log In</Link>
+              <Link href="/signup" className="btn btn-primary full-width" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+            </div>
+          )}
+        </div>
+      )}
 
       <style jsx>{`
         .navbar {
@@ -593,12 +664,113 @@ export default function Navbar({ user }) {
           font-size: 1rem;
         }
 
+        .mobile-hamburger-btn {
+          display: none;
+          background: white;
+          border: 1px solid var(--border-color);
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 1.25rem;
+          color: var(--text-primary);
+          transition: all 0.2s ease;
+        }
+
+        .mobile-hamburger-btn:hover {
+          background: #f8fafc;
+        }
+
+        .mobile-drawer {
+          display: none;
+        }
+
         @media (max-width: 768px) {
           .nav-links {
             display: none;
           }
           .account-label {
             display: none;
+          }
+          .mobile-hamburger-btn {
+            display: flex;
+          }
+
+          .mobile-drawer {
+            display: block;
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+            padding: 1.5rem;
+            animation: slideDownDrawer 0.25s ease forwards;
+            max-height: calc(100vh - var(--header-height));
+            overflow-y: auto;
+          }
+
+          @keyframes slideDownDrawer {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .mobile-drawer-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+          }
+
+          .mobile-cat-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: background 0.15s;
+            margin-bottom: 0.5rem;
+          }
+
+          .mobile-cat-link:hover, .mobile-cat-link.active {
+            background: #f1f5f9;
+          }
+
+          .cat-emoji {
+            font-size: 1.5rem;
+          }
+
+          .mobile-cat-link strong {
+            display: block;
+            font-size: 0.95rem;
+          }
+
+          .mobile-cat-link p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+          }
+
+          .mobile-drawer-auth {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 1rem;
           }
         }
       `}</style>

@@ -1,4 +1,5 @@
 "use client";
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -6,18 +7,20 @@ export default function ListingCard({ item }) {
     // Ensure numeric price
     const price = Number(item.price);
 
-    // Fallback image if missing — use an existing public image
-    const imageUrl = item.image_url || item.image || '/images/hero-main.jpg';
+    // Dynamic image source with fallback if URL fails to load
+    const initialImage = item.image_url || item.image || '/images/hero-main.jpg';
+    const [imgSrc, setImgSrc] = useState(initialImage);
 
     return (
         <Link href={`/item/${item.id}`} className="listing-card">
             <div className="card-image-wrapper">
                 <Image
-                    src={imageUrl}
+                    src={imgSrc}
                     alt={item.name}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     style={{ objectFit: 'cover' }}
+                    onError={() => setImgSrc('/images/hero-main.jpg')}
                 />
                 {item.instant_book && (
                     <div className="instant-badge">

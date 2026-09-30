@@ -120,8 +120,11 @@ export default function ChatWidget() {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleSend();
+    if (e.key === 'Enter' && !e.shiftKey) {
+      if (!isLoading && inputValue.trim()) {
+        e.preventDefault();
+        handleSend();
+      }
     }
   };
 
@@ -188,21 +191,28 @@ export default function ChatWidget() {
       <button
         onClick={handleToggle}
         className={`gearbuddy-toggle ${isOpen ? 'active' : ''}`}
-        aria-label="Toggle GearBuddy Chat"
+        aria-label={isOpen ? "Close GearBuddy AI Assistant" : "Open GearBuddy AI Assistant"}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
       >
         {isOpen ? (
-          <span className="close-icon">✕</span>
+          <span className="close-icon" aria-hidden="true">✕</span>
         ) : (
-          <span className="chat-icon">💬</span>
+          <span className="chat-icon" aria-hidden="true">💬</span>
         )}
-        {showNotification && !isOpen && <span className="notification-dot"></span>}
+        {showNotification && !isOpen && <span className="notification-dot" aria-label="New notification"></span>}
       </button>
 
       {/* Chat Window Panel */}
-      <div className={`gearbuddy-panel ${isOpen ? 'open' : ''}`}>
+      <div
+        className={`gearbuddy-panel ${isOpen ? 'open' : ''}`}
+        role="dialog"
+        aria-label="GearBuddy AI Assistant"
+        aria-modal="false"
+      >
         <div className="panel-header">
           <div className="header-info">
-            <span className="avatar">🤖</span>
+            <span className="avatar" aria-hidden="true">🤖</span>
             <div>
               <h3>GearBuddy</h3>
               <p>HobbyRent AI Assistant</p>
@@ -213,7 +223,7 @@ export default function ChatWidget() {
           </button>
         </div>
 
-        <div className="panel-messages">
+        <div className="panel-messages" role="log" aria-live="polite">
           {messages.map((msg, index) => (
             <div key={index} className={`message-row ${msg.role}`}>
               {msg.role === 'assistant' && <span className="msg-avatar">🤖</span>}

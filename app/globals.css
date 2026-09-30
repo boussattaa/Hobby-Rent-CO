@@ -876,3 +876,10 @@ h3 {
   color: #64748b;
   font-size: 0.9rem;
 }
+
+/* Mobile safe bottom spacing for floating UI & viewport bars */
+@media (max-width: 600px) {
+  main {
+    padding-bottom: 5.5rem;
+  }
+}
