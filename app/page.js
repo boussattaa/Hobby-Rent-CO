@@ -25,7 +25,7 @@ export default function Home() {
             Rent the Adventure.<br />
             Earn from your Gear.
           </h1>
-          <p className="subtitle desktop-only">
+          <p className="subtitle">
             The premium marketplace for outdoor enthusiasts and DIY masters.
             <br />Rent what you need, list what you have.
           </p>

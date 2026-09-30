@@ -33,6 +33,21 @@ const nextConfig = {
         destination: '/housing',
         permanent: true,
       },
+      {
+        source: '/watersports',
+        destination: '/water',
+        permanent: true,
+      },
+      {
+        source: '/browse',
+        destination: '/search',
+        permanent: true,
+      },
+      {
+        source: '/listings',
+        destination: '/search',
+        permanent: true,
+      },
     ];
   },
 };

@@ -710,6 +710,15 @@ h3 {
     margin-bottom: 0.5rem;
   }
 
+  .hero .subtitle {
+    font-size: 0.95rem;
+    color: #f1f5f9;
+    margin: 0 auto 1.25rem;
+    padding: 0 1rem;
+    line-height: 1.5;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  }
+
   .desktop-only {
     display: none;
   }

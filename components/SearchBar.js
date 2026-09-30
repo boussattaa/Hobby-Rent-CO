@@ -62,6 +62,7 @@ export default function SearchBar() {
         <input
           type="text"
           placeholder="What are you looking for?"
+          aria-label="Search gear by keyword"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -73,6 +74,7 @@ export default function SearchBar() {
           onClick={handleUseLocation}
           className="icon-btn"
           title="Use my current location"
+          aria-label="Use my current location"
           disabled={locLoading}
         >
           {locLoading ? (
@@ -84,6 +86,7 @@ export default function SearchBar() {
         <input
           type="text"
           placeholder="Zip Code or City"
+          aria-label="Search location by zip code or city"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
         />
@@ -122,7 +125,7 @@ export default function SearchBar() {
         }
 
         .input-group input::placeholder {
-           color: #999;
+           color: #64748b;
         }
 
         .icon {
