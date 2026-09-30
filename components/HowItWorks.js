@@ -121,8 +121,8 @@ export default function HowItWorks() {
         }
 
         .step-number {
-            background: var(--text-primary);
-            color: var(--accent-color);
+            background: #2563eb;
+            color: #ffffff;
             width: 32px;
             height: 32px;
             border-radius: 50%;
