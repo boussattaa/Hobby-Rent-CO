@@ -145,6 +145,7 @@ export async function POST(request) {
             return NextResponse.json({ url: successUrl });
         }
 
+        const finalItemId = itemId || rental?.item_id;
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: line_items,
@@ -153,7 +154,7 @@ export async function POST(request) {
                 rentalId: rental.id
             },
             success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${origin}/item/${itemId}`,
+            cancel_url: finalItemId ? `${origin}/item/${finalItemId}` : `${origin}/rentals`,
         });
 
         return NextResponse.json({ url: session.url });

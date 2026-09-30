@@ -12,7 +12,7 @@ export default function Home() {
     { name: 'Offroad', image: '/images/dirt-hero.png', href: '/offroad', desc: 'UTVs, ATVs, and Dirt Bikes', icon: '🏍️' },
     { name: 'Watersports', image: '/images/water-hero.png', href: '/water', desc: 'Jet Skis, Boats, and Kayaks', icon: '🚤' },
     { name: 'Trailers', image: '/images/trailer-hero.png', href: '/trailers', desc: 'Car haulers, Dump, and Utility', icon: '🚛' },
-    { name: 'Tools', image: '/images/housing-hero.png', href: '/housing', desc: 'Heavy equipment and DIY tools', icon: '🔧' },
+    { name: 'Tools', image: '/images/housing-hero.png', href: '/tools', desc: 'Heavy equipment and DIY tools', icon: '🔧' },
   ];
 
   return (

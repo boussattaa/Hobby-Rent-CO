@@ -427,7 +427,25 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                       onDateSelect={({ start, end }) => {
                         setStartDate(start);
                         setEndDate(end);
-                        setAvailabilityError('');
+
+                        // Check if any date in the selected range is blocked/booked
+                        let current = new Date(start);
+                        const endObj = new Date(end);
+                        let hasConflict = false;
+                        while (current <= endObj) {
+                          const dateStr = current.toISOString().split('T')[0];
+                          if (blockedDates.has(dateStr)) {
+                            hasConflict = true;
+                            break;
+                          }
+                          current.setDate(current.getDate() + 1);
+                        }
+
+                        if (hasConflict) {
+                          setAvailabilityError('Selected dates include days that are already booked or unavailable.');
+                        } else {
+                          setAvailabilityError('');
+                        }
                       }}
                     />
                   </div>
@@ -554,10 +572,6 @@ export default function ItemClient({ id, initialItem, similarItems = [] }) {
                   onClick={() => {
                     if (!currentUser) {
                       router.push('/login');
-                      return;
-                    }
-                    if (!isRenterVerified) {
-                      router.push('/verify?message=Please verify your identity before renting');
                       return;
                     }
                     if (!isRenterVerified) {

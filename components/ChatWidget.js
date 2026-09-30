@@ -16,6 +16,7 @@ export default function ChatWidget() {
   const [showNotification, setShowNotification] = useState(false);
   
   const messagesEndRef = useRef(null);
+  const widgetRef = useRef(null);
 
   // Suggestions for user
   const suggestions = [
@@ -24,6 +25,49 @@ export default function ChatWidget() {
     { text: 'How does verification work?', query: 'How does verification work?' },
     { text: 'Contact support', query: 'I would like to contact support/submit a lead' }
   ];
+
+  // Mobile body scroll lock when chat is open
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (isOpen && window.innerWidth <= 480) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isOpen]);
+
+  // Click outside and Escape key listener to dismiss
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleOutsideClick = (e) => {
+      if (widgetRef.current && !widgetRef.current.contains(e.target)) {
+        setIsOpen(false);
+        sessionStorage.setItem('gearbuddy_chat_open', 'false');
+      }
+    };
+
+    const handleEscapeKey = (e) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        sessionStorage.setItem('gearbuddy_chat_open', 'false');
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick, { passive: true });
+    document.addEventListener('keydown', handleEscapeKey);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isOpen]);
 
   // Load chat history from sessionStorage
   useEffect(() => {
@@ -186,7 +230,7 @@ export default function ChatWidget() {
   };
 
   return (
-    <div className="gearbuddy-container">
+    <div className="gearbuddy-container" ref={widgetRef}>
       {/* Floating Toggle Button */}
       <button
         onClick={handleToggle}

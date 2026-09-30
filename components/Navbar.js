@@ -112,7 +112,7 @@ export default function Navbar({ user }) {
     { name: 'Offroad', href: '/offroad' },
     { name: 'Watersports', href: '/water' },
     { name: 'Trailers', href: '/trailers' },
-    { name: 'Tools', href: '/housing' },
+    { name: 'Tools', href: '/tools' },
   ];
 
   const isActive = (path) => pathname === path;
@@ -325,7 +325,7 @@ export default function Navbar({ user }) {
                 <p>Car haulers, utility, dump, campers</p>
               </div>
             </Link>
-            <Link href="/housing" className={`mobile-cat-link ${isActive('/housing') ? 'active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/tools" className={`mobile-cat-link ${isActive('/tools') ? 'active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
               <span className="cat-emoji">🔧</span>
               <div>
                 <strong>Tools & Equipment</strong>

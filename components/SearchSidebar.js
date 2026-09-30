@@ -15,6 +15,9 @@ const CATEGORY_DATA = {
     ],
     housing: [
         'Heavy Equipment', 'Lawn & Garden', 'Construction', 'Power Tools', 'Cleaning/Finish'
+    ],
+    tools: [
+        'Heavy Equipment', 'Lawn & Garden', 'Construction', 'Power Tools', 'Cleaning/Finish'
     ]
 };
 
@@ -23,7 +26,8 @@ export default function SearchSidebar() {
     const searchParams = useSearchParams();
 
     // 1. Initialize State from URL
-    const initialCat = searchParams.get('category') || '';
+    const rawCat = searchParams.get('category') || '';
+    const initialCat = rawCat === 'housing' ? 'tools' : rawCat;
     const initialSubcats = searchParams.get('subcat')?.split(',') || [];
     const initialMaxPrice = searchParams.get('max_price') || 2000;
     const initialLocation = searchParams.get('location') || '';
@@ -147,7 +151,7 @@ export default function SearchSidebar() {
                     <option value="offroad">Offroad</option>
                     <option value="water">Watersports</option>
                     <option value="trailers">Trailers</option>
-                    <option value="housing">Tools & Equipment</option>
+                    <option value="tools">Tools & Equipment</option>
                 </select>
             </div>
 

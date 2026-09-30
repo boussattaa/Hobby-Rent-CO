@@ -76,7 +76,7 @@ Be enthusiastic, professional, and matching the adventurous spirit of HobbyRent.
             type: 'object',
             properties: {
               query: { type: 'string', description: 'Keyword query to search names and descriptions, e.g., "car hauler", "dumpster", "jet ski".' },
-              category: { type: 'string', enum: ['offroad', 'water', 'trailers', 'housing'], description: 'The item category.' },
+              category: { type: 'string', enum: ['offroad', 'water', 'watersports', 'trailers', 'tools', 'housing'], description: 'The item category.' },
               maxPrice: { type: 'number', description: 'The maximum daily rental price.' }
             }
           }
@@ -90,8 +90,8 @@ Be enthusiastic, professional, and matching the adventurous spirit of HobbyRent.
           parameters: {
             type: 'object',
             properties: {
-              category: { type: 'string', enum: ['offroad', 'water', 'trailers', 'housing'], description: 'The gear category.' },
-              rate: { type: 'number', description: 'The daily rate in USD. If not specified, default to category average (trailers: 80, offroad: 180, water: 220, tools/housing: 90).' }
+              category: { type: 'string', enum: ['offroad', 'water', 'watersports', 'trailers', 'tools', 'housing'], description: 'The gear category.' },
+              rate: { type: 'number', description: 'The daily rate in USD. If not specified, default to category average (trailers: 80, offroad: 180, water: 220, tools: 90).' }
             },
             required: ['category']
           }
@@ -182,7 +182,14 @@ async function searchListingsTool(query, category, maxPrice) {
       qb = qb.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
     }
     if (category) {
-      qb = qb.eq('category', category.toLowerCase());
+      const cat = category.toLowerCase();
+      if (cat === 'tools' || cat === 'housing') {
+        qb = qb.or('category.eq.tools,category.eq.housing');
+      } else if (cat === 'water' || cat === 'watersports') {
+        qb = qb.or('category.eq.water,category.eq.watersports');
+      } else {
+        qb = qb.eq('category', cat);
+      }
     }
     if (maxPrice) {
       qb = qb.lte('price', Number(maxPrice));
@@ -204,7 +211,9 @@ function calculateEarningsTool(category, rate) {
     trailers: 80,
     offroad: 180,
     water: 220,
-    housing: 90
+    watersports: 220,
+    housing: 90,
+    tools: 90
   };
 
   const selectedRate = rate || averages[category] || 100;

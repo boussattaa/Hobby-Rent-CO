@@ -13,6 +13,7 @@ export default async function LoginPage(props) {
           <p className="subtitle">Sign in to your HobbyRent account</p>
 
           <form className="auth-form">
+            <input type="hidden" name="redirect_to" value={searchParams?.redirect_to || ''} />
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input id="email" name="email" type="email" required placeholder="you@example.com" />

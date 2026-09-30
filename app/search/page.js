@@ -48,7 +48,7 @@ function SearchContent() {
         { value: 'offroad', label: '🏍️ Offroad' },
         { value: 'water', label: '🚤 Watersports' },
         { value: 'trailers', label: '🚛 Trailers' },
-        { value: 'housing', label: '🔧 Tools' },
+        { value: 'tools', label: '🔧 Tools' },
     ];
 
     const priceRanges = [
@@ -68,7 +68,11 @@ function SearchContent() {
             if (query) {
                 queryBuilder = queryBuilder.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
             }
-            if (category) {
+            if (category === 'tools' || category === 'housing') {
+                queryBuilder = queryBuilder.or('category.eq.tools,category.eq.housing');
+            } else if (category === 'water' || category === 'watersports') {
+                queryBuilder = queryBuilder.or('category.eq.water,category.eq.watersports');
+            } else if (category) {
                 queryBuilder = queryBuilder.eq('category', category);
             }
             if (subcats.length > 0) {
@@ -140,7 +144,13 @@ function SearchContent() {
                     // Apply other filters to both
     const applyFiltersToQuery = (qb) => {
                         if (query) qb = qb.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
-                        if (category) qb = qb.eq('category', category);
+                        if (category === 'tools' || category === 'housing') {
+                            qb = qb.or('category.eq.tools,category.eq.housing');
+                        } else if (category === 'water' || category === 'watersports') {
+                            qb = qb.or('category.eq.water,category.eq.watersports');
+                        } else if (category) {
+                            qb = qb.eq('category', category);
+                        }
                         if (subcats.length > 0) qb = qb.in('subcategory', subcats);
                         if (maxPrice) qb = qb.lte('price', maxPrice);
                         if (instantBookOnly) qb = qb.eq('instant_book', true);
@@ -319,7 +329,7 @@ function SearchContent() {
                                 <Link href="/offroad" className="pill">Offroad</Link>
                                 <Link href="/water" className="pill">Watersports</Link>
                                 <Link href="/trailers" className="pill">Trailers</Link>
-                                <Link href="/housing" className="pill">Tools</Link>
+                                <Link href="/tools" className="pill">Tools</Link>
                             </div>
                         </div>
                     )}

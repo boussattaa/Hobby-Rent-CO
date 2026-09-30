@@ -106,6 +106,24 @@ export async function createListing(formData) {
         instant_book: formData.get('instant_book') === 'on',
     }
 
+    // Pricing validation sanity checks
+    if (itemData.price !== null) {
+        if (itemData.price < 5 && itemData.price_type !== 'hourly') {
+            return { message: 'Daily price must be at least $5.' };
+        }
+        if (itemData.price > 50000) {
+            return { message: 'Daily price cannot exceed $50,000.' };
+        }
+    }
+    if (itemData.hourly_rate !== null) {
+        if (itemData.hourly_rate < 5) {
+            return { message: 'Hourly rate must be at least $5.' };
+        }
+        if (itemData.hourly_rate > 5000) {
+            return { message: 'Hourly rate cannot exceed $5,000.' };
+        }
+    }
+
     // Fix for price NOT NULL constraint if Hourly
     if (itemData.price_type === 'hourly' && !itemData.price) {
         itemData.price = 0; // Placeholder
@@ -168,7 +186,8 @@ export async function createListing(formData) {
         }
     }
 
-    revalidatePath('/')
-    revalidatePath(`/${itemData.category}`)
-    redirect(`/${itemData.category}`)
+    const targetCategory = (itemData.category === 'housing' || itemData.category === 'tools') ? 'tools' : itemData.category;
+    revalidatePath('/');
+    revalidatePath(`/${targetCategory}`);
+    redirect(`/${targetCategory}`);
 }

@@ -12,16 +12,22 @@ export async function login(formData) {
         email: formData.get('email'),
         password: formData.get('password'),
     }
+    const redirectTo = formData.get('redirect_to') || '/'
 
     const { error } = await supabase.auth.signInWithPassword(data)
 
     if (error) {
         console.error('Login Error:', error)
-        redirect(`/login?message=${encodeURIComponent(error.message)}`)
+        const params = new URLSearchParams()
+        params.set('message', error.message)
+        if (redirectTo && redirectTo !== '/') {
+            params.set('redirect_to', redirectTo)
+        }
+        redirect(`/login?${params.toString()}`)
     }
 
     revalidatePath('/', 'layout')
-    redirect('/')
+    redirect(redirectTo)
 }
 
 export async function signup(formData) {
