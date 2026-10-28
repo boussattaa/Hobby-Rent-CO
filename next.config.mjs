@@ -1,12 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
-    return [
-      {
-        source: '/campaigns/:path*',
-        destination: 'https://agent-factory-smoky.vercel.app/campaigns/:path*',
-      },
-    ];
+    return {
+      beforeFiles: [],
+      afterFiles: [
+        {
+          source: '/campaigns/:path*',
+          destination: 'https://agent-factory-smoky.vercel.app/campaigns/:path*',
+        },
+      ],
+      fallback: [
+        {
+          source: '/_next/static/:path*',
+          destination: 'https://agent-factory-smoky.vercel.app/_next/static/:path*',
+        },
+      ],
+    };
   },
   images: {
     formats: ['image/avif', 'image/webp'],
