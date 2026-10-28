@@ -8,6 +8,14 @@ const nextConfig = {
           source: '/campaigns/:path*',
           destination: 'https://agent-factory-smoky.vercel.app/campaigns/:path*',
         },
+        {
+          source: '/api/og',
+          destination: 'https://agent-factory-smoky.vercel.app/api/og',
+        },
+        {
+          source: '/api/og/:path*',
+          destination: 'https://agent-factory-smoky.vercel.app/api/og/:path*',
+        },
       ],
       fallback: [
         {
