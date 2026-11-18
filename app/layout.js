@@ -10,19 +10,24 @@ import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ['latin'] })
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_BASE_URL || 'https://hobby-rent-co.vercel.app'
+
 export const metadata = {
-  metadataBase: new URL('https://www.hobbyrent.com'),
+  metadataBase: new URL(SITE_URL),
   title: 'HobbyRent | Rent Offroad, Watersports, Trailers & Tools',
   description: 'The premium marketplace for renting outdoor gear and tools. Turn your toys into income.',
+  alternates: {
+    canonical: '/',
+  },
   manifest: '/manifest.json',
   openGraph: {
     title: 'HobbyRent | Rent Offroad, Watersports, Trailers & Tools',
     description: 'Turn your toys into income. Rent them out when you\'re not using them.',
-    url: 'https://www.hobbyrent.com',
+    url: SITE_URL,
     siteName: 'HobbyRent',
     images: [
       {
-        url: '/images/og-main.jpg',
+        url: '/api/og?tenantId=hobbyrent&title=HobbyRent%20Gear%20Rentals',
         width: 1200,
         height: 630,
         alt: 'HobbyRent - Turn your toys into income',
@@ -35,7 +40,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'HobbyRent | Rent Offroad, Watersports, Trailers & Tools',
     description: 'Turn your toys into income. Rent them out when you\'re not using them.',
-    images: ['/images/og-main.jpg'],
+    images: ['/api/og?tenantId=hobbyrent&title=HobbyRent%20Gear%20Rentals'],
   },
   appleWebApp: {
     capable: true,

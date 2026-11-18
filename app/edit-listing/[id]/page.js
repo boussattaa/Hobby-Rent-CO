@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { updateListing } from '../actions';
@@ -560,7 +561,7 @@ export default function EditListingPage() {
                                 <div className="upload-box">
                                     {formData.image_url ? (
                                         <div style={{ position: 'relative' }}>
-                                            <img src={formData.image_url} alt="Preview" style={{ width: '100%', borderRadius: '8px', maxHeight: '300px', objectFit: 'cover' }} />
+                                            <Image src={formData.image_url} alt="Preview" width={600} height={300} unoptimized style={{ width: '100%', height: 'auto', borderRadius: '8px', maxHeight: '300px', objectFit: 'cover' }} />
                                             <button
                                                 type="button"
                                                 onClick={(e) => {

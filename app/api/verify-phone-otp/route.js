@@ -1,23 +1,49 @@
+import crypto from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { createClient as createServerClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 
-export async function POST(request) {
-    const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-    try {
-        const { phone, otp, userId } = await request.json();
+function safeEqual(a, b) {
+    const bufA = Buffer.from(String(a));
+    const bufB = Buffer.from(String(b));
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+}
 
-        if (!phone || !otp || !userId) {
-            return NextResponse.json({ error: 'Phone, OTP, and userId are required' }, { status: 400 });
+export async function POST(request) {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    try {
+        const serverSupabase = await createServerClient();
+        const { data: { user } } = await serverSupabase.auth.getUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
         }
 
-        // Fetch the stored OTP
+        const body = await request.json().catch(() => null);
+        const phone = typeof body?.phone === 'string' ? body.phone.trim() : '';
+        const otp = typeof body?.otp === 'string' ? body.otp.trim() : '';
+        const userId = typeof body?.userId === 'string' ? body.userId.trim() : user.id;
+
+        if (!phone || !otp) {
+            return NextResponse.json({ error: 'Phone and OTP are required' }, { status: 400 });
+        }
+
+        if (userId !== user.id) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+
         const { data: otpRecord, error: fetchError } = await supabase
             .from('phone_otps')
             .select('*')
-            .eq('user_id', userId)
+            .eq('user_id', user.id)
             .eq('phone', phone)
             .single();
 
@@ -25,31 +51,27 @@ export async function POST(request) {
             return NextResponse.json({ error: 'No verification code found. Please request a new one.' }, { status: 400 });
         }
 
-        // Check if OTP has expired
         if (new Date(otpRecord.expires_at) < new Date()) {
             return NextResponse.json({ error: 'Verification code has expired. Please request a new one.' }, { status: 400 });
         }
 
-        // Check if OTP matches
-        if (otpRecord.otp !== otp) {
+        if (!safeEqual(otpRecord.otp, otp)) {
             return NextResponse.json({ error: 'Invalid verification code. Please try again.' }, { status: 400 });
         }
 
-        // Mark OTP as verified
         await supabase
             .from('phone_otps')
             .update({ verified: true })
-            .eq('user_id', userId);
+            .eq('user_id', user.id);
 
-        // Update user profile to mark phone as verified
         const { error: profileError } = await supabase
             .from('profiles')
             .update({
                 phone_verified: true,
-                phone: phone,
-                updated_at: new Date().toISOString()
+                phone,
+                updated_at: new Date().toISOString(),
             })
-            .eq('id', userId);
+            .eq('id', user.id);
 
         if (profileError) {
             console.error('Profile update error:', profileError);
@@ -58,7 +80,7 @@ export async function POST(request) {
 
         return NextResponse.json({
             success: true,
-            message: 'Phone number verified successfully'
+            message: 'Phone number verified successfully',
         });
     } catch (error) {
         console.error('Error verifying OTP:', error);

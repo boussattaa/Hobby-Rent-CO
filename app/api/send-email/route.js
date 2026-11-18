@@ -2,31 +2,46 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 export async function POST(request) {
     try {
-        const resendKey = process.env.RESEND_API_KEY || 're_dummy_key_for_build_purposes_only';
-        const resend = new Resend(resendKey);
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+        }
 
+        const resendKey = process.env.RESEND_API_KEY;
+        if (!resendKey) {
+            return NextResponse.json({ error: 'Email service is not configured' }, { status: 500 });
+        }
+
+        const resend = new Resend(resendKey);
         const supabaseAdmin = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co',
-            process.env.SUPABASE_SERVICE_ROLE_KEY || 'dummy_key',
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY,
             {
                 auth: {
                     autoRefreshToken: false,
-                    persistSession: false
-                }
+                    persistSession: false,
+                },
             }
         );
 
-        const { type, bookingId } = await request.json();
+        const body = await request.json().catch(() => null);
+        const type = body?.type;
+        const bookingId = body?.bookingId;
 
-        if (!bookingId) {
-            return NextResponse.json({ error: 'Missing bookingId' }, { status: 400 });
+        if (!bookingId || !type) {
+            return NextResponse.json({ error: 'Missing type or bookingId' }, { status: 400 });
         }
 
-        // 1. Fetch Booking Details (with Item and Profiles)
-        // Note: We need join tables. Since we are admin, we can query safely.
-        // However, our standard client might be easier if RLS allows, but admin is safer.
         const { data: booking, error: bookingError } = await supabaseAdmin
             .from('bookings')
             .select(`
@@ -44,68 +59,58 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
         }
 
-        // 2. Determine Recipient and Email Content
+        const safeTitle = escapeHtml(booking.items?.title || 'Gear Rental');
+        const safeStatus = escapeHtml(booking.status || 'updated');
+        const baseUrl =
+            process.env.NEXT_PUBLIC_BASE_URL ||
+            process.env.NEXT_PUBLIC_SITE_URL ||
+            'https://hobby-rent-co.vercel.app';
+
         let recipientId;
         let subject;
         let htmlContent;
 
         if (type === 'new_request') {
             recipientId = booking.owner_id;
-            subject = `New Booking Request: ${booking.items.title}`;
+            subject = `New Booking Request: ${booking.items?.title || 'Gear Rental'}`;
             htmlContent = `
         <h1>New Booking Request!</h1>
-        <p>You have received a request to rent <strong>${booking.items.title}</strong>.</p>
-        <p><strong>Total:</strong> $${booking.total_price}</p>
+        <p>You have received a request to rent <strong>${safeTitle}</strong>.</p>
+        <p><strong>Total:</strong> $${Number(booking.total_price || 0).toFixed(2)}</p>
         <p><strong>Dates:</strong> ${new Date(booking.start_date).toLocaleDateString()} - ${new Date(booking.end_date).toLocaleDateString()}</p>
         <br/>
-        <a href="${process.env.NEXT_PUBLIC_BASE_URL}/dashboard" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Request</a>
+        <a href="${baseUrl}/dashboard" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Request</a>
       `;
         } else if (type === 'status_change') {
-            // Notify Renter
-            recipientId = booking.user_id; // Renter
-            subject = `Booking Update: ${booking.status.toUpperCase()}`;
+            recipientId = booking.user_id;
+            subject = `Booking Update: ${String(booking.status || '').toUpperCase()}`;
             htmlContent = `
         <h1>Booking Update</h1>
-        <p>Your booking for <strong>${booking.items.title}</strong> is now <strong>${booking.status}</strong>.</p>
+        <p>Your booking for <strong>${safeTitle}</strong> is now <strong>${safeStatus}</strong>.</p>
         <br/>
-        <a href="${process.env.NEXT_PUBLIC_BASE_URL}/rentals" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Booking</a>
+        <a href="${baseUrl}/rentals" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Booking</a>
       `;
         } else if (type === 'new_booking_confirmed') {
-            // Notify Owner of Instant/Paid Booking
             recipientId = booking.owner_id;
-            subject = `New Booking Confirmed: ${booking.items.title}`;
+            subject = `New Booking Confirmed: ${booking.items?.title || 'Gear Rental'}`;
             htmlContent = `
         <h1>New Booking Confirmed!</h1>
-        <p>Great news! You have a new confirmed booking for <strong>${booking.items.title}</strong>.</p>
-        <p><strong>Total Payout:</strong> $${(booking.total_price * 0.9).toFixed(2)}</p>
+        <p>Great news! You have a new confirmed booking for <strong>${safeTitle}</strong>.</p>
+        <p><strong>Total Payout:</strong> $${(Number(booking.total_price || 0) * 0.9).toFixed(2)}</p>
         <p><strong>Dates:</strong> ${new Date(booking.start_date).toLocaleDateString()} - ${new Date(booking.end_date).toLocaleDateString()}</p>
         <br/>
-        <a href="${process.env.NEXT_PUBLIC_BASE_URL}/dashboard" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Booking</a>
+        <a href="${baseUrl}/dashboard" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Booking</a>
       `;
         } else {
             return NextResponse.json({ error: 'Invalid email type' }, { status: 400 });
         }
 
-        // 3. Fetch Recipient Email from Auth Users
-        const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(recipientId);
+        const { data: userData, error: userError } =
+            await supabaseAdmin.auth.admin.getUserById(recipientId);
 
-        if (userError || !userData.user) {
-            console.error('User fetch error:', userError);
+        if (userError || !userData.user?.email) {
             return NextResponse.json({ error: 'Recipient user not found' }, { status: 404 });
         }
-
-        const recipientEmail = userData.user.email;
-
-        // 4. Send Email via Resend
-        // Use a verified domain or the testing domain 'onboarding@resend.dev' if strictly testing.
-        // For specific user emails to work in test mode, you must send to the exact email registered in Resend,
-        // OR use the 'delivered@resend.dev' for a generic success.
-        // Assuming user wants to see it work:
-        // If we are in dev/test, send to the developer's email or the specific allowed test email.
-        // Since we don't know if the user verified their domain, we'll try to send to the fetched email 
-        // BUT Resend free tier only allows sending to your own email.
-        // We will default to a safe value or try the real one. 
-        // Let's send to the actual user email. If it fails due to "unverified", we catch it.
 
         const fromEmail = process.env.EMAIL_FROM || 'HobbyRent <notifications@hobbyrent.com>';
         const replyToEmail = process.env.EMAIL_REPLY_TO || 'support@hobbyrent.com';
@@ -113,20 +118,23 @@ export async function POST(request) {
         const { data: emailData, error: emailError } = await resend.emails.send({
             from: fromEmail,
             reply_to: replyToEmail,
-            to: recipientEmail,
-            subject: subject,
+            to: userData.user.email,
+            subject,
             html: htmlContent,
+            headers: {
+                'Idempotency-Key': `hobbyrent-${type}-${bookingId}-${booking.status || 'na'}`,
+            },
         });
 
         if (emailError) {
             console.error('Resend Error:', emailError);
-            // Don't fail the request, just log it. 
-            // Or return error if strict.
-            return NextResponse.json({ error: emailError.message }, { status: 500 });
+            return NextResponse.json(
+                { error: 'Failed to send email notification' },
+                { status: 500 }
+            );
         }
 
-        return NextResponse.json({ success: true, emailId: emailData.id });
-
+        return NextResponse.json({ success: true, emailId: emailData?.id });
     } catch (err) {
         console.error('API Error:', err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

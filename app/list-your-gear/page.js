@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
@@ -198,7 +199,7 @@ export default function ListYourGear() {
 
     return (
       <div ref={setNodeRef} style={style} className={`img-preview ${index === 0 ? 'main' : ''}`} {...attributes} {...listeners}>
-        <img src={url} alt={`Photo ${index}`} />
+        <Image src={url} alt={`Photo ${index}`} width={200} height={200} unoptimized style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
 
         {/* Buttons independent of overlay for better touch accessibility */}
         {index !== 0 && (

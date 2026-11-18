@@ -12,13 +12,24 @@ export default function Footer() {
         </div>
 
         <div className="footer-column">
-          <h5>Destinations</h5>
-          <Link href="/destinations/lake-lowell-boat-rentals">Lake Lowell Boats</Link>
-          <Link href="/destinations/lucky-peak-jet-ski-rentals">Lucky Peak Jet Skis</Link>
+          <h5>Water Sports</h5>
+          <Link href="/destinations/miami-boat-rentals">Miami Boat Rentals</Link>
+          <Link href="/destinations/destin-boat-rentals">Destin Pontoons</Link>
+          <Link href="/destinations/lake-havasu-boat-rentals">Lake Havasu Boats</Link>
+          <Link href="/destinations/lake-tahoe-boat-rentals">Lake Tahoe Rentals</Link>
+          <Link href="/destinations/key-west-boat-rentals">Key West Jet Skis</Link>
+        </div>
+
+        <div className="footer-column">
+          <h5>Off-Road &amp; Trail</h5>
+          <Link href="/destinations/moab-utv-rentals">Moab UTV &amp; RZR</Link>
+          <Link href="/destinations/las-vegas-atv-rentals">Las Vegas ATVs</Link>
+          <Link href="/destinations/jackson-hole-snowmobile-rentals">Jackson Hole Sleds</Link>
           <Link href="/destinations/owyhee-dirt-bike-rentals">Owyhee Dirt Bikes</Link>
         </div>
 
-        <div className="footer-links">
+        <div className="footer-column">
+          <h5>Company</h5>
           <Link href="/protection-plan">Protection Plan</Link>
           <Link href="/cancellation-policy">Cancellation Policy</Link>
           <Link href="/terms">Terms</Link>
@@ -37,7 +48,9 @@ export default function Footer() {
         .footer-content {
           display: flex;
           justify-content: space-between;
-          align-items: center;
+          align-items: flex-start;
+          flex-wrap: wrap;
+          gap: 2rem;
         }
         .footer-brand {
           flex: 1;

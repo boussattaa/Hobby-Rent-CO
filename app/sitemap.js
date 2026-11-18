@@ -1,9 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
+import { DESTINATIONS } from './destinations/data'
 
 export const revalidate = 3600 // Revalidate every hour
 
 export default async function sitemap() {
     const supabase = await createClient()
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.hobbyrent.com'
 
     // Fetch high priority listings
     const { data: listings } = await supabase
@@ -12,11 +14,18 @@ export default async function sitemap() {
         .limit(1000)
 
     const listingUrls = listings?.map((listing) => ({
-        url: `https://www.hobbyrent.com/item/${listing.id}`,
-        lastModified: new Date(listing.created_at), // Using created_at since updated_at might not exist or be commonly updated
+        url: `${baseUrl}/item/${listing.id}`,
+        lastModified: new Date(listing.created_at),
         changeFrequency: 'weekly',
         priority: 0.8,
     })) || []
+
+    const destinationUrls = Object.keys(DESTINATIONS).map((slug) => ({
+        url: `${baseUrl}/destinations/${slug}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly',
+        priority: 0.9,
+    }))
 
     const staticRoutes = [
         {
@@ -95,6 +104,7 @@ export default async function sitemap() {
 
     return [
         ...staticRoutes,
+        ...destinationUrls,
         ...listingUrls,
     ];
 }

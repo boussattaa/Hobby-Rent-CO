@@ -31,6 +31,7 @@ export default async function AdminLayout({ children }) {
                     <Link href="/admin/users" className="admin-link" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontWeight: 500 }}>Users</Link>
                     <Link href="/admin/rentals" className="admin-link" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontWeight: 500 }}>Rentals</Link>
                     <Link href="/admin/payments" className="admin-link" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontWeight: 500 }}>💰 Payments</Link>
+                    <Link href="/admin/ingest" className="admin-link" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontWeight: 500 }}>🤖 Ingestion Agent</Link>
                 </nav>
             </aside>
             <main style={{ flex: 1, padding: '2rem', background: '#f8fafc' }}>

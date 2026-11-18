@@ -26,16 +26,33 @@ export default async function DestinationPage({ params }) {
 
     const supabase = createClient();
 
-    // Simple fetch based on category for now (mocking the location filter for simplicity unless we have real lat/long)
-    // In a real app we'd query by distance from the destination's coordinates
-    const { data: items } = await supabase
-        .from('items')
-        .select('*')
-        .eq('category', data.filter.category)
-        .limit(8);
+    // Filter dynamically by category and location keyword
+    let query = supabase.from('items').select('*').eq('category', data.filter.category);
+    if (data.filter.location) {
+        query = query.ilike('location', `%${data.filter.location}%`);
+    }
+    const { data: items } = await query.limit(8);
+
+    // Dynamic JSON-LD for Destination Collection
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: data.heading,
+        description: data.description,
+        url: `https://hobbyrent-eta.vercel.app/destinations/${params.slug}`,
+        about: {
+            '@type': 'Place',
+            name: data.filter.location,
+            description: data.subheading
+        }
+    };
 
     return (
         <div className="destination-page">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <div className="hero-section">
                 <Image
                     src={data.heroImage}

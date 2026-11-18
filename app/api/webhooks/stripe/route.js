@@ -24,12 +24,16 @@ export async function POST(req) {
         const headerList = await headers();
         const signature = headerList.get('stripe-signature');
 
+        if (!signature) {
+            return new NextResponse('Missing stripe-signature header', { status: 400 });
+        }
+
         let event;
         try {
             event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET);
         } catch (err) {
             console.error(`Webhook signature verification failed: ${err.message}`);
-            return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+            return new NextResponse('Webhook signature verification failed', { status: 400 });
         }
 
         // Handle events idempotently
@@ -85,7 +89,7 @@ export async function POST(req) {
 
     } catch (err) {
         console.error('SERVER ERROR in Webhook:', err);
-        return new NextResponse(`Server Error: ${err.message}`, { status: 500 });
+        return new NextResponse('Internal Server Error', { status: 500 });
     }
 }
 
@@ -102,6 +106,16 @@ function getAdminClient() {
 
 async function updateUserVerificationStatus(userId) {
     const supabase = getAdminClient();
+    const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('is_verified, id_verified_status')
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (existingProfile?.is_verified && existingProfile?.id_verified_status === 'verified') {
+        return;
+    }
+
     const { error } = await supabase
         .from('profiles')
         .update({ is_verified: true, id_verified_status: 'verified' })
